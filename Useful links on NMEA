@@ -7,7 +7,6 @@ An introduction to NMEA on Wikipedia:
 http://en.wikipedia.org/wiki/NMEA_0183
 
 Existing Program on NMEA Parser:
-
 RTKLIB
 http://www.rtklib.com/
 
@@ -21,4 +20,5 @@ NMEA GPS Data Logger
 http://www.aggsoft.com/nmea-data-logger.htm
 
 Existing NMEA Library on Github:
+
 https://github.com/AHR-Project/nmealib
