@@ -1,0 +1,47 @@
+user input
+	vertical tolerance 
+	horizontal tolerance
+	receiver distance tolerance
+	
+	
+	would like handheld
+	possible visual view (% object obstruction, location, angle )
+	wants down more precise than meter level 
+	better altitude value
+	
+data gathered
+	longitude 
+	latitude
+	height/altitude 
+	
+trident beam - 0.5 meters distance between receivers 
+		
+GPS model: Leica Viva GS14
+
+connection types:
+	Bluetooth 
+	internet stream
+	serial
+	usb
+
+NMEA message streams - 
+	GGA
+	GGK
+	GGK_PT
+	GGQ
+	GLL
+	GNS
+	GSA
+	GSV
+	LLK
+	LLQ
+	RMC
+	VTG
+	ZDA
+
+
+usually uses sd card to log information in 10 hour sessions in rinex format 
+usual accuracy
+	2 cm horizontal 
+	3 cm vertical 
+
