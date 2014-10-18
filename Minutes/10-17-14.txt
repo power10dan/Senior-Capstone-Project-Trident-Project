@@ -1,0 +1,8 @@
+What was accomplished:
+- Installed USB Driver update for Leica
+- Downloaded NMEA parser  
+
+What needs to be accomplished: 
+- Make USB turn into recognizable comport
+- Make computer receive NMEA data stream
+- Make USB connection and Blue-tooth work 
