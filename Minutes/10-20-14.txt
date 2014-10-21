@@ -1,3 +1,6 @@
+What was accomplished:
 -connected to GPs receiver through bluetooth
 -created com port through  bluetooth device properties
 -pulled NMEA data via bluetooth
+
+What needs to be accomplished:
