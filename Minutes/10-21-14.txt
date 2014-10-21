@@ -1,0 +1,11 @@
+What we accomplished:
+Decide on technology to use for the project (Bluetooth with USB as backup)
+Finished Tech Review for Capstone Class
+Installed Python Pluggin for Visual Studio 2013
+Downloaded pynmea, python library for NMEA parsing 
+Updated project wikia 
+Started skeleton code of parser
+
+What needs to be accomplished:
+Reviewing NMEA code example from Albert's Notes
+Begin writing parser
