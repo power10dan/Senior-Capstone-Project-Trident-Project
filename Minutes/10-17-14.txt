@@ -3,5 +3,4 @@ What was accomplished:
 - Downloaded NMEA parser  
 - NMEA can be logged from software called Advanced NMEA Data logger
 
-
 What needs to be accomplished: 
