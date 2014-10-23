@@ -41,6 +41,12 @@ def init_serial():
 	print 'OPEN: '+ ser.name
 	print ''
 	
+	while 1:
+		stream_serial()
+	ser.close()	
+	sys.exit()
+	
+	
 def position():
   pass
 
