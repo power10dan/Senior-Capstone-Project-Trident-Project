@@ -1,10 +1,5 @@
 from pynmea import nmea
-<<<<<<< HEAD
 import serial, time, sys, datetime, shutil, threading
-
-=======
-import serial, time, sys, datetime, shutil
->>>>>>> ddbb01c7d8ee4a56807821acec21669714253af6
 
 ######Global Variables#####################################################
 # you must declare the variables as 'global' in the fxn before using#
@@ -18,11 +13,9 @@ def check_serial():
 	if temp == 'y':
 		init_serial()
 	if temp == 'n':
-<<<<<<< HEAD
 		sys.exit()
-=======
-		print 'You can enter your own NMEA sentences into a file named nmea.txt'
->>>>>>> ddbb01c7d8ee4a56807821acec21669714253af6
+	print 'You can enter your own NMEA sentences into a file named nmea.txt'
+
 	
 def init_serial():
 	#opens the serial port based on the COM number you choose
@@ -43,10 +36,8 @@ def init_serial():
 	ser = serial.Serial()
 	ser.baudrate = BAUDRATE
 	ser.port = comnum
-<<<<<<< HEAD
-=======
-	ser.timeout = none
->>>>>>> ddbb01c7d8ee4a56807821acec21669714253af6
+	ser.stopbits = 1
+	ser.bytesize = 8
 	ser.open()
 	ser.isOpen()
 	
@@ -60,17 +51,14 @@ def init_serial():
 	
 	
 def position():
-<<<<<<< HEAD
     pass
 
 def thread():
-    #thread_Primary = threading.thread(target=check_serial(),name="primary")
-    #thread_Left = threading.thread(target=check_serial(),name="left")
+    thread_Primary = threading.Thread(target=check_serial(),name="primary")
+    #thread_Left = threading.Thread(target=check_serial(),name="left")
     #thread_Right = threading.thread(target=check_serial(),name="right")
     pass
-=======
-  pass
->>>>>>> ddbb01c7d8ee4a56807821acec21669714253af6
+
 
 def save_raw():
 	#this fxn creates a txt file and saves only GPGGA sentences
@@ -107,19 +95,8 @@ def stream_serial():
     print line_str
 
 ########START#####################################################################################
-<<<<<<< HEAD
-#thread()
-check_serial()
+thread()
 #main program loop
 #while 1:
   # pass
  # ser.close()
-=======
-check_serial()
-
-#main program loop
-while 1:
-  # pass
-  ser.close()
->>>>>>> ddbb01c7d8ee4a56807821acec21669714253af6
-#sys.exit()
