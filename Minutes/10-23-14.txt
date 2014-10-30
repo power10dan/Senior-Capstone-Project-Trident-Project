@@ -1,0 +1,5 @@
+-installed nmea and pyserial modules
+-got NMEA parser working
+-created thread function
+-worked out some logic for multipathing function
+-tested parser on gps via bluetooth and usb

@@ -1,6 +1,9 @@
 from pynmea import nmea
 import serial, time, sys, datetime, shutil, threading
+<<<<<<< HEAD
 from threading import Lock
+=======
+>>>>>>> 22aae6ecfd23ab7a67fc5be6f989f1989045ebbb
 
 ######Global Variables#####################################################
 # you must declare the variables as 'global' in the fxn before using#
@@ -44,8 +47,11 @@ def init_serial():
 	ser.port = comnum
 	ser.stopbits = 1
 	ser.bytesize = 8
+<<<<<<< HEAD
 	global active
 	active.append(comnum)
+=======
+>>>>>>> 22aae6ecfd23ab7a67fc5be6f989f1989045ebbb
 	ser.open()
 	ser.isOpen()
 	print 'OPEN: '+ ser.name
@@ -56,6 +62,7 @@ def position():
     pass
 
 def thread():
+<<<<<<< HEAD
     global thread_Primary, thread_Left,thread_Right
     thread_Primary = threading.Thread(target=init_serial(),name="primary")
     #thread_Left = threading.Thread(target=init_serial(),name="left")
@@ -76,6 +83,12 @@ def thread():
 	#thread_Right.run()
     #ser.close()	
     sys.exit()
+=======
+    thread_Primary = threading.Thread(target=check_serial(),name="primary")
+    #thread_Left = threading.Thread(target=check_serial(),name="left")
+    #thread_Right = threading.thread(target=check_serial(),name="right")
+    pass
+>>>>>>> 22aae6ecfd23ab7a67fc5be6f989f1989045ebbb
 
 
 def save_raw():
@@ -120,4 +133,8 @@ thread()
 #main program loop
 #while 1:
   # pass
+<<<<<<< HEAD
  # ser.close()
+=======
+ # ser.close()
+>>>>>>> 22aae6ecfd23ab7a67fc5be6f989f1989045ebbb

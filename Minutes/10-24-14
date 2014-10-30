@@ -1,0 +1,6 @@
+-Client wants to try out RTLLib, an open source NMEA parser because 
+ he wants error correction code, a code that tells the surveyor how much the satellite reported location of the surveyor and 
+ GPS reported location of the surveyor differ, inside the data stream. 
+-Client is testing the RTKLib code, so don't proceed further on the existing NMEA parser code
+
+
