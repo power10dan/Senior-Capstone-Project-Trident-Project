@@ -1,0 +1,10 @@
+What was accomplished:
+
+Blog is almost ready 
+Attempted to get three receivers working
+Found the reason why three receivers can't connect ( due to multiple comport problem)
+
+What needs to be accomplished:
+
+Get three receivers working
+Get pictures of today's progress onto the blog

@@ -1,10 +1,16 @@
 from pynmea import nmea
 import serial, time, sys, datetime, shutil, threading
+from threading import Lock
 
 ######Global Variables#####################################################
 # you must declare the variables as 'global' in the fxn before using#
 ser = 0
 BAUDRATE = 115200
+thread_Primary = 0
+thread_Left = 0
+thread_Right = 0
+active = []
+mutex = Lock()
 
 ######FUNCTIONS############################################################ 
 def check_serial():
@@ -18,12 +24,12 @@ def check_serial():
 
 	
 def init_serial():
+	global thread_Primary, thread_Left,thread_Right
 	#opens the serial port based on the COM number you choose
 	print "Found Ports:"
 	for n,s in scan():
 		print "%s" % s
 	print " "
-
 	#enter your COM port number
 	print "Choose a COM port #. Enter # only, then enter"
 	temp = raw_input() #waits here for keyboard input
@@ -38,26 +44,38 @@ def init_serial():
 	ser.port = comnum
 	ser.stopbits = 1
 	ser.bytesize = 8
+	global active
+	active.append(comnum)
 	ser.open()
 	ser.isOpen()
-	
 	print 'OPEN: '+ ser.name
-	print ''
-	
-	while 1:
-		stream_serial()
-	ser.close()	
-	sys.exit()
-	
+	#while 1:
+	    #stream_serial()
 	
 def position():
     pass
 
 def thread():
-    thread_Primary = threading.Thread(target=check_serial(),name="primary")
-    #thread_Left = threading.Thread(target=check_serial(),name="left")
-    #thread_Right = threading.thread(target=check_serial(),name="right")
-    pass
+    global thread_Primary, thread_Left,thread_Right
+    thread_Primary = threading.Thread(target=init_serial(),name="primary")
+    #thread_Left = threading.Thread(target=init_serial(),name="left")
+    #thread_Right = threading.Thread(target=init_serial(),name="right")
+    thread_Primary.daemon = True
+    thread_Primary.start()
+    #thread_Left.daemon = True
+    #thread_Left.start()
+    #thread_Right.daemon = True
+    #thread_Right.start()
+    
+    while 1:
+	thread_Primary = threading.Thread(target=stream_serial("primary"))
+	thread_Primary.run()
+	#thread_Left = threading.Thread(target=stream_serial("left"))
+	#thread_Left.run()
+	#thread_Right = threading.Thread(target=stream_serial("right"))
+	#thread_Right.run()
+    #ser.close()	
+    sys.exit()
 
 
 def save_raw():
@@ -78,21 +96,24 @@ def save_raw():
 
 def scan():
     #scan for available ports. return a list of tuples (num, name)
-    available = []
+    available=[]
     for i in range(256):
         try:
             s = serial.Serial(i)
-            available.append( (i, s.name))
-            s.close()   # explicit close 'cause of delayed GC in java
+	    if s.name in active:
+		break
+	    else:
+		available.append( (i, s.name))
+		s.close()   # explicit close 'cause of delayed GC in java
         except serial.SerialException:
             pass
     return available  
 
-def stream_serial():
+def stream_serial(name):
     #stream data directly from the serial port
     line = ser.readline()
     line_str = str(line)    
-    print line_str
+    print name + ":" +line_str
 
 ########START#####################################################################################
 thread()
