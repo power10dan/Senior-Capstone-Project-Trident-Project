@@ -4,14 +4,13 @@ from threading import Lock
 
 ######Global Variables#####################################################
 # you must declare the variables as 'global' in the fxn before using#
-ser = 0
+ser = [()]
 BAUDRATE = 115200
 thread_Primary = 0
 thread_Left = 0
 thread_Right = 0
 active = []
 mutex = Lock()
-
 ######FUNCTIONS############################################################ 
 def check_serial():
 	print 'Do you have a GPS connected to the serial port? hit y or n, then enter'
@@ -23,7 +22,8 @@ def check_serial():
 	print 'You can enter your own NMEA sentences into a file named nmea.txt'
 
 	
-def init_serial():
+def init_serial(i):
+	
 	global thread_Primary, thread_Left,thread_Right
 	#opens the serial port based on the COM number you choose
 	print "Found Ports:"
@@ -39,16 +39,17 @@ def init_serial():
 
 	# configure the serial connections 
 	global ser, BAUDRATE
-	ser = serial.Serial()
-	ser.baudrate = BAUDRATE
-	ser.port = comnum
-	ser.stopbits = 1
-	ser.bytesize = 8
+	ser[i] = serial.Serial()
+	ser[i].port = comnum
+	ser[i].baudrate = BAUDRATE
+	ser[i].bytesize = 8
+	ser[i].stopbits = 1
+	print ser
 	global active
 	active.append(comnum)
-	ser.open()
-	ser.isOpen()
-	print 'OPEN: '+ ser.name
+	ser[i].open()
+	ser[i].isOpen()
+	print 'OPEN: '+ ser[i].name
 	#while 1:
 	    #stream_serial()
 	
@@ -57,9 +58,9 @@ def position():
 
 def thread():
     global thread_Primary, thread_Left,thread_Right
-    thread_Primary = threading.Thread(target=init_serial(),name="primary")
-    #thread_Left = threading.Thread(target=init_serial(),name="left")
-    #thread_Right = threading.Thread(target=init_serial(),name="right")
+    thread_Primary = threading.Thread(target=init_serial(0))
+    #thread_Left = threading.Thread(target=init_serial(1))
+    #thread_Right = threading.Thread(target=init_serial(2))
     thread_Primary.daemon = True
     thread_Primary.start()
     #thread_Left.daemon = True
@@ -68,13 +69,13 @@ def thread():
     #thread_Right.start()
     
     while 1:
-	thread_Primary = threading.Thread(target=stream_serial("primary"))
+	thread_Primary = threading.Thread(target=stream_serial("0"))
 	thread_Primary.run()
-	#thread_Left = threading.Thread(target=stream_serial("left"))
+	#thread_Left = threading.Thread(target=stream_serial("1"))
 	#thread_Left.run()
-	#thread_Right = threading.Thread(target=stream_serial("right"))
+	#thread_Right = threading.Thread(target=stream_serial("2"))
 	#thread_Right.run()
-    #ser.close()	
+    ser.close()	
     sys.exit()
 
 
@@ -111,7 +112,7 @@ def scan():
 
 def stream_serial(name):
     #stream data directly from the serial port
-    line = ser.readline()
+    line = ser[int(name)].readline()
     line_str = str(line)    
     print name + ":" +line_str
 
