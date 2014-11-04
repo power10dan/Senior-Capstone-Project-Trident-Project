@@ -4,7 +4,7 @@ from threading import Lock
 
 ######Global Variables#####################################################
 # you must declare the variables as 'global' in the fxn before using#
-ser = [()]
+ser= [(),(),()]
 BAUDRATE = 115200
 thread_Primary = 0
 thread_Left = 0
@@ -70,10 +70,10 @@ def thread():
     
     while 1:
 	thread_Primary = threading.Thread(target=stream_serial("0"))
-	thread_Primary.run()
 	#thread_Left = threading.Thread(target=stream_serial("1"))
-	#thread_Left.run()
 	#thread_Right = threading.Thread(target=stream_serial("2"))
+	thread_Primary.run()
+	#thread_Left.run()
 	#thread_Right.run()
     ser.close()	
     sys.exit()
@@ -112,7 +112,8 @@ def scan():
 
 def stream_serial(name):
     #stream data directly from the serial port
-    line = ser[int(name)].readline()
+    a = int(name)
+    line = ser[a].readline()
     line_str = str(line)    
     print name + ":" +line_str
 
