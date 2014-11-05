@@ -1,125 +1,91 @@
 from pynmea import nmea
-import serial, time, sys, datetime, shutil, threading
+import serial, time, sys, datetime, shutil, threading, signal
 from threading import Lock
 
 ######Global Variables#####################################################
 # you must declare the variables as 'global' in the fxn before using#
-ser= [(),(),()]
+ser= []
 BAUDRATE = 115200
-thread_Primary = 0
-thread_Left = 0
-thread_Right = 0
 active = []
 mutex = Lock()
+log = 0 
 ######FUNCTIONS############################################################ 
-def check_serial():
-	print 'Do you have a GPS connected to the serial port? hit y or n, then enter'
-	temp = raw_input()
-	if temp == 'y':
-		init_serial()
-	if temp == 'n':
-		sys.exit()
-	print 'You can enter your own NMEA sentences into a file named nmea.txt'
+class connect_output:
+	def init_serial(self, i):
+		#opens the serial port based on the COM number you choose
+		print "Found Ports:"
+		for n,s in self.scan():
+			print "%s" % s
+		print " "
+		#enter your COM port number
+		print "Choose a COM port #. Enter # only, then enter"
+		temp = raw_input() #waits here for keyboard input
+		if temp == 'e':
+			sys.exit()
+		comnum = 'COM' + temp #concatenate COM and the port number to define serial port
+		# configure the serial connections 
+		global ser, BAUDRATE
+		
+		p = serial.Serial()
+		p.port = comnum
+		p.baudrate = BAUDRATE
+		p.bytesize = 8
+		p.stopbits = 1
+		
+		global active
+		active.append(comnum)
+		ser.append(p)
+		
+		p.open()
+		p.isOpen()
+		print 'OPEN: '+ ser[i].name
 
-	
-def init_serial(i):
-	
-	global thread_Primary, thread_Left,thread_Right
-	#opens the serial port based on the COM number you choose
-	print "Found Ports:"
-	for n,s in scan():
-		print "%s" % s
-	print " "
-	#enter your COM port number
-	print "Choose a COM port #. Enter # only, then enter"
-	temp = raw_input() #waits here for keyboard input
-	if temp == 'e':
-		sys.exit()
-	comnum = 'COM' + temp #concatenate COM and the port number to define serial port
-
-	# configure the serial connections 
-	global ser, BAUDRATE
-	ser[i] = serial.Serial()
-	ser[i].port = comnum
-	ser[i].baudrate = BAUDRATE
-	ser[i].bytesize = 8
-	ser[i].stopbits = 1
-	print ser
-	global active
-	active.append(comnum)
-	ser[i].open()
-	ser[i].isOpen()
-	print 'OPEN: '+ ser[i].name
-	#while 1:
-	    #stream_serial()
-	
-def position():
-    pass
-
-def thread():
-    global thread_Primary, thread_Left,thread_Right
-    thread_Primary = threading.Thread(target=init_serial(0))
-    #thread_Left = threading.Thread(target=init_serial(1))
-    #thread_Right = threading.Thread(target=init_serial(2))
-    thread_Primary.daemon = True
-    thread_Primary.start()
-    #thread_Left.daemon = True
-    #thread_Left.start()
-    #thread_Right.daemon = True
-    #thread_Right.start()
-    
-    while 1:
-	thread_Primary = threading.Thread(target=stream_serial("0"))
-	#thread_Left = threading.Thread(target=stream_serial("1"))
-	#thread_Right = threading.Thread(target=stream_serial("2"))
-	thread_Primary.run()
-	#thread_Left.run()
-	#thread_Right.run()
-    ser.close()	
-    sys.exit()
+	def signal_handler(self, signal, frame):
+		global ser, log
+		log.close()
+		for	n in range(0,len(ser)):
+			ser[n].close()
+		sys.exit(0)
 
 
-def save_raw():
-	#this fxn creates a txt file and saves only GPGGA sentences
-	while 1:
-		line = ser.readline()
-		line_str = str(line)
-		if(line_str[4] == 'G'): # $GPGGA
-			if(len(line_str) > 50): 
-				# open txt file and log data
-				f = open('nmea.txt', 'a')
-				try:
-					f.write('{0:}'.format(line_str))
-				finally:
-					f.close()
-			else:
-				stream_serial()
+	def thread(self):
+		global log
+		print "How many receivers are you connecting?"
+		r = int(raw_input())
+		for i in range(0,r):
+			thread = threading.Thread(target=self.init_serial(i))
+			thread.daemon = True
+			thread.start()
+		   
+		signal.signal(signal.SIGINT, self.signal_handler)
+		log = open('output_'+ str(datetime.date.today())+'.txt','a')
+		print log.name
+		while 1:
+			for i in range(0,r): 
+				thread = threading.Thread(target=self.stream_serial(str(i))).run()
 
-def scan():
-    #scan for available ports. return a list of tuples (num, name)
-    available=[]
-    for i in range(256):
-        try:
-            s = serial.Serial(i)
-	    if s.name in active:
-		break
-	    else:
-		available.append( (i, s.name))
-		s.close()   # explicit close 'cause of delayed GC in java
-        except serial.SerialException:
-            pass
-    return available  
+	def scan(self):
+		#scan for available ports. return a list of tuples (num, name)
+		available=[]
+		for i in range(256):
+			try:
+				s = serial.Serial(i)
+				if s.name in active:
+					break
+				else:
+					available.append( (i, s.name))
+					s.close()   # explicit close 'cause of delayed GC in java
+			except serial.SerialException:
+				pass
+		return available  
 
-def stream_serial(name):
-    #stream data directly from the serial port
-    a = int(name)
-    line = ser[a].readline()
-    line_str = str(line)    
-    print name + ":" +line_str
+	def stream_serial(self, name):
+		#stream data directly from the serial port
+		global log 
+		line_str = name + ":" + str(ser[int(name)].readline())
+		print line_str
+		log.writelines(line_str)
 
 ########START#####################################################################################
-thread()
-#main program loop
-#while 1:
-  # pass
- # ser.close()
+run = connect_output()
+run.thread()
