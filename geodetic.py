@@ -19,13 +19,15 @@ class geodetic:
 			LatN = 46.0
 			Eo = 2500000 #meters
 			Nb = 0
-		if zone == '3602':
+		elif zone == '3602':
 			lambdacm = 120.5
 			LatO = 41.0+40.0/60.0
 			LatS = 42.0+20.0/60.0
 			LatN = 44.0
 			Eo = 1500000 #meters
 			Nb = 0
+		else:
+			print "ERROR: Zone number not recognized"
 		
 		lat = math.radians(lat)
 		long = math.radians(long)
