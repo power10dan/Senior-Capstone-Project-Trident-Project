@@ -6,117 +6,128 @@ import geodetic
 
 ######Global Variables#####################################################
 # you must declare the variables as 'global' in the fxn before using#
-ser= []
-BAUDRATE = 115200
+ser = []
+BAUDRATE = 115200   # TODO : move BAUDRATE to ui.xml
 active = []
 mutex = Lock()
-log = 0 
+log = 0
 zone = 0
-G = geodetic.geodetic()
+# G = geodetic.geodetic()   # TODO : we might want to make geodetic a static method?
+
 ######FUNCTIONS############################################################ 
 class connect_output:
-	def init_serial(self, i):
-		#opens the serial port based on the COM number you choose
-		print "Found Ports:"
-		for n,s in self.scan():
-			print "%s" % s
-		print " "
-		#enter your COM port number
-		print "Choose a COM port #. Enter # only, then enter"
-		temp = raw_input() #waits here for keyboard input
-		if temp != 'e' and not temp.isdigit():
-			print "Invalid Port, exiting!!!"
-			sys.exit(0)
-		comnum = 'COM' + temp #concatenate COM and the port number to define serial port
-		# configure the serial connections 
-		global ser, BAUDRATE
-		
-		p = serial.Serial()
-		p.port = comnum
-		p.baudrate = BAUDRATE
-		p.bytesize = 8
-		p.stopbits = 1
-		
-		global active
-		active.append(comnum)
-		ser.append(p)
-		
-		p.open()
-		p.isOpen()
-		print 'OPEN: '+ ser[i].name
+    def init_serial(self, i):
+        #opens the serial port based on the COM number you choose
+        print "Found Ports:"
+        for n, s in self.scan():
+            print "%s" % s
+        print " "
+        #enter your COM port number
+        print "Choose a COM port #. Enter # only, then enter"
+        temp = raw_input() #waits here for keyboard input
+        if temp != 'e' and not temp.isdigit():
+            print "Invalid Port, exiting!!!"
+            sys.exit(0)
+        comNum = 'COM' + temp #concatenate COM and the port number to define serial port
+        # configure the serial connections
+        global ser, BAUDRATE
 
-	def signal_handler(self, signal, frame):
-		global ser, log
-		if log != 0:
-			log.close()
-		for	n in range(0,len(ser)):
-			ser[n].close()
-		sys.exit(0)
+        p = serial.Serial()
+        p.port = comNum
+        p.baudrate = BAUDRATE
+        p.bytesize = 8
+        p.stopbits = 1
+
+        global active
+        active.append(comNum)
+        ser.append(p)
+
+        p.open()
+        p.isOpen()
+        print 'OPEN: '+ ser[i].name
+
+    def signal_handler(self, signal, frame):
+        global ser, log
+        if log != 0:
+            log.close()
+        for	n in range(0, len(ser)):
+            ser[n].close()
+        sys.exit(0)
+
+    def thread(self):
+        global log
+        signal.signal(signal.SIGINT, self.signal_handler)
+
+        print "How many receivers are you connecting?"
+        r = raw_input()
+        if not r.isdigit():
+            print "Invalid number of receivers, exiting!!!"
+            sys.exit(0)
+        r = int(r)
+        for i in range(0, r):
+            thread = threading.Thread(target=self.init_serial(i))
+            thread.daemon = True
+            thread.start()
+
+        log = open('output_'+ str(datetime.date.today())+'.txt','a')
+        print log.name
+        while 1:
+            for i in range(0, r):
+                thread = threading.Thread(target=self.stream_serial(str(i))).run()
+            time.sleep(1)
+
+    def scan(self):
+        #scan for available ports. return a list of tuples (num, name)
+        available = []
+        for i in range(256):
+            try:
+                s = serial.Serial(i)
+                if s.name in active:
+                    break
+                else:
+                    available.append((i, s.name))
+                    s.close()   # explicit close 'cause of delayed GC in java
+            except serial.SerialException:
+                pass
+        return available
+
+    def stream_serial(self, name):
+        #stream data directly from the serial port
+        global log
+        line = ser[int(name)].readline()
+        if line[3:6] == 'GGA':
+            data = nmea.GPGGA()
+            data.parse(line)
+
+            if len(line) > 50:
+                lat = self.degrees(data.latitude)
+                lon = self.degrees(data.longitude)
+
+                print str(name) + " latitude: " + str(lat)
+                print str(name) + " longitude: " + str(lon)
+
+                cartesian = geodetic.geo(lat, lon)
+                print "cartesian: " + str(cartesian)
+
+                #print utm.from_latlon(self.degrees(data.latitude), self.degrees(data.longitude))
+
+        line_str = name + ":" + str(line)
+        print line_str
+        log.writelines(line_str)
+
+    def degrees(self, coor):
+        if len(coor.split('.')[0])%2 == 0:
+            degrees = float(coor[:2])
+            minutes = float(coor[2:])/60
+        else:
+            degrees = float(coor[:3])
+            minutes = float(coor[3:])/60
+        return degrees + minutes
 
 
-	def thread(self):
-		global log
-		signal.signal(signal.SIGINT, self.signal_handler)
-		
-		print "How many receivers are you connecting?"
-		r = raw_input()
-		if not r.isdigit():
-			print "Invalid number of receivers, exiting!!!"
-			sys.exit(0)
-		r = int(r)
-		for i in range(0,r):
-			thread = threading.Thread(target=self.init_serial(i))
-			thread.daemon = True
-			thread.start()
-		  
-		log = open('output_'+ str(datetime.date.today())+'.txt','a')
-		print log.name
-		while 1:
-			for i in range(0,r): 
-				thread = threading.Thread(target=self.stream_serial(str(i))).run()
-			time.sleep(1)
-
-	def scan(self):
-		#scan for available ports. return a list of tuples (num, name)
-		available=[]
-		for i in range(256):
-			try:
-				s = serial.Serial(i)
-				if s.name in active:
-					break
-				else:
-					available.append( (i, s.name))
-					s.close()   # explicit close 'cause of delayed GC in java
-			except serial.SerialException:
-				pass
-		return available  
-
-	def stream_serial(self, name):
-		#stream data directly from the serial port
-		global log,G
-		line = ser[int(name)].readline()
-		if line[3:6] == 'GGA':
-			data = nmea.GPGGA()
-			data.parse(line)
-			if len(line) > 50:
-				print str(name) + " latitude: " + str(self.degrees(data.latitude))
-				print str(name) + " longitude: " + str(self.degrees(data.longitude))
-				print "carte: " + str(G.geo(self.degrees(data.latitude),self.degrees(data.longitude)))
-				#print utm.from_latlon(self.degrees(data.latitude), self.degrees(data.longitude))
-		line_str = name + ":" + str(line)
-		print line_str
-		log.writelines(line_str)
-
-	
-	def degrees(self, coor):
-		if len(coor.split('.')[0])%2 == 0:
-			degrees = float(coor[:2])
-			minutes = float(coor[2:])/60
-		else:
-			degrees = float(coor[:3])
-			minutes = float(coor[3:])/60
-		return degrees + minutes
-		
 ########START#####################################################################################
 run = connect_output()
 run.thread()
+
+
+
