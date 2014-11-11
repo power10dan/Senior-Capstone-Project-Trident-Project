@@ -1,0 +1,16 @@
+<gps>
+	<ui>
+		<zone>3601</zone>
+		<tolerances>
+			<tolerance name="gps_spacing">50</tolerance>
+			<tolerance name="vertical">5</tolerance>
+			<tolerance name="horizontal">15</tolerance>
+			<tolerance name="units">cm</tolerance>
+		</tolerances>	
+		<receivers>
+			<receiver name="number"></receiver>
+			<receiver name="name"></receiver>
+			<receiver name="port"></receiver>
+		</receivers>
+	</ui>
+</gps>
