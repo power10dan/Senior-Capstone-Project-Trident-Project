@@ -16,34 +16,37 @@ class geodetic:
 		root = tree.getroot()
 		zone = tree.find("ui/zone").text
 		if zone == '3601':
-			lambdacm = -120.5
+			lambdacm = 120.5
 			LatO = 43+(40/60)
 			LatS = 44+(20/60)
 			LatN = 46
 			Eo = 2500000 #meters
 			Nb = 0
 		if zone == '3602':
-			lambdacm = -120.5
+			lambdacm = 120.5
 			LatO = 41+(40/60)
 			LatS = 42+(20/60)
 			LatN = 44
 			Eo = 1500000 #meters
 			Nb = 0
+		
+		LatO = math.radians(LatO)	
+		LatS = math.radians(LatS)
+		LatN = math.radians(LatN)	
 
 		W = math.sqrt(1-(q**2)*((math.sin(lat))**2))
-		print W
-		M = math.degrees(math.cos(lat))/W
-		print M
-		T = math.sqrt(((1-math.degrees(math.sin(lat)))/(1+math.degrees(math.sin(lat))))*(((1+q*math.degrees(math.sin(lat)))/(1-q*math.degrees(math.sin(lat))))**q))
+		M = math.cos(lat)/W
+		T = math.sqrt(((1-math.sin(lat))/(1+math.sin(lat)))*(((1+q*math.sin(lat))/(1-q*math.sin(lat)))**q))
+		
+		
+		w1 = math.sqrt(1-(q**2)*((math.sin(LatS))**2))
+		w2 = math.sqrt(1-(q**2)*((math.sin(LatN))**2))
 
-		w1 = math.sqrt(1-(q**2)*((math.degrees(math.sin(LatS)))**2))
-		w2 = math.sqrt(1-(q**2)*((math.degrees(math.sin(LatN)))**2))
-
-		m1 = math.degrees(math.cos(LatS))/w1
-		m2 = math.degrees(math.cos(LatN))/w2
-		t0 = math.sqrt(((1-math.degrees(math.sin(LatO)))/(1+math.degrees(math.sin(LatO))))*(((1+q*math.degrees(math.sin(LatO)))/(1-q*math.degrees(math.sin(LatO))))**q))
-		t1 = math.sqrt(((1-math.degrees(math.sin(LatS)))/(1+math.degrees(math.sin(LatS))))*(((1+q*math.degrees(math.sin(LatS)))/(1-q*math.degrees(math.sin(LatS))))**q))
-		t2 = math.sqrt(((1-math.degrees(math.sin(LatN)))/(1+math.degrees(math.sin(LatN))))*(((1+q*math.degrees(math.sin(LatN)))/(1-q*math.degrees(math.sin(LatN))))**q))
+		m1 = math.cos(LatS)/w1
+		m2 = math.cos(LatN)/w2
+		t0 = math.sqrt(((1-math.sin(LatO))/(1+math.sin(LatO)))*(((1+q*math.sin(LatO)))/(1-q*math.sin(LatO)))**q)
+		t1 = math.sqrt(((1-math.sin(LatS))/(1+math.sin(LatS)))*(((1+q*math.sin(LatS)))/(1-q*math.sin(LatS)))**q)
+		t2 = math.sqrt(((1-math.sin(LatN))/(1+math.sin(LatN)))*(((1+q*math.sin(LatN)))/(1-q*math.sin(LatN)))**q)
 
 		n = (math.log(m1)-math.log(m2))/((math.log(t1)-math.log(t2)))
 		F = m1/n*t1**n
@@ -55,11 +58,11 @@ class geodetic:
 
 		k = (R*n)/(a*M) #grid_factor
 
-		easting = (R*math.sin(gamma).degrees)+Eo
-		northing = Rb-(R*math.cos(gamma).degrees)+Nb
+		easting = (R*math.sin(gamma))+Eo
+		northing = Rb-(R*math.cos(gamma))+Nb
 		
-		return (northing,easting,k,gamma)
+		print(northing,easting,k,gamma)
 		
 Y = geodetic()
-Y.geo(44.5,(-123))		
+Y.geo(44,(123))		
 		
