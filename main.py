@@ -2,7 +2,7 @@ from pynmea import nmea
 import serial, time, sys, datetime, shutil, threading, signal
 #import utm
 from threading import Lock
-#import geodetic
+import geodetic
 
 ######Global Variables#####################################################
 # you must declare the variables as 'global' in the fxn before using#
@@ -12,6 +12,7 @@ active = []
 mutex = Lock()
 log = 0 
 zone = 0
+G = geodetic.geodetic()
 ######FUNCTIONS############################################################ 
 class connect_output:
 	def init_serial(self, i):
@@ -67,7 +68,7 @@ class connect_output:
 			thread = threading.Thread(target=self.init_serial(i))
 			thread.daemon = True
 			thread.start()
-		   
+		  
 		log = open('output_'+ str(datetime.date.today())+'.txt','a')
 		print log.name
 		while 1:
@@ -92,14 +93,15 @@ class connect_output:
 
 	def stream_serial(self, name):
 		#stream data directly from the serial port
-		global log 
+		global log,G
 		line = ser[int(name)].readline()
 		if line[3:6] == 'GGA':
 			data = nmea.GPGGA()
 			data.parse(line)
 			if len(line) > 50:
-				print name + " latitude: " + self.degrees(data.latitude)
-				print name + " longitude: " + self.degrees(data.longitude)
+				print str(name) + " latitude: " + str(self.degrees(data.latitude))
+				print str(name) + " longitude: " + str(self.degrees(data.longitude))
+				print "carte: " + str(G.geo(self.degrees(data.latitude),self.degrees(data.longitude)))
 				#print utm.from_latlon(self.degrees(data.latitude), self.degrees(data.longitude))
 		line_str = name + ":" + str(line)
 		print line_str
