@@ -1,16 +1,21 @@
-<gps>
-	<ui>
-		<zone>3601</zone>
-		<tolerances>
-			<tolerance name="gps_spacing">50</tolerance>
-			<tolerance name="vertical">5</tolerance>
-			<tolerance name="horizontal">15</tolerance>
-			<tolerance name="units">cm</tolerance>
-		</tolerances>	
-		<receivers>
-			<receiver name="number"></receiver>
-			<receiver name="name"></receiver>
-			<receiver name="port"></receiver>
-		</receivers>
-	</ui>
-</gps>
+<ui>
+	<zone>3601</zone>
+	<tolerances>
+		<gps_spacing>50</gps_spacing>
+		<vertical>5</vertical>
+		<horizontal>15</horizontal>
+		<units>cm</units>
+	</tolerances>	
+	<receivers>
+        <receiver>
+            <number>2811390</number>
+            <name>1</name>
+            <port>26</port>
+        </receiver>
+    </receivers>
+    <nmea>
+        <baudrate>115200</baudrate>
+        <bytesize>8</bytesize>
+        <stopbits>1</stopbits>
+    </nmea>
+</ui>

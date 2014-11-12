@@ -1,10 +1,10 @@
 import math
-import xml.etree.ElementTree
+import xml.etree.ElementTree as ET
 
 global xmlFilePath
 
 class MultipathDetector():
-    xmlFilePath = "ui.xml"
+    xmlFilePath = 'ui.xml'
 
     @staticmethod
     def parseTupleFile():
@@ -59,26 +59,26 @@ class MultipathDetector():
 
     @staticmethod
     def computeDotProductTolerance():
-        tree = xml.etree.ElementTree.parse(xmlFilePath)
+        tree = ET.parse(xmlFilePath)
         root = tree.getroot()
-        distance = root.get("gps_spacing")
-        tolerance = root.get("horizontal")
+        distance = tree.find("tolerances/gps_spacing").text
+        tolerance = tree.find("tolerances/horizontal").text
 
         # might want to ensure that tolerance is non-zero. Should be done when input by user, but might want to double-check here
-        dotProductTolerance = math.acos(math.pi - 2 * math.atan(distance / tolerance))
+        dotProductTolerance = math.acos(math.pi - 2 * math.atan(float(distance) / float(tolerance)))
 
         return dotProductTolerance
 
     # returns True if multipathing is detected, otherwise returns False
     @staticmethod
     def multipathDetect(coord1, coord2, coord3):
-        tree = xml.etree.ElementTree.parse(xmlFilePath)
+        tree = ET.parse(xmlFilePath)
         root = tree.getroot()
 
         dotProductTolerance = MultipathDetector.computeDotProductTolerance()
 
-        gpsDistance = root.get("gps_spacing")
-        linearTolerance = root.get("horizontal")
+        gpsDistance = tree.find("tolerances/gps_spacing").text
+        linearTolerance = tree.find("tolerances/horizontal").text
 
         dist1_2 = MultipathDetector.computeDistance(coord1, coord2)
         dist2_3 = MultipathDetector.computeDistance(coord2, coord3)
@@ -137,7 +137,7 @@ class MultipathDetector():
         yCoordAvg_3 = 0
 
 
-        for i in queue1:
+        for i in range(len(queue1)):
             xCoord1, yCoord1 = queue1[i]
             xCoord2, yCoord2 = queue2[i]
             xCoord3, yCoord3 = queue3[i]

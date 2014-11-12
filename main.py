@@ -1,19 +1,22 @@
 from pynmea import nmea
 import serial, time, sys, datetime, shutil, threading, signal
+from collections import deque
 #import utm
 from threading import Lock
 import geodetic
+import MultipathDetector
+import xml.etree.ElementTree as ET
 
 ######Global Variables#####################################################
 # you must declare the variables as 'global' in the fxn before using#
 ser = []
-BAUDRATE = 115200   # TODO : move BAUDRATE to ui.xml
 active = []
 mutex = Lock()
+multQueue = []
 log = 0
-zone = 0
-# G = geodetic.geodetic()   # TODO : we might want to make geodetic a static method?
-
+G = geodetic.geodetic()   # TODO : we might want to make geodetic a static method?
+M = MultipathDetector.MultipathDetector()
+xmlFilePath = 'ui.xml'
 ######FUNCTIONS############################################################ 
 class connect_output:
     def init_serial(self, i):
@@ -30,14 +33,17 @@ class connect_output:
             sys.exit(0)
         comNum = 'COM' + temp #concatenate COM and the port number to define serial port
         # configure the serial connections
-        global ser, BAUDRATE
-
+        global ser,xmlFilePath
+        tree = ET.parse(xmlFilePath)
+        nmea = tree.find("nmea")
+        
+        
         p = serial.Serial()
         p.port = comNum
-        p.baudrate = BAUDRATE
-        p.bytesize = 8
-        p.stopbits = 1
-
+        p.baudrate = int(nmea.find("baudrate").text)
+        p.bytesize = int(nmea.find("bytesize").text)
+        p.stopbits = int(nmea.find("stopbits").text)
+        print p
         global active
         active.append(comNum)
         ser.append(p)
@@ -55,7 +61,7 @@ class connect_output:
         sys.exit(0)
 
     def thread(self):
-        global log
+        global log, multQueue,M
         signal.signal(signal.SIGINT, self.signal_handler)
 
         print "How many receivers are you connecting?"
@@ -63,21 +69,29 @@ class connect_output:
         if not r.isdigit():
             print "Invalid number of receivers, exiting!!!"
             sys.exit(0)
+        
         r = int(r)
+        
+        if r == 3:
+            self.createQueue()
+            
         for i in range(0, r):
             thread = threading.Thread(target=self.init_serial(i))
             thread.daemon = True
             thread.start()
-
-        log = open('output_'+ str(datetime.date.today())+'.txt','a')
+        
+        log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a')
         print log.name
         while 1:
             for i in range(0, r):
                 thread = threading.Thread(target=self.stream_serial(str(i))).run()
-            time.sleep(1)
+            if r == 3 and len(multQueue[0]) == 10 and len(multQueue[1]) == 10 and len(multQueue[2]) == 10:
+                print multQueue
+                M.multipathQueueHandler(multQueue)    
 
     def scan(self):
         #scan for available ports. return a list of tuples (num, name)
+        global active
         available = []
         for i in range(256):
             try:
@@ -93,7 +107,7 @@ class connect_output:
 
     def stream_serial(self, name):
         #stream data directly from the serial port
-        global log
+        global log, multQueue,G
         line = ser[int(name)].readline()
         if line[3:6] == 'GGA':
             data = nmea.GPGGA()
@@ -106,14 +120,21 @@ class connect_output:
                 print str(name) + " latitude: " + str(lat)
                 print str(name) + " longitude: " + str(lon)
 
-                cartesian = geodetic.geo(lat, lon)
+                cartesian = G.geo(lat, lon)
+                northing, easting, k , gamma = cartesian
                 print "cartesian: " + str(cartesian)
-
+                multQueue[int(name)].append((northing,easting))
+                
                 #print utm.from_latlon(self.degrees(data.latitude), self.degrees(data.longitude))
-
         line_str = name + ":" + str(line)
         print line_str
         log.writelines(line_str)
+        
+    def createQueue(self):
+        for i in range(3):
+            temp =  deque(maxlen = 10)
+            multQueue.append(temp)
+        
 
     def degrees(self, coor):
         if len(coor.split('.')[0])%2 == 0:
