@@ -8,14 +8,16 @@
 	</tolerances>	
 	<receivers>
         <receiver>
-            <number>2811390</number>
-            <name>1</name>
+            <use>F</use>
+            <center>F</center>
+            <serialNumber>2811390</serialNumber>
             <port>26</port>
         </receiver>
     </receivers>
-    <nmea>
+    <serial>
         <baudrate>115200</baudrate>
         <bytesize>8</bytesize>
         <stopbits>1</stopbits>
-    </nmea>
+        <timeout>5</timeout>
+    </serial>
 </ui>
