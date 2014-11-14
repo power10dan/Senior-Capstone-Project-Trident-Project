@@ -8,7 +8,7 @@ from collections import deque
 import geodetic
 import MultipathDetector
 import xml.etree.ElementTree as ET
-imprt xml.dom as X
+
 
 ser = []
 active = []
@@ -17,24 +17,22 @@ log = 0
 #G = geodetic.geodetic()   # TODO : we might want to make geodetic a static method?
 #M = MultipathDetector.MultipathDetector()
 xmlFilePath = 'ui.xml'
-
-
 class connectOutput:
-
     # Searches and opens serial connections
     # Called from: thread
     def initSerial(self, i):
         comNum = self.portSearch()        
         # configure and open serial connections
         global ser, xmlFilePath, active
-        tree = X.parse(xmlFilePath)
-        serialConfig = tree.getElementsByTagName("serial")
+        tree = ET.parse(xmlFilePath)
+        serialConfig = tree.iter('serial')
+        serialConfig = list(serialConfig)
         p = serial.Serial()
         p.port = comNum
-        p.baudrate = int(serialConfig.find("baudrate").text)
-        p.bytesize = int(serialConfig.find("bytesize").text)
-        p.stopbits = int(serialConfig.find("stopbits").text)
-        p.timeout = int(serialConfig.find("timeout").text)
+        p.baudrate = int(serialConfig[0][0].text)
+        p.bytesize = int(serialConfig[0][1].text)
+        p.stopbits = int(serialConfig[0][2].text)
+        p.timeout = int(serialConfig[0][3].text)
         active.append(comNum)
         ser.append(p)
         p.open()
@@ -46,7 +44,6 @@ class connectOutput:
     def thread(self):
         global log, multiQueue,M
         signal.signal(signal.SIGINT, self.signalHandler)
-
         print "How many receivers are you connecting?"
         r = raw_input()
         if not r.isdigit():
@@ -54,11 +51,9 @@ class connectOutput:
             sys.exit(0)
         r = int(r)
         if r == 3:
-            self.createQueue()
-           
+            self.createQueue()         
         log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a')
-        #print log.name
-        
+        #print log.name      
         for i in range(0, r):
             thread = threading.Thread(target=self.initSerial(i))
             thread.daemon = True
@@ -67,18 +62,18 @@ class connectOutput:
             for i in range(0, r):
                 thread = threading.Thread(target=self.streamSerial(str(i))).run()
             if (r == 3 and len(multiQueue[0]) == 10 and 
-                    len(multiQueue[1]) == 10 and 
-                    len(multiQueue[2]) == 10):
+                len(multiQueue[1]) == 10 and 
+                len(multiQueue[2]) == 10):
                 #print multiQueue
                 multipathing = MultipathDetector().multipathQueueHandler(multiQueue)
-                print "Multipathing: " = str(multipathing)
+                print "Multipathing: " + str(multipathing)
     
     # Scan for available ports. Return a list of tuples (num, name)
     # Called from: portSearch
-    def scan(self):
+    def scan(self, ports):
         global active
         available = []
-        for i in range(256):
+        for i in ports:
             try:
                 s = serial.Serial(i)
                 if s.name in active:
@@ -123,8 +118,9 @@ class connectOutput:
     # Append cartesian coordinates to queues within multiQueue list
     # When the length of queue being appended equals 10, it pops left values off queue
     # Called from: stream_serial
-    def queueAppend(self, int(name), coor):
+    def queueAppend(self, name, coor):
         global multiQueue
+        name = int(name)
         if len(multiQueue[name]) == 10:
             multiQueue[name].popleft()
         multiQueue[name].append(coor)
@@ -157,12 +153,14 @@ class connectOutput:
         input = raw_input()
         if input == 'e':
             available = []
-            tree = X.parse(xmlFilePath)
-            RSearch = tree.getElementsByTagName("receiver")
+            tree = ET.parse(xmlFilePath)
+            RSearch = tree.iter('receiver')
+            for r in RSearch:
+                if (list(r)[0].text).upper() == 'T':
+                    available.append(list(r)[3].text)
             print "Found Devices:"
-            for r in range(len(RSearch)):
-                print "Serial Number: " + RSearch[r][serialNumber] + ", port: " + RSearch[r][port]
-                available.append(RSearch[r][port])
+            for n, s in self.scan(available):
+                print "%s" % s
             print "Choose a COM port #. Enter # only, then enter"
             temp = raw_input()
             if temp != 'q' or (temp not in available) or not temp.isdigit():
@@ -171,7 +169,7 @@ class connectOutput:
             return 'COM' + temp #concatenate COM and the port number to define serial port    
         elif input == 's':
             print "Found Ports:"
-            for n, s in self.scan():
+            for n, s in self.scan(range(256)):
                 print "%s" % s
             print " "
             print "Choose a COM port #. Enter # only, then enter"
@@ -183,8 +181,7 @@ class connectOutput:
         else:
             print "Invalid input, exiting!!!"
             sys.exit(0)
-        
-        
+               
 run = connectOutput()
 run.thread()
 
