@@ -1,10 +1,10 @@
 import math
 import xml.etree.ElementTree as ET
 
-global xmlFilePath
+xmlFilePath = 'ui.xml'
 
 class MultipathDetector():
-    xmlFilePath = 'ui.xml'
+    
 
     @staticmethod
     def parseTupleFile():
@@ -60,9 +60,8 @@ class MultipathDetector():
     @staticmethod
     def computeDotProductTolerance():
         tree = ET.parse(xmlFilePath)
-        root = tree.getroot()
-        distance = tree.find("tolerances/gps_spacing").text
-        tolerance = tree.find("tolerances/horizontal").text
+        distance = float(list(tree.iter('gps_spacing'))[0].text)
+        tolerance = float(list(tree.iter('horizontal'))[0].text)
 
         # might want to ensure that tolerance is non-zero. Should be done when input by user, but might want to double-check here
         dotProductTolerance = math.acos(math.pi - 2 * math.atan(float(distance) / float(tolerance)))
@@ -73,12 +72,11 @@ class MultipathDetector():
     @staticmethod
     def multipathDetect(coord1, coord2, coord3):
         tree = ET.parse(xmlFilePath)
-        root = tree.getroot()
 
         dotProductTolerance = MultipathDetector.computeDotProductTolerance()
 
-        gpsDistance = tree.find("tolerances/gps_spacing").text
-        linearTolerance = tree.find("tolerances/horizontal").text
+        gpsDistance = float(list(tree.iter('gps_spacing'))[0].text)
+        linearTolerance = float(list(tree.iter('horizontal'))[0].text)
 
         dist1_2 = MultipathDetector.computeDistance(coord1, coord2)
         dist2_3 = MultipathDetector.computeDistance(coord2, coord3)

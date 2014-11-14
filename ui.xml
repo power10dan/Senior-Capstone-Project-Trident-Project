@@ -1,10 +1,10 @@
 <ui>
 	<zone>3601</zone>
 	<tolerances>
-		<gps_spacing>50</gps_spacing>
-		<vertical>5</vertical>
-		<horizontal>15</horizontal>
-		<units>cm</units>
+		<gps_spacing>0.50</gps_spacing>
+		<vertical>0.1</vertical>
+		<horizontal>0.05</horizontal>
+		<units>m</units>
 	</tolerances>	
 	<receivers>
         <receiver>
@@ -15,12 +15,12 @@
         </receiver>
         <receiver>
             <use>T</use>
-            <center>F</center>
+            <center>T</center>
             <serialNumber>2811371</serialNumber>
             <port>23</port>
         </receiver>
         <receiver>
-            <use>T</use>
+            <use>F</use>
             <center>F</center>
             <serialNumber>2811372</serialNumber>
             <port>25</port>
@@ -32,7 +32,7 @@
             <port>10</port>
         </receiver>
         <receiver>
-            <use>F</use>
+            <use>T</use>
             <center>F</center>
             <serialNumber>2811388</serialNumber>
             <port>13</port>

@@ -14,14 +14,16 @@ ser = []
 active = []
 multiQueue = []
 log = 0
-#G = geodetic.geodetic()   # TODO : we might want to make geodetic a static method?
-#M = MultipathDetector.MultipathDetector()
+allLog = 0
+G = geodetic.geodetic()   # TODO : we might want to make geodetic a static method?
+M = MultipathDetector.MultipathDetector()
 xmlFilePath = 'ui.xml'
+
 class connectOutput:
     # Searches and opens serial connections
     # Called from: thread
-    def initSerial(self, i):
-        comNum = self.portSearch()        
+    def initSerial(self, i, input):
+        comNum = self.portSearch(input)        
         # configure and open serial connections
         global ser, xmlFilePath, active
         tree = ET.parse(xmlFilePath)
@@ -35,14 +37,18 @@ class connectOutput:
         p.timeout = int(serialConfig[0][3].text)
         active.append(comNum)
         ser.append(p)
-        p.open()
-        p.isOpen()
-        print 'OPEN: '+ ser[i].name
-    
+        try:
+            p.open()
+            p.isOpen()
+            print 'OPEN: '+ ser[i].name
+        except serial.SerialException:
+            print "Error opening port, exiting!!!"
+            sys.exit(0)
+        
     # Handles thread logistics, creates logs, calls multipathQueueHandler
     # Called from: main
     def thread(self):
-        global log, multiQueue,M
+        global log, multiQueue, M
         signal.signal(signal.SIGINT, self.signalHandler)
         print "How many receivers are you connecting?"
         r = raw_input()
@@ -52,10 +58,13 @@ class connectOutput:
         r = int(r)
         if r == 3:
             self.createQueue()         
+        print "Use existing(e) devices or scan(s) for devices?"
+        input = raw_input()    
         log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a')
+        #allLog = open('.\output\Allout_'+ str(datetime.date.today())+'.txt','a')
         #print log.name      
         for i in range(0, r):
-            thread = threading.Thread(target=self.initSerial(i))
+            thread = threading.Thread(target=self.initSerial(i,input))
             thread.daemon = True
             thread.start()
         while True:
@@ -65,8 +74,11 @@ class connectOutput:
                 len(multiQueue[1]) == 10 and 
                 len(multiQueue[2]) == 10):
                 #print multiQueue
-                multipathing = MultipathDetector().multipathQueueHandler(multiQueue)
-                print "Multipathing: " + str(multipathing)
+                multipathing = M.multipathQueueHandler(multiQueue)
+                mult = "Multipathing: " + str(multipathing)
+                #allLog.writelines(str(mult))
+                print mult
+                
     
     # Scan for available ports. Return a list of tuples (num, name)
     # Called from: portSearch
@@ -98,13 +110,16 @@ class connectOutput:
                 lon = self.degrees(data.longitude)
                 #print str(name) + " latitude: " + str(lat)
                 #print str(name) + " longitude: " + str(lon)
-                cartesian = geodetic().geo(lat, lon)
+                cartesian = G.geo(lat, lon)
                 northing, easting, k , gamma = cartesian
-                print "cartesian: " + str(cartesian)
-                self.queueAppend(name, (northing,easting))
+                c = "cartesian: " + str(cartesian)
+                print c
+                #allLog.writelines(str(c))
+                self.queueAppend(name, (northing, easting, data.antenna_altitude))
         line_str = name + ":" + str(line)
         print line_str
         log.writelines(line_str)
+        #allLog.writelines(line_str)
         
     # Creates a list of queues inside of global list named multiQueue
     # Only used when connecting 3 receivers, sets max length of queues to 10
@@ -148,25 +163,28 @@ class connectOutput:
     
     # Searches for devices or ports available and returns COM number
     # Called from: initSerial
-    def portSearch(self):
-        print "Use existing(e) devices or search(s) for devices?"
-        input = raw_input()
+    def portSearch(self, input):
         if input == 'e':
             available = []
             tree = ET.parse(xmlFilePath)
             RSearch = tree.iter('receiver')
             for r in RSearch:
                 if (list(r)[0].text).upper() == 'T':
-                    available.append(list(r)[3].text)
-            print "Found Devices:"
-            for n, s in self.scan(available):
-                print "%s" % s
-            print "Choose a COM port #. Enter # only, then enter"
-            temp = raw_input()
-            if temp != 'q' or (temp not in available) or not temp.isdigit():
-                print "Invalid Port, exiting!!!"
-                sys.exit(0)
-            return 'COM' + temp #concatenate COM and the port number to define serial port    
+                    available.append((int(list(r)[3].text)-1))
+            available = self.scan(available)
+            if len(available) != 0:
+                print "Found Devices:"
+                for n, s in available:
+                    print "%s" % s
+                print "Choose a COM port #. Enter # only, then enter"
+                temp = raw_input()
+                if temp == 'q' or not temp.isdigit():
+                    print "Invalid Port, exiting!!!"
+                    sys.exit(0)
+                return 'COM' + temp #concatenate COM and the port number to define serial port  
+            else:
+                print "No active devices found. Switching to scan mode"
+                self.portSearch('s')  
         elif input == 's':
             print "Found Ports:"
             for n, s in self.scan(range(256)):
@@ -174,7 +192,7 @@ class connectOutput:
             print " "
             print "Choose a COM port #. Enter # only, then enter"
             temp = raw_input()
-            if temp != 'q' or not temp.isdigit():
+            if temp == 'q' or not temp.isdigit():
                 print "Invalid Port, exiting!!!"
                 sys.exit(0)
             return 'COM' + temp #concatenate COM and the port number to define serial port

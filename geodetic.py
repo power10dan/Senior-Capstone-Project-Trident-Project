@@ -11,7 +11,7 @@ class geodetic:
         global a, f, e
         tree = ET.parse('ui.xml')
         root = tree.getroot()
-        zone = tree.find("ui/zone").text
+        zone = list(tree.iter('zone'))[0].text
         if zone == '3601':
             lambdacm = 120.5
             LatO = 43.0 + 40.0 / 60.0
