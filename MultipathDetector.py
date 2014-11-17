@@ -152,6 +152,16 @@ class MultipathDetector():
         xCoordAvg_2 = xCoordAvg_2 / len(queue2)
         xCoordAvg_3 = xCoordAvg_3 / len(queue3)
 
+
+
+        # prints the dot product tolerance, the average dot product of the queue, and the most recent data points' dot product
+        # for testing purposes
+        dotProductTolerance = MultipathDetector.computeDotProductTolerance()
+        dotProductAvg = MultipathDetector.computeDotProduct((xCoordAvg_1, yCoordAvg_1), (xCoordAvg_2, yCoordAvg_2), (xCoordAvg_3, yCoordAvg_3))
+        dotProductSingle = MultipathDetector.computeDotProduct(queue1[9], queue2[9], queue3[9])
+        print "Tolerance =", dotProductTolerance, "\t Avg=", dotProductAvg, "\t Recent=", dotProductSingle
+
+
         return MultipathDetector.multipathDetect((xCoordAvg_1, yCoordAvg_1), (xCoordAvg_2, yCoordAvg_2), (xCoordAvg_3, yCoordAvg_3))
 
 
