@@ -165,7 +165,11 @@ class MultipathDetector():
             (multipathFlag, outlierFlag) = MultipathDetector.multipathDetect(queue1[i], queue2[i], queue3[i])
             if multipathFlag == True:
                 multipathCounter = multipathCounter + 1
-
+            if outlierFlag == True:
+                finalOutlierFlag = True
+            else:
+                finalOutlierFlag = False
+                
             xCoord1, yCoord1 = queue1[i]
             xCoord2, yCoord2 = queue2[i]
             xCoord3, yCoord3 = queue3[i]
@@ -196,7 +200,7 @@ class MultipathDetector():
 
         if multipathCounter >= 3:
             return True
-        elif outlierFlag == True:
+        elif finalOutlierFlag == True:
             return True
         else:
             return avgMultipath
