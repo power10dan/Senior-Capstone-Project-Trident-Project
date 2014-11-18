@@ -68,7 +68,8 @@ class MultipathDetector():
 
         return dotProductTolerance
 
-    # returns True if multipathing is detected, otherwise returns False
+    # returns a tuple of booleans (Bool_A, Bool_B), where Bool_A is True if multipathing is detected and false otherwise
+    # and Bool_B is True if outlier-multipathing is detected (meaning VERY bad multipathing)
     @staticmethod
     def multipathDetect(coord1, coord2, coord3):
         tree = ET.parse(xmlFilePath)
@@ -81,30 +82,54 @@ class MultipathDetector():
         dist1_2 = MultipathDetector.computeDistance(coord1, coord2)
         dist2_3 = MultipathDetector.computeDistance(coord2, coord3)
         dist1_3 = MultipathDetector.computeDistance(coord1, coord3)
+        dotProduct = MultipathDetector.computeDotProduct(coord1, coord2, coord3)
+
+        outlierMultiplier = 3
+        outlierFlag = False
+        multipathFlag = False
+
+
+        if dist1_2 < (gpsDistance - outlierMultiplier*linearTolerance):
+            outlierFlag = True
+        elif dist1_2 > (gpsDistance + outlierMultiplier*linearTolerance):
+            outlierFlag = True
+        elif dist2_3 < (gpsDistance - outlierMultiplier*linearTolerance):
+            outlierFlag = True
+        elif dist2_3 > (gpsDistance + outlierMultiplier*linearTolerance):
+            outlierFlag = True
+        elif dist1_3 < (2*gpsDistance) - outlierMultiplier*linearTolerance:
+            outlierFlag = True
+        elif dist1_3 > (2*gpsDistance) + outlierMultiplier*linearTolerance:
+            outlierFlag = True
+
 
         # initially assume no multipathing
         if dist1_2 < (gpsDistance - linearTolerance):
-            return True
+            multipathFlag = True
         elif dist1_2 > (gpsDistance + linearTolerance):
-            return True
+            multipathFlag = True
         elif dist2_3 < (gpsDistance - linearTolerance):
-            return True
+            multipathFlag = True
         elif dist2_3 > (gpsDistance + linearTolerance):
-            return True
+            multipathFlag = True
         elif dist1_3 < (2*gpsDistance) - linearTolerance:
-            return True
+            multipathFlag = True
         elif dist1_3 > (2*gpsDistance) + linearTolerance:
-            return True
+            multipathFlag = True
 
-        dotProduct = MultipathDetector.computeDotProduct(coord1, coord2, coord3)
+
+        if dotProduct > (1 + outlierMultiplier*MultipathDetector.computeDotProductTolerance()):
+            outlierFlag = True
+        elif dotProduct < (1 - outlierMultiplier*MultipathDetector.computeDotProductTolerance()):
+            outlierFlag = True
 
         # Note: this first case should NEVER occur - a dot product is bounded between [-1, 1] (inclusive)
         if dotProduct > (1 + MultipathDetector.computeDotProductTolerance()):
-            return True
+            multipathFlag = True
         elif dotProduct < (1 - MultipathDetector.computeDotProductTolerance()):
-            return True
+            multipathFlag = True
 
-        return False
+        return (multipathFlag, outlierFlag)
 
     # This will take a queue of sets of tuples, where each set of tuples is one tuple from each receiver
     # Then, we will compute 3 tuples that are the averaged x- and y-values of each tuple from a given receiver
@@ -135,7 +160,12 @@ class MultipathDetector():
         yCoordAvg_3 = 0
 
 
+        multipathCounter = 0
         for i in range(len(queue1)):
+            (multipathFlag, outlierFlag) = MultipathDetector.multipathDetect(queue1[i], queue2[i], queue3[i])
+            if multipathFlag == True:
+                multipathCounter = multipathCounter + 1
+
             xCoord1, yCoord1 = queue1[i]
             xCoord2, yCoord2 = queue2[i]
             xCoord3, yCoord3 = queue3[i]
@@ -162,8 +192,11 @@ class MultipathDetector():
         print "Tolerance =", dotProductTolerance, "\t Avg=", dotProductAvg, "\t Recent=", dotProductSingle
 
 
-        return MultipathDetector.multipathDetect((xCoordAvg_1, yCoordAvg_1), (xCoordAvg_2, yCoordAvg_2), (xCoordAvg_3, yCoordAvg_3))
+        avgMultipath = MultipathDetector.multipathDetect((xCoordAvg_1, yCoordAvg_1), (xCoordAvg_2, yCoordAvg_2), (xCoordAvg_3, yCoordAvg_3))
 
-
-
-
+        if multipathCounter >= 3:
+            return True
+        elif outlierFlag == True:
+            return True
+        else:
+            return avgMultipath
