@@ -18,12 +18,13 @@ allLog = 0
 G = geodetic.geodetic()   # TODO : we might want to make geodetic a static method?
 M = MultipathDetector.MultipathDetector()
 xmlFilePath = 'ui.xml'
+multiQueueFlag = 0
 
 class connectOutput:
     # Searches and opens serial connections
     # Called from: thread
     def initSerial(self, i, input):
-        comNum = self.portSearch(input)        
+        comNum = self.portSearch(i,input)        
         # configure and open serial connections
         global ser, xmlFilePath, active
         tree = ET.parse(xmlFilePath)
@@ -57,7 +58,8 @@ class connectOutput:
             sys.exit(0)
         r = int(r)
         if r == 3:
-            self.createQueue()         
+            self.createQueue()
+            multiQueueFlag = 1
         print "Use existing(e) devices or scan(s) for devices?"
         input = raw_input()    
         log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a')
@@ -71,8 +73,8 @@ class connectOutput:
             for i in range(0, r):
                 thread = threading.Thread(target=self.streamSerial(str(i))).run()
             if (r == 3 and len(multiQueue[0]) == 10 and 
-                len(multiQueue[1]) == 10 and 
-                len(multiQueue[2]) == 10):
+                    len(multiQueue[1]) == 10 and 
+                    len(multiQueue[2]) == 10):
                 #print multiQueue
                 multipathing = M.multipathQueueHandler(multiQueue)
                 mult = "Multipathing: " + str(multipathing)
@@ -115,7 +117,9 @@ class connectOutput:
                 c = "cartesian: " + str(cartesian)
                 print c
                 #allLog.writelines(str(c))
-                self.queueAppend(name, (northing, easting, data.antenna_altitude))
+                if int(data.gps_qual) == 4:
+                    self.queueAppend(name, (northing, easting))
+                    #self.queueAppend(name, (northing, easting, data.antenna_altitude))
         line_str = name + ":" + str(line)
         print line_str
         log.writelines(line_str)
@@ -163,15 +167,19 @@ class connectOutput:
     
     # Searches for devices or ports available and returns COM number
     # Called from: initSerial
-    def portSearch(self, input):
+    def portSearch(self, threadNum, input):
+        global active
         if input == 'e':
             available = []
             tree = ET.parse(xmlFilePath)
             RSearch = tree.iter('receiver')
             for r in RSearch:
-                if (list(r)[0].text).upper() == 'T':
+                if (list(r)[0].text).upper() == 'T' and (('COM'+list(r)[3].text) not in active):
                     available.append((int(list(r)[3].text)-1))
             available = self.scan(available)
+            #if multiQueueFlag == 1 and len(available) == 3:
+                    #if threadNum == 1 and 
+                    #pass
             if len(available) != 0:
                 print "Found Devices:"
                 for n, s in available:
