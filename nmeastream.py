@@ -16,7 +16,7 @@ def degrees(coor):
         minutes = float(coor[3:])/60
     return degrees + minutes
     
-with open('.\output\output_2014-11-17.txt', 'r') as data_file:
+with open('.\output\output_2014-11-17 - Copy.txt', 'r') as data_file:
     streamer = pynmea.streamer.NMEAStream(data_file)
     next_data = streamer.get_strings()
     data = []
@@ -25,21 +25,26 @@ with open('.\output\output_2014-11-17.txt', 'r') as data_file:
         next_data = streamer.get_strings()
 
 talker = []
-talkerData = []        
+talkerData = []
+cartesian = []  
+length = []
+      
 for i in data:
     i.partition(':')
     if i[:2] not in talker:
         talker.append(i[:2])
         talkerData.append([])
+        cartesian.append([])
         talkerData[(talker.index(i[:2]))].append(i)
     else: 
         talkerData[(talker.index(i[:2]))].append(i)
-
+print talker
 cart = open('.\output\cart_'+ str(datetime.date.today())+'.txt','w')
 d = pynmea.nmea.GPGGA()
 
 for i in range(len(talker)):
     cart.writelines(str(i) + "\n")
+    length.append(len(talkerData[i])
     for j in range(len(talkerData[i])):
         if len(talkerData[i][j]) > 40:
             d.parse(talkerData[i][j])
@@ -47,12 +52,13 @@ for i in range(len(talker)):
             long = degrees(d.longitude)
             cartesian = G.geo(lat,long)
             northing, easting, k ,gamma = cartesian
-            cart.writelines("\t" + str(northing) + "\t" + str(easting) + "\t" + str(d.gps_qual) + "\t" + str(d.antenna_altitude) + "\n")
-            for q in range (0,15):
-                cart.writelines("\n")
-            
+            cartesian[i].append((northing,easting))
+            cart.writelines("\t" + str(northing) + "\t" + str(easting) + "\t" + str(d.gps_qual) + "\t" + str(d.antenna_altitude) + "\n")           
 cart.close()
 
+# for i in range(min(length)):
+    # for j in range(
+    
 # parse_map = (
             # ('Timestamp', 'timestamp'),
             # ('Latitude', 'latitude'),
@@ -68,4 +74,3 @@ cart.close()
             # ('Units of Geoidal Separation (meters)', 'geo_sep_units'),
             # ('Age of Differential GPS Data (secs)', 'age_gps_data'),
             # ('Differential Reference Station ID', 'ref_station_id'))
-    
