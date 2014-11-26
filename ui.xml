@@ -10,30 +10,40 @@
 	<receivers>
         <receiver>
             <use>T</use>
+            <left>F</left>
+            <right>F</right>
             <center>F</center>
             <serialNumber>2811390</serialNumber>
             <port>26</port>
         </receiver>
         <receiver>
             <use>T</use>
-            <center>T</center>
+            <left>F</left>
+            <right>F</right>
+            <center>F</center>
             <serialNumber>2811371</serialNumber>
             <port>23</port>
         </receiver>
         <receiver>
             <use>F</use>
+            <left>F</left>
+            <right>F</right>
             <center>F</center>
             <serialNumber>2811372</serialNumber>
             <port>25</port>
         </receiver>
         <receiver>
             <use>F</use>
+            <left>F</left>
+            <right>F</right>
             <center>F</center>
             <serialNumber>2811384</serialNumber>
             <port>10</port>
         </receiver>
         <receiver>
             <use>T</use>
+            <left>F</left>
+            <right>F</right>
             <center>F</center>
             <serialNumber>2811388</serialNumber>
             <port>13</port>
