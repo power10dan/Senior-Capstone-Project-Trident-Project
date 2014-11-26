@@ -59,7 +59,7 @@ cart.close()
 for i in range(min(length)%10):
     Queue = []
     for j in range(len(talker)):
-        Queue.append(cartesian[j][i:(i+10)]
+        Queue.append(cartesian[j][i:(i+10)])
     #M.multipathQueueHandler(Queue)
         
     
