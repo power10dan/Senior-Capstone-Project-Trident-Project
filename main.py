@@ -81,10 +81,10 @@ class connectOutput:
     
     # Scan for available ports. Return a list of tuples (num, name)
     # Called from: portSearch
-    def scan(self, ports):
+    def scan(self, ports, loc = ''):
         global active
         available = []
-        for i,loc in ports:
+        for i in ports:
             try:
                 s = serial.Serial(i)
                 if s.name in active:
@@ -171,18 +171,23 @@ class connectOutput:
             for r in RSearch:
                 if (list(r)[0].text).upper() == 'T' and (('COM'+list(r)[5].text) not in active):
                     if (list(r)[1].text).upper() == 'T':
-                        available.append(((int(list(r)[5].text)-1),'L'))
+                        available.append((int(list(r)[5].text)-1),'L')
                     elif (list(r)[2].text).upper() == 'T':
-                        available.append(((int(list(r)[5].text)-1),'R'))
+                        available.append((int(list(r)[5].text)-1),'R')
                     elif (list(r)[3].text).upper() == 'T':
-                        available.append(((int(list(r)[5].text)-1),'C'))
+                        available.append((int(list(r)[5].text)-1),'C')
                     else:
-                        available.append(((int(list(r)[5].text)-1),''))
+                        available.append((int(list(r)[5].text)-1))
             print available
             available = self.scan(available)
             if multiQueueFlag == 1 and len(available) == 3:
-                    if threadNum == 1:
-                        pass
+                    for s, loc in available
+                        if int(threadNum) == 0 and loc = 'L':
+                            return s
+                        if int(threadNum) == 1 and loc = 'C':
+                            return s
+                        if int(threadNum) == 2 and loc = 'R':
+                            return s
             if len(available) != 0:
                 print "Found Devices:"
                 for s, loc in available:
@@ -198,7 +203,7 @@ class connectOutput:
                 self.portSearch(threadNum,'s')  
         elif input == 's':
             print "Found Ports:"
-            for s, loc in self.scan((range(256),'')):
+            for s, loc in self.scan(range(256)):
                 print "%s" % s
             print " "
             print "Choose a COM port #. Enter # only, then enter"
