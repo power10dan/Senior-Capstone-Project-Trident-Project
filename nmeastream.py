@@ -26,7 +26,7 @@ with open('.\output\output_2014-11-17 - Copy.txt', 'r') as data_file:
 
 talker = []
 talkerData = []
-cartesian = []  
+cartesianQueue = []  
 length = []
       
 for i in data:
@@ -34,7 +34,7 @@ for i in data:
     if i[:2] not in talker:
         talker.append(i[:2])
         talkerData.append([])
-        cartesian.append([])
+        cartesianQueue.append([])
         talkerData[(talker.index(i[:2]))].append(i)
     else: 
         talkerData[(talker.index(i[:2]))].append(i)
@@ -52,15 +52,16 @@ for i in range(len(talker)):
             long = degrees(d.longitude)
             cartesian = G.geo(lat,long)
             northing, easting, k ,gamma = cartesian
-            cartesian[i].append((northing,easting))
+            cartesianQueue[i].append((northing,easting))
             cart.writelines("\t" + str(northing) + "\t" + str(easting) + "\t" + str(d.gps_qual) + "\t" + str(d.antenna_altitude) + "\n")           
 cart.close()
 
-for i in range(min(length)%10):
+for i in range(min(length)):
     Queue = []
     for j in range(len(talker)):
-        Queue.append(cartesian[j][i:(i+10)])
-    #M.multipathQueueHandler(Queue)
+        Queue.append(cartesianQueue[j][i:(i+10)])
+    if len(Queue[0]) == 10 and len(Queue[1]) == 10 and len(Queue[2]) == 10:
+        print M.multipathQueueHandler(Queue)
         
     
 # parse_map = (

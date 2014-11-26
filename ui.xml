@@ -1,4 +1,5 @@
 <ui>
+    <Debugging>T</Debugging>
 	<zone>3601</zone>
 	<tolerances>
 		<gps_spacing>0.50</gps_spacing>

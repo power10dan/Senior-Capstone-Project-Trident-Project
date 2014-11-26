@@ -122,7 +122,7 @@ class connectOutput:
                     #self.queueAppend(name, (northing, easting, data.antenna_altitude))
         line_str = name + ":" + str(line)
         print line_str
-        log.writelines(line_str)
+        log.writelines(str(line))
         #allLog.writelines(line_str)
         
     # Creates a list of queues inside of global list named multiQueue
