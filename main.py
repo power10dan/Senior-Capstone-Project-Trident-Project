@@ -84,7 +84,7 @@ class connectOutput:
     def scan(self, ports, loc = ''):
         global active
         available = []
-        for i in ports:
+        for i,loc in ports,loc:
             try:
                 s = serial.Serial(i)
                 if s.name in active:
@@ -166,20 +166,24 @@ class connectOutput:
         global active
         if input == 'e':
             available = []
+            location = []
             tree = ET.parse(xmlFilePath)
             RSearch = tree.iter('receiver')
             for r in RSearch:
                 if (list(r)[0].text).upper() == 'T' and (('COM'+list(r)[5].text) not in active):
                     if (list(r)[1].text).upper() == 'T':
-                        available.append((int(list(r)[5].text)-1),'L')
+                        available.append((int(list(r)[5].text)-1))
+                        location.append('L')
                     elif (list(r)[2].text).upper() == 'T':
-                        available.append((int(list(r)[5].text)-1),'R')
+                        available.append((int(list(r)[5].text)-1))
+                        location.append('R')
                     elif (list(r)[3].text).upper() == 'T':
-                        available.append((int(list(r)[5].text)-1),'C')
+                        available.append((int(list(r)[5].text)-1))
+                        location.append('C')
                     else:
                         available.append((int(list(r)[5].text)-1))
             print available
-            available = self.scan(available)
+            available = self.scan(available,location)
             if multiQueueFlag == 1 and len(available) == 3:
                     for s, loc in available:
                         if int(threadNum) == 0 and loc == 'L':
