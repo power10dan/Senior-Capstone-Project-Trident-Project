@@ -44,7 +44,7 @@ d = pynmea.nmea.GPGGA()
 
 for i in range(len(talker)):
     cart.writelines(str(i) + "\n")
-    length.append(len(talkerData[i])
+    length.append(len(talkerData[i]))
     for j in range(len(talkerData[i])):
         if len(talkerData[i][j]) > 40:
             d.parse(talkerData[i][j])
@@ -56,8 +56,12 @@ for i in range(len(talker)):
             cart.writelines("\t" + str(northing) + "\t" + str(easting) + "\t" + str(d.gps_qual) + "\t" + str(d.antenna_altitude) + "\n")           
 cart.close()
 
-# for i in range(min(length)):
-    # for j in range(
+for i in range(min(length)%10):
+    Queue = []
+    for j in range(len(talker)):
+        Queue.append(cartesian[j][i:(i+10)]
+    #M.multipathQueueHandler(Queue)
+        
     
 # parse_map = (
             # ('Timestamp', 'timestamp'),
