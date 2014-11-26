@@ -84,13 +84,13 @@ class connectOutput:
     def scan(self, ports):
         global active
         available = []
-        for i in ports:
+        for i,loc in ports:
             try:
                 s = serial.Serial(i)
                 if s.name in active:
                     break
                 else:
-                    available.append((i, s.name))
+                    available.append((s.name,loc))
                     s.close()   # explicit close 'cause of delayed GC in java
             except serial.SerialException:
                 pass
@@ -169,15 +169,23 @@ class connectOutput:
             tree = ET.parse(xmlFilePath)
             RSearch = tree.iter('receiver')
             for r in RSearch:
-                if (list(r)[0].text).upper() == 'T' and (('COM'+list(r)[3].text) not in active):
-                    available.append((int(list(r)[3].text)-1))
+                if (list(r)[0].text).upper() == 'T' and (('COM'+list(r)[5].text) not in active):
+                    if (list(r)[1].text).upper() == 'T':
+                        available.append(((int(list(r)[5].text)-1),'L'))
+                    elif (list(r)[2].text).upper() == 'T':
+                        available.append(((int(list(r)[5].text)-1),'R'))
+                    elif (list(r)[3].text).upper() == 'T':
+                        available.append(((int(list(r)[5].text)-1),'C'))
+                    else:
+                        available.append(((int(list(r)[5].text)-1),''))
+            print available
             available = self.scan(available)
             if multiQueueFlag == 1 and len(available) == 3:
                     if threadNum == 1:
                         pass
             if len(available) != 0:
                 print "Found Devices:"
-                for n, s in available:
+                for s, loc in available:
                     print "%s" % s
                 print "Choose a COM port #. Enter # only, then enter"
                 temp = raw_input()
@@ -187,10 +195,10 @@ class connectOutput:
                 return 'COM' + temp #concatenate COM and the port number to define serial port  
             else:
                 print "No active devices found. Switching to scan mode"
-                self.portSearch('s')  
+                self.portSearch(threadNum,'s')  
         elif input == 's':
             print "Found Ports:"
-            for n, s in self.scan(range(256)):
+            for s, loc in self.scan((range(256),'')):
                 print "%s" % s
             print " "
             print "Choose a COM port #. Enter # only, then enter"
