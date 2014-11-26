@@ -14,11 +14,10 @@ ser = []
 active = []
 multiQueue = []
 log = 0
-allLog = 0
 G = geodetic.geodetic()   # TODO : we might want to make geodetic a static method?
 M = MultipathDetector.MultipathDetector()
 xmlFilePath = 'ui.xml'
-multiQueueFlag = 0
+multiQueueFlag = 0  #used to check if multipath queues are allocated and used to auto select receivers
 
 class connectOutput:
     # Searches and opens serial connections
@@ -63,7 +62,6 @@ class connectOutput:
         print "Use existing(e) devices or scan(s) for devices?"
         input = raw_input()    
         log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a')
-        #allLog = open('.\output\Allout_'+ str(datetime.date.today())+'.txt','a')
         #print log.name      
         for i in range(0, r):
             thread = threading.Thread(target=self.initSerial(i,input))
@@ -78,7 +76,6 @@ class connectOutput:
                 #print multiQueue
                 multipathing = M.multipathQueueHandler(multiQueue)
                 mult = "Multipathing: " + str(multipathing)
-                #allLog.writelines(str(mult))
                 print mult
                 
     
@@ -116,14 +113,12 @@ class connectOutput:
                 northing, easting, k , gamma = cartesian
                 c = "cartesian: " + str(cartesian)
                 print c
-                #allLog.writelines(str(c))
                 if int(data.gps_qual) == 4:
                     self.queueAppend(name, (northing, easting))
                     #self.queueAppend(name, (northing, easting, data.antenna_altitude))
         line_str = name + ":" + str(line)
         print line_str
         log.writelines(str(line))
-        #allLog.writelines(line_str)
         
     # Creates a list of queues inside of global list named multiQueue
     # Only used when connecting 3 receivers, sets max length of queues to 10
@@ -177,9 +172,9 @@ class connectOutput:
                 if (list(r)[0].text).upper() == 'T' and (('COM'+list(r)[3].text) not in active):
                     available.append((int(list(r)[3].text)-1))
             available = self.scan(available)
-            #if multiQueueFlag == 1 and len(available) == 3:
-                    #if threadNum == 1 and 
-                    #pass
+            if multiQueueFlag == 1 and len(available) == 3:
+                    if threadNum == 1:
+                        pass
             if len(available) != 0:
                 print "Found Devices:"
                 for n, s in available:
