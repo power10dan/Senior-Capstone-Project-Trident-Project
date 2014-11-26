@@ -84,7 +84,7 @@ class connectOutput:
     def scan(self, ports, loc = ''):
         global active
         available = []
-        for i,loc in ports,loc:
+        for i,loc in zip(ports,loc):
             try:
                 s = serial.Serial(i)
                 if s.name in active:
