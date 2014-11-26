@@ -81,7 +81,7 @@ class connectOutput:
     
     # Scan for available ports. Return a list of tuples (num, name)
     # Called from: portSearch
-    def scan(self, ports, loc = ''):
+    def scan(self, ports, loc = []*256):
         global active
         available = []
         for i,loc in zip(ports,loc):
