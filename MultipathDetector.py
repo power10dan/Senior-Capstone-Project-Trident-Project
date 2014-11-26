@@ -158,6 +158,9 @@ class MultipathDetector():
         yCoordAvg_1 = 0
         yCoordAvg_2 = 0
         yCoordAvg_3 = 0
+        zCoordAvg_1 = 0
+        zCoordAvg_2 = 0
+        zCoordAvg_3 = 0
 
 
         multipathCounter = 0
@@ -170,9 +173,9 @@ class MultipathDetector():
             else:
                 finalOutlierFlag = False
                 
-            xCoord1, yCoord1 = queue1[i]
-            xCoord2, yCoord2 = queue2[i]
-            xCoord3, yCoord3 = queue3[i]
+            xCoord1, yCoord1, zCoord1 = queue1[i]
+            xCoord2, yCoord2, zCoord2 = queue2[i]
+            xCoord3, yCoord3, zCoord3 = queue3[i]
 
             xCoordAvg_1 = xCoordAvg_1 + xCoord1
             xCoordAvg_2 = xCoordAvg_2 + xCoord2
@@ -181,6 +184,10 @@ class MultipathDetector():
             yCoordAvg_1 = yCoordAvg_1 + yCoord1
             yCoordAvg_2 = yCoordAvg_2 + yCoord2
             yCoordAvg_3 = yCoordAvg_3 + yCoord3
+            
+            zCoordAvg_1 = zCoordAvg_1 + zCoord1
+            zCoordAvg_2 = zCoordAvg_2 + zCoord2
+            zCoordAvg_3 = zCoordAvg_3 + zCoord3
 
         xCoordAvg_1 = xCoordAvg_1 / len(queue1)
         xCoordAvg_2 = xCoordAvg_2 / len(queue2)
@@ -189,6 +196,10 @@ class MultipathDetector():
         yCoordAvg_1 = yCoordAvg_1 / len(queue1)
         yCoordAvg_2 = yCoordAvg_2 / len(queue2)
         yCoordAvg_3 = yCoordAvg_3 / len(queue3)
+        
+        zCoordAvg_1 = zCoordAvg_1 / len(queue1)
+        zCoordAvg_2 = zCoordAvg_2 / len(queue2)
+        zCoordAvg_3 = zCoordAvg_3 / len(queue3)
 
 
         # prints the dot product tolerance, the average dot product of the queue, and the most recent data points' dot product
