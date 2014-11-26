@@ -181,12 +181,12 @@ class connectOutput:
             print available
             available = self.scan(available)
             if multiQueueFlag == 1 and len(available) == 3:
-                    for s, loc in available
-                        if int(threadNum) == 0 and loc = 'L':
+                    for s, loc in available:
+                        if int(threadNum) == 0 and loc == 'L':
                             return s
-                        if int(threadNum) == 1 and loc = 'C':
+                        if int(threadNum) == 1 and loc == 'C':
                             return s
-                        if int(threadNum) == 2 and loc = 'R':
+                        if int(threadNum) == 2 and loc == 'R':
                             return s
             if len(available) != 0:
                 print "Found Devices:"
