@@ -138,7 +138,7 @@ class MultipathDetector():
     # The call to multipathQueueHandler must guarantee that the queues are fully populated
     # queue2 will be the center receiver
     @staticmethod
-    def multipathQueueHandler(listOfQueues):
+    def multipathQueueHandler(listOfQueues, debug = False):
         if len(listOfQueues) != 3:
             print "ERROR: List of queues contains an incorrect number of queues (exactly 3 needed)"
 
@@ -162,10 +162,9 @@ class MultipathDetector():
         zCoordAvg_2 = 0
         zCoordAvg_3 = 0
 
-
         multipathCounter = 0
         for i in range(len(queue1)):
-            (multipathFlag, outlierFlag) = MultipathDetector.multipathDetect(queue1[i], queue2[i], queue3[i])
+            (multipathFlag, outlierFlag) = MultipathDetector.multipathDetect(queue1[i][:-1], queue2[i][:-1], queue3[i][:-1])
             if multipathFlag == True:
                 multipathCounter = multipathCounter + 1
             if outlierFlag == True:
@@ -177,17 +176,17 @@ class MultipathDetector():
             xCoord2, yCoord2, zCoord2 = queue2[i]
             xCoord3, yCoord3, zCoord3 = queue3[i]
 
-            xCoordAvg_1 = xCoordAvg_1 + xCoord1
-            xCoordAvg_2 = xCoordAvg_2 + xCoord2
-            xCoordAvg_3 = xCoordAvg_3 + xCoord3
-
-            yCoordAvg_1 = yCoordAvg_1 + yCoord1
-            yCoordAvg_2 = yCoordAvg_2 + yCoord2
-            yCoordAvg_3 = yCoordAvg_3 + yCoord3
-            
-            zCoordAvg_1 = zCoordAvg_1 + zCoord1
-            zCoordAvg_2 = zCoordAvg_2 + zCoord2
-            zCoordAvg_3 = zCoordAvg_3 + zCoord3
+            xCoordAvg_1 = xCoordAvg_1 + float(xCoord1)
+            xCoordAvg_2 = xCoordAvg_2 + float(xCoord2)
+            xCoordAvg_3 = xCoordAvg_3 + float(xCoord3)
+                                        
+            yCoordAvg_1 = yCoordAvg_1 + float(yCoord1)
+            yCoordAvg_2 = yCoordAvg_2 + float(yCoord2)
+            yCoordAvg_3 = yCoordAvg_3 + float(yCoord3)
+                                       
+            zCoordAvg_1 = zCoordAvg_1 + float(zCoord1)
+            zCoordAvg_2 = zCoordAvg_2 + float(zCoord2)
+            zCoordAvg_3 = zCoordAvg_3 + float(zCoord3)
 
         xCoordAvg_1 = xCoordAvg_1 / len(queue1)
         xCoordAvg_2 = xCoordAvg_2 / len(queue2)
@@ -201,13 +200,15 @@ class MultipathDetector():
         zCoordAvg_2 = zCoordAvg_2 / len(queue2)
         zCoordAvg_3 = zCoordAvg_3 / len(queue3)
 
-
+        
+        
         # prints the dot product tolerance, the average dot product of the queue, and the most recent data points' dot product
         # for testing purposes
-        dotProductTolerance = MultipathDetector.computeDotProductTolerance()
-        dotProductAvg = MultipathDetector.computeDotProduct((xCoordAvg_1, yCoordAvg_1), (xCoordAvg_2, yCoordAvg_2), (xCoordAvg_3, yCoordAvg_3))
-        dotProductSingle = MultipathDetector.computeDotProduct(queue1[9], queue2[9], queue3[9])
-        print "Tolerance =", dotProductTolerance, "\t Avg=", dotProductAvg, "\t Recent=", dotProductSingle
+        if debug:
+            dotProductTolerance = MultipathDetector.computeDotProductTolerance()
+            dotProductAvg = MultipathDetector.computeDotProduct((xCoordAvg_1, yCoordAvg_1), (xCoordAvg_2, yCoordAvg_2), (xCoordAvg_3, yCoordAvg_3))
+            dotProductSingle = MultipathDetector.computeDotProduct(queue1[9][:-1], queue2[9][:-1], queue3[9][:-1])
+            print "Tolerance =", dotProductTolerance, "\t Avg=", dotProductAvg, "\t Recent=", dotProductSingle
 
 
         avgMultipath = MultipathDetector.multipathDetect((xCoordAvg_1, yCoordAvg_1), (xCoordAvg_2, yCoordAvg_2), (xCoordAvg_3, yCoordAvg_3))
