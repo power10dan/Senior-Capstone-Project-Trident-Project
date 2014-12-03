@@ -52,7 +52,7 @@ for i in range(len(talker)):
             long = degrees(d.longitude)
             cartesian = G.geo(lat,long)
             northing, easting, k ,gamma = cartesian
-            cartesianQueue[i].append((northing,easting))
+            cartesianQueue[i].append((northing,easting,d.antenna_altitude))
             cart.writelines("\t" + str(northing) + "\t" + str(easting) + "\t" + str(d.gps_qual) + "\t" + str(d.antenna_altitude) + "\n")           
 cart.close()
 
