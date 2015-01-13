@@ -116,7 +116,12 @@ class connectOutput:
                 if int(data.gps_qual) == 4:
                     self.queueAppend(name, (northing, easting))
                     #self.queueAppend(name, (northing, easting, data.antenna_altitude))
-        line_str = name + ":" + str(line)
+                line_str = name + ":" + str(line)
+        else:
+            if line == 0:
+                line_str = "Nothing received from GPS " + name  
+            else:
+                line_str = "Received somthing other than GGA message from receiver: " + name
         print line_str
         log.writelines(str(line))
         
@@ -160,6 +165,17 @@ class connectOutput:
             ser[n].close()
         sys.exit(0)
     
+    def portsFound(self, available):
+        print "Found Devices:"
+        for s, loc in available:
+            print "%s" % s
+        print "Choose a COM port #. Enter # only, then enter"
+        temp = raw_input()
+        if temp == 'q' or not temp.isdigit():
+            print "Invalid Port, exiting!!!"
+            sys.exit(0)
+        return 'COM' + temp #concatenate COM and the port number to define serial port
+    
     # Searches for devices or ports available and returns COM number
     # Called from: initSerial
     def portSearch(self, threadNum, input):
@@ -185,37 +201,25 @@ class connectOutput:
             print available
             available = self.scan(available,location)
             if multiQueueFlag == 1 and len(available) == 3:
-                    for s, loc in available:
-                        if int(threadNum) == 0 and loc == 'L':
-                            return s
-                        if int(threadNum) == 1 and loc == 'C':
-                            return s
-                        if int(threadNum) == 2 and loc == 'R':
-                            return s
-            if len(available) != 0:
-                print "Found Devices:"
                 for s, loc in available:
-                    print "%s" % s
-                print "Choose a COM port #. Enter # only, then enter"
-                temp = raw_input()
-                if temp == 'q' or not temp.isdigit():
-                    print "Invalid Port, exiting!!!"
-                    sys.exit(0)
-                return 'COM' + temp #concatenate COM and the port number to define serial port  
+                    if int(threadNum) == 0 and loc == 'L':
+                        return s
+                    if int(threadNum) == 1 and loc == 'C':
+                        return s
+                    if int(threadNum) == 2 and loc == 'R':
+                        return s
+            if len(available) != 0:
+                return portsFound(available)
             else:
                 print "No active devices found. Switching to scan mode"
                 self.portSearch(threadNum,'s')  
         elif input == 's':
-            print "Found Ports:"
-            for s, loc in self.scan(range(256)):
-                print "%s" % s
-            print " "
-            print "Choose a COM port #. Enter # only, then enter"
-            temp = raw_input()
-            if temp == 'q' or not temp.isdigit():
-                print "Invalid Port, exiting!!!"
+            available = self.scan(range(256))
+            if available != 0:   
+                return portsFound(available)
+            else:
+                print "No ports found, exiting!!!"
                 sys.exit(0)
-            return 'COM' + temp #concatenate COM and the port number to define serial port
         else:
             print "Invalid input, exiting!!!"
             sys.exit(0)
