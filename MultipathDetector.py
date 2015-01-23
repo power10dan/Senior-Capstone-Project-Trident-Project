@@ -4,30 +4,23 @@ import xml.etree.ElementTree as ET
 xmlFilePath = 'ui.xml'
 
 class MultipathDetector():
-    
 
     @staticmethod
-    def parseTupleFile():
-        filePath = "cartesianTupleFile.txt"
-        fileObject = open(filePath, 'r')
-
-        fileObject.seek(2, 0)
-
-
-        fileObject.close()
-
-
-
-    @staticmethod
-    def computeDistance(coord1, coord2):
+    def computeDistance(coord1, coord2,debug = False):
         coord1_x, coord1_y = coord1
         coord2_x, coord2_y = coord2
-
+        
         coord1_x = float(coord1_x)
         coord2_x = float(coord2_x)
         coord1_y = float(coord1_y)
-        coord2_y = float(coord1_y)
+        coord2_y = float(coord2_y)
 
+        if debug: 
+            print "coord1_x:%s"%(coord1_x)
+            print "coord2_x:%s"%(coord2_x)
+            print "coord1_y:%s"%(coord1_y)
+            print "coord2_y:%s"%(coord2_y)
+           
         distance = math.sqrt(((coord1_x - coord2_x)**2)+((coord1_y - coord2_y)**2))
 
         if distance <= 0.0:
@@ -58,11 +51,7 @@ class MultipathDetector():
         return dotProduct
 
     @staticmethod
-    def computeDotProductTolerance():
-        tree = ET.parse(xmlFilePath)
-        distance = float(list(tree.iter('gps_spacing'))[0].text)
-        tolerance = float(list(tree.iter('horizontal'))[0].text)
-
+    def computeDotProductTolerance(distance,tolerance):
         # might want to ensure that tolerance is non-zero. Should be done when input by user, but might want to double-check here
         dotProductTolerance = math.acos(math.pi - 2 * math.atan(float(distance) / float(tolerance)))
 
@@ -71,78 +60,114 @@ class MultipathDetector():
     # returns a tuple of booleans (Bool_A, Bool_B), where Bool_A is True if multipathing is detected and false otherwise
     # and Bool_B is True if outlier-multipathing is detected (meaning VERY bad multipathing)
     @staticmethod
-    def multipathDetect(coord1, coord2, coord3):
+    def multipathDetect(coord1, coord2, coord3, debug = False):
         tree = ET.parse(xmlFilePath)
-
-        dotProductTolerance = MultipathDetector.computeDotProductTolerance()
 
         gpsDistance = float(list(tree.iter('gps_spacing'))[0].text)
         linearTolerance = float(list(tree.iter('horizontal'))[0].text)
-
-        dist1_2 = MultipathDetector.computeDistance(coord1[:-1], coord2[:-1])
-        dist2_3 = MultipathDetector.computeDistance(coord2[:-1], coord3[:-1])
-        dist1_3 = MultipathDetector.computeDistance(coord1[:-1], coord3[:-1])
+        verticalTolerance = float(list(tree.iter('vertical'))[0].text)
+        
+        dotProductTolerance = MultipathDetector.computeDotProductTolerance(gpsDistance,linearTolerance)
+        
+        if debug: 
+            print "\nMultipathDetect Algorithm Debugging Mode"
+            print "\n\nCompute Distance Debugging Mode:"
+            print "GPS 1 and 2"
+        dist1_2 = MultipathDetector.computeDistance(coord1[:-1], coord2[:-1],debug)
+        if debug: print "\nGPS 2 and 3"
+        dist2_3 = MultipathDetector.computeDistance(coord2[:-1], coord3[:-1],debug)
+        if debug: print "\nGPS 1 and 3"
+        dist1_3 = MultipathDetector.computeDistance(coord1[:-1], coord3[:-1],debug)
         dotProduct = MultipathDetector.computeDotProduct(coord1[:-1], coord2[:-1], coord3[:-1])
 
+        if debug:
+            print "\nGPS Spacing: %s"%(gpsDistance)
+            print "Horizontal Tolerance: %s"%(linearTolerance)
+            print "Vertical Tolerance: %s"%(verticalTolerance)
+            print "Distance 1 and 2: %s"%(dist1_2)
+            print "Distance 2 and 3: %s"%(dist2_3)
+            print "Distance 1 and 3: %s"%(dist1_3)
+            print "Dot product: %s"%(dotProduct)
+            print "Dot product tolerance: %s"%(dotProductTolerance)
+            
         outlierMultiplier = 3
         outlierFlag = False
         multipathFlag = False
 
-
+        if debug: print "\nChecking outlier"
         if dist1_2 < (gpsDistance - outlierMultiplier*linearTolerance):
+            if debug: print "dist1_2 < (gpsDistance - outlierMultiplier*linearTolerance)"
             outlierFlag = True
         elif dist1_2 > (gpsDistance + outlierMultiplier*linearTolerance):
+            if debug: print "dist1_2 > (gpsDistance + outlierMultiplier*linearTolerance)"
             outlierFlag = True
         elif dist2_3 < (gpsDistance - outlierMultiplier*linearTolerance):
+            if debug: print "dist2_3 < (gpsDistance - outlierMultiplier*linearTolerance)"
             outlierFlag = True
         elif dist2_3 > (gpsDistance + outlierMultiplier*linearTolerance):
+            if debug: print "dist2_3 > (gpsDistance + outlierMultiplier*linearTolerance)"
             outlierFlag = True
         elif dist1_3 < (2*gpsDistance) - outlierMultiplier*linearTolerance:
+            if debug: print "dist1_3 < (2*gpsDistance) - outlierMultiplier*linearTolerance"
             outlierFlag = True
         elif dist1_3 > (2*gpsDistance) + outlierMultiplier*linearTolerance:
+            if debug: print "dist1_3 < (2*gpsDistance) - outlierMultiplier*linearTolerance"
             outlierFlag = True
        
-            
+        if debug: print "\nChecking linear tolerance"  
         # initially assume no multipathing
         if dist1_2 < (gpsDistance - linearTolerance):
+            if debug: print "dist1_2 < (gpsDistance - linearTolerance)"
             multipathFlag = True
         elif dist1_2 > (gpsDistance + linearTolerance):
+            if debug: print "dist1_2 > (gpsDistance + linearTolerance)"
             multipathFlag = True
         elif dist2_3 < (gpsDistance - linearTolerance):
+            if debug: print "dist2_3 < (gpsDistance - linearTolerance)"
             multipathFlag = True
         elif dist2_3 > (gpsDistance + linearTolerance):
+            if debug: print "dist2_3 > (gpsDistance + linearTolerance)"
             multipathFlag = True
         elif dist1_3 < (2*gpsDistance) - linearTolerance:
+            if debug: print "dist1_3 < (2*gpsDistance) - linearTolerance"
             multipathFlag = True
         elif dist1_3 > (2*gpsDistance) + linearTolerance:
+            if debug: print "dist1_3 > (2*gpsDistance) + linearTolerance"
             multipathFlag = True
-        elif MultipathDetector.altitudeCheck(coord1[2], coord2[2], coord3[2]):
+        elif MultipathDetector.altitudeCheck(verticalTolerance, coord1[2], coord2[2], coord3[2],True):
             multipathFlag = True
 
-        if dotProduct > (1 + outlierMultiplier*MultipathDetector.computeDotProductTolerance()):
+        if dotProduct > (1 + outlierMultiplier*dotProductTolerance):
+            if debug: print "dotProduct > (1 + outlierMultiplier*dotProductTolerance)"
             outlierFlag = True
-        elif dotProduct < (1 - outlierMultiplier*MultipathDetector.computeDotProductTolerance()):
+        elif dotProduct < (1 - outlierMultiplier*dotProductTolerance):
+            if debug: print "dotProduct < (1 - outlierMultiplier*dotProductTolerance)"
             outlierFlag = True
-
+        
+        if debug: print "\nChecking dot product" 
         # Note: this first case should NEVER occur - a dot product is bounded between [-1, 1] (inclusive)
-        if dotProduct > (1 + MultipathDetector.computeDotProductTolerance()):
+        if dotProduct > (1 + dotProductTolerance):
+            if debug: print "dotProduct > (1 + dotProductTolerance)"
             multipathFlag = True
-        elif dotProduct < (1 - MultipathDetector.computeDotProductTolerance()):
+        elif dotProduct < (1 - dotProductTolerance):
+            if debug: print "dotProduct < (1 - dotProductTolerance)"
             multipathFlag = True
 
         return (multipathFlag, outlierFlag)
     
     @staticmethod
-    def altitudeCheck(alt1, alt2, alt3):
-        tree = ET.parse(xmlFilePath)
-        verticalTolerance = float(list(tree.iter('vertical'))[0].text)
-        
+    def altitudeCheck(verticalTolerance,alt1, alt2, alt3, debug = False):
+        if debug:
+            print "\nAltitude Check Debugging Mode"
         altMultipath = False
         if abs(alt1 - alt2) > verticalTolerance:
+            if debug: print "abs(alt1 - alt2) > verticalTolerance"
             altMultipath = True
         elif abs(alt2 - alt3) > verticalTolerance:
+            if debug: print "abs(alt2 - alt3) > verticalTolerance"
             altMultipath = True
         elif abs(alt1 - alt3) > verticalTolerance:
+            if debug: print "abs(alt1 - alt3) > verticalTolerance"
             altMultipath = True
             
         return altMultipath
@@ -156,6 +181,12 @@ class MultipathDetector():
     # queue2 will be the center receiver
     @staticmethod
     def multipathQueueHandler(listOfQueues, debug = False):
+        tree = ET.parse(xmlFilePath)
+
+        gpsDistance = float(list(tree.iter('gps_spacing'))[0].text)
+        linearTolerance = float(list(tree.iter('horizontal'))[0].text)
+        verticalTolerance = float(list(tree.iter('vertical'))[0].text)
+        
         if len(listOfQueues) != 3:
             print "ERROR: List of queues contains an incorrect number of queues (exactly 3 needed)"
 
@@ -181,7 +212,7 @@ class MultipathDetector():
 
         multipathCounter = 0
         for i in range(len(queue1)):
-            (multipathFlag, outlierFlag) = MultipathDetector.multipathDetect(queue1[i], queue2[i], queue3[i])
+            (multipathFlag, outlierFlag) = MultipathDetector.multipathDetect(queue1[i], queue2[i], queue3[i],True)
             if multipathFlag == True:
                 multipathCounter = multipathCounter + 1
             if outlierFlag == True:
@@ -222,17 +253,19 @@ class MultipathDetector():
         # prints the dot product tolerance, the average dot product of the queue, and the most recent data points' dot product
         # for testing purposes
         if debug:
-            dotProductTolerance = MultipathDetector.computeDotProductTolerance()
+            dotProductTolerance = MultipathDetector.computeDotProductTolerance(gpsDistance,linearTolerance)
             dotProductAvg = MultipathDetector.computeDotProduct((xCoordAvg_1, yCoordAvg_1), (xCoordAvg_2, yCoordAvg_2), (xCoordAvg_3, yCoordAvg_3))
             dotProductSingle = MultipathDetector.computeDotProduct(queue1[9][:-1], queue2[9][:-1], queue3[9][:-1])
             print "Tolerance =", dotProductTolerance, "\t Avg=", dotProductAvg, "\t Recent=", dotProductSingle
 
 
-        avgMultipath = MultipathDetector.multipathDetect((xCoordAvg_1, yCoordAvg_1,0), (xCoordAvg_2, yCoordAvg_2,0), (xCoordAvg_3, yCoordAvg_3,0))
+        avgMultipath = MultipathDetector.multipathDetect((xCoordAvg_1, yCoordAvg_1,zCoordAvg_1), (xCoordAvg_2, yCoordAvg_2,zCoordAvg_2), (xCoordAvg_3, yCoordAvg_3,zCoordAvg_3))
 
         if multipathCounter >= 3:
+            if debug: print "multipathCounter"
             return True
         elif finalOutlierFlag == True:
+            if debug: print "finalOutlierFlag"
             return True
         else:
             return avgMultipath

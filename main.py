@@ -209,14 +209,14 @@ class connectOutput:
                     if int(threadNum) == 2 and loc == 'R':
                         return s
             if len(available) != 0:
-                return portsFound(available)
+                return self.portsFound(available)
             else:
                 print "No active devices found. Switching to scan mode"
                 self.portSearch(threadNum,'s')  
         elif input == 's':
             available = self.scan(range(256))
             if available != 0:   
-                return portsFound(available)
+                return self.portsFound(available)
             else:
                 print "No ports found, exiting!!!"
                 sys.exit(0)
