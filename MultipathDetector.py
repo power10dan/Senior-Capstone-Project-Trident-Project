@@ -18,16 +18,16 @@ class MultipathDetector():
         coord1_y = float(coord1_y)
         coord2_y = float(coord2_y)
 
-        log.debug("coord1_x:%s"%(coord1_x))
-        log.debug("coord2_x:%s"%(coord2_x))
-        log.debug("coord1_y:%s"%(coord1_y))
-        log.debug("coord2_y:%s"%(coord2_y))
+        log.info('coord1_x:%s'%(coord1_x))
+        log.info('coord2_x:%s'%(coord2_x))
+        log.info('coord1_y:%s'%(coord1_y))
+        log.info('coord2_y:%s'%(coord2_y))
            
         distance = math.sqrt(((coord1_x - coord2_x)**2)+((coord1_y - coord2_y)**2))
 
         if distance <= 0.0:
             print "distance between two coordinates is less than or equal to zero - something is wrong!  (MultipathDetector.distanceForumula)"
-            log.debug('distance between two coordinates is less than or equal to zero - something is wrong!  (MultipathDetector.distanceForumula)')
+            log.info('distance between two coordinates is less than or equal to zero - something is wrong!  (MultipathDetector.distanceForumula)')
             return None
         else:
             return distance
@@ -72,102 +72,102 @@ class MultipathDetector():
         
         dotProductTolerance = MultipathDetector.computeDotProductTolerance(gpsDistance,linearTolerance)
          
-        log.debug('\nMultipathDetect Algorithm Debugging Mode')
-        log.debug('\n\nCompute Distance Debugging Mode:')
-        log.debug('GPS 1 and 2')
+        log.info('MultipathDetect Algorithm Debugging Mode')
+        log.info('Compute Distance Debugging Mode:')
+        log.info('GPS 1 and 2')
         dist1_2 = MultipathDetector.computeDistance(coord1[:-1], coord2[:-1])
-        log.debug('\nGPS 2 and 3')
+        log.info('GPS 2 and 3')
         dist2_3 = MultipathDetector.computeDistance(coord2[:-1], coord3[:-1])
-        log.debug('\nGPS 1 and 3')
+        log.info('GPS 1 and 3')
         dist1_3 = MultipathDetector.computeDistance(coord1[:-1], coord3[:-1])
         dotProduct = MultipathDetector.computeDotProduct(coord1[:-1], coord2[:-1], coord3[:-1])
 
-        log.debug('\nGPS Spacing: %s'%(gpsDistance))
-        log.debug('Horizontal Tolerance: %s'%(linearTolerance))
-        log.debug('Vertical Tolerance: %s'%(verticalTolerance))
-        log.debug('Distance 1 and 2: %s'%(dist1_2))
-        log.debug('Distance 2 and 3: %s'%(dist2_3))
-        log.debug('Distance 1 and 3: %s'%(dist1_3))
-        log.debug('Dot product: %s'%(dotProduct))
-        log.debug('Dot product tolerance: %s'%(dotProductTolerance))
+        log.info('GPS Spacing: %s'%(gpsDistance))
+        log.info('Horizontal Tolerance: %s'%(linearTolerance))
+        log.info('Vertical Tolerance: %s'%(verticalTolerance))
+        log.info('Distance 1 and 2: %s'%(dist1_2))
+        log.info('Distance 2 and 3: %s'%(dist2_3))
+        log.info('Distance 1 and 3: %s'%(dist1_3))
+        log.info('Dot product: %s'%(dotProduct))
+        log.info('Dot product tolerance: %s'%(dotProductTolerance))
             
         outlierMultiplier = 3
         outlierFlag = False
         multipathFlag = False
 
-        log.debug('\nChecking outlier')
+        log.info('Checking outlier')
         if dist1_2 < (gpsDistance - outlierMultiplier*linearTolerance):
-            log.debug("dist1_2 < (gpsDistance - outlierMultiplier*linearTolerance)")
+            log.info('dist1_2 < (gpsDistance - outlierMultiplier*linearTolerance)')
             outlierFlag = True
         elif dist1_2 > (gpsDistance + outlierMultiplier*linearTolerance):
-            log.debug("dist1_2 > (gpsDistance + outlierMultiplier*linearTolerance)")
+            log.info('dist1_2 > (gpsDistance + outlierMultiplier*linearTolerance)')
             outlierFlag = True
         elif dist2_3 < (gpsDistance - outlierMultiplier*linearTolerance):
-            log.debug("dist2_3 < (gpsDistance - outlierMultiplier*linearTolerance)")
+            log.info('dist2_3 < (gpsDistance - outlierMultiplier*linearTolerance)')
             outlierFlag = True
         elif dist2_3 > (gpsDistance + outlierMultiplier*linearTolerance):
-            log.debug("dist2_3 > (gpsDistance + outlierMultiplier*linearTolerance)")
+            log.info('dist2_3 > (gpsDistance + outlierMultiplier*linearTolerance)')
             outlierFlag = True
         elif dist1_3 < (2*gpsDistance) - outlierMultiplier*linearTolerance:
-            log.debug("dist1_3 < (2*gpsDistance) - outlierMultiplier*linearTolerance")
+            log.info('dist1_3 < (2*gpsDistance) - outlierMultiplier*linearTolerance')
             outlierFlag = True
         elif dist1_3 > (2*gpsDistance) + outlierMultiplier*linearTolerance:
-            log.debug("dist1_3 < (2*gpsDistance) - outlierMultiplier*linearTolerance")
+            log.info('dist1_3 < (2*gpsDistance) - outlierMultiplier*linearTolerance')
             outlierFlag = True
        
-        log.debug("\nChecking linear tolerance") 
+        log.info('Checking linear tolerance') 
         # initially assume no multipathing
         if dist1_2 < (gpsDistance - linearTolerance):
-            log.debug("dist1_2 < (gpsDistance - linearTolerance)")
+            log.info('dist1_2 < (gpsDistance - linearTolerance)')
             multipathFlag = True
         elif dist1_2 > (gpsDistance + linearTolerance):
-            log.debug("dist1_2 > (gpsDistance + linearTolerance)")
+            log.info('dist1_2 > (gpsDistance + linearTolerance)')
             multipathFlag = True
         elif dist2_3 < (gpsDistance - linearTolerance):
-            log.debug("dist2_3 < (gpsDistance - linearTolerance)")
+            log.info('dist2_3 < (gpsDistance - linearTolerance)')
             multipathFlag = True
         elif dist2_3 > (gpsDistance + linearTolerance):
-            log.debug("dist2_3 > (gpsDistance + linearTolerance)")
+            log.info('dist2_3 > (gpsDistance + linearTolerance)')
             multipathFlag = True
         elif dist1_3 < (2*gpsDistance) - linearTolerance:
-            log.debug("dist1_3 < (2*gpsDistance) - linearTolerance")
+            log.info('dist1_3 < (2*gpsDistance) - linearTolerance')
             multipathFlag = True
         elif dist1_3 > (2*gpsDistance) + linearTolerance:
-            log.debug("dist1_3 > (2*gpsDistance) + linearTolerance")
+            log.info('dist1_3 > (2*gpsDistance) + linearTolerance')
             multipathFlag = True
         elif MultipathDetector.altitudeCheck(verticalTolerance, coord1[2], coord2[2], coord3[2],True):
             multipathFlag = True
 
         if dotProduct > (1 + outlierMultiplier*dotProductTolerance):
-            log.debug("dotProduct > (1 + outlierMultiplier*dotProductTolerance)")
+            log.info('dotProduct > (1 + outlierMultiplier*dotProductTolerance)')
             outlierFlag = True
         elif dotProduct < (1 - outlierMultiplier*dotProductTolerance):
-            log.debug("dotProduct < (1 - outlierMultiplier*dotProductTolerance)")
+            log.info('dotProduct < (1 - outlierMultiplier*dotProductTolerance)')
             outlierFlag = True
         
-        log.debug("\nChecking dot product")
+        log.info('Checking dot product')
         # Note: this first case should NEVER occur - a dot product is bounded between [-1, 1] (inclusive)
         if dotProduct > (1 + dotProductTolerance):
-            log.debug("dotProduct > (1 + dotProductTolerance)")
+            log.info('dotProduct > (1 + dotProductTolerance)')
             multipathFlag = True
         elif dotProduct < (1 - dotProductTolerance):
-            log.debug("dotProduct < (1 - dotProductTolerance)")
+            log.info('dotProduct < (1 - dotProductTolerance)')
             multipathFlag = True
 
         return (multipathFlag, outlierFlag)
     
     @staticmethod
     def altitudeCheck(verticalTolerance,alt1, alt2, alt3, debug = False):
-        log.debug("\nAltitude Check Debugging Mode")
+        log.info('Altitude Check Debugging Mode')
         altMultipath = False
         if abs(alt1 - alt2) > verticalTolerance:
-            log.debug("abs(alt1 - alt2) > verticalTolerance")
+            log.info('abs(alt1 - alt2) > verticalTolerance')
             altMultipath = True
         elif abs(alt2 - alt3) > verticalTolerance:
-            log.debug("abs(alt2 - alt3) > verticalTolerance")
+            log.info('abs(alt2 - alt3) > verticalTolerance')
             altMultipath = True
         elif abs(alt1 - alt3) > verticalTolerance:
-            log.debug("abs(alt1 - alt3) > verticalTolerance")
+            log.info('abs(alt1 - alt3) > verticalTolerance')
             altMultipath = True
         return altMultipath
     
@@ -255,18 +255,18 @@ class MultipathDetector():
         # prints the dot product tolerance, the average dot product of the queue, and the most recent data points' dot product
         # for testing purposes
 
-        log.debug(dotProductTolerance = MultipathDetector.computeDotProductTolerance(gpsDistance,linearTolerance))
-        log.debug(dotProductAvg = MultipathDetector.computeDotProduct((xCoordAvg_1, yCoordAvg_1), (xCoordAvg_2, yCoordAvg_2), (xCoordAvg_3, yCoordAvg_3)))
-        log.debug(dotProductSingle = MultipathDetector.computeDotProduct(queue1[9][:-1], queue2[9][:-1], queue3[9][:-1]))
-        log.debug("Tolerance =%s\t Avg=%s\t Recent=%s"%(dotProductTolerance, dotProductAvg,dotProductSingle))
+        dotProductTolerance = MultipathDetector.computeDotProductTolerance(gpsDistance,linearTolerance)
+        dotProductAvg = MultipathDetector.computeDotProduct((xCoordAvg_1, yCoordAvg_1), (xCoordAvg_2, yCoordAvg_2), (xCoordAvg_3, yCoordAvg_3))
+        dotProductSingle = MultipathDetector.computeDotProduct(queue1[9][:-1], queue2[9][:-1], queue3[9][:-1])
+        log.info('Tolerance =%s\t Avg=%s\t Recent=%s'%(dotProductTolerance, dotProductAvg,dotProductSingle))
 
         avgMultipath = MultipathDetector.multipathDetect((xCoordAvg_1, yCoordAvg_1,zCoordAvg_1), (xCoordAvg_2, yCoordAvg_2,zCoordAvg_2), (xCoordAvg_3, yCoordAvg_3,zCoordAvg_3))
 
         if multipathCounter >= 3:
-            log.debug("multipathCounter")
+            log.info('multipathCounter')
             return True
         elif finalOutlierFlag == True:
-            log.debug("finalOutlierFlag")
+            log.info('finalOutlierFlag')
             return True
         else:
             return avgMultipath
