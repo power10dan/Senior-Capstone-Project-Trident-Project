@@ -53,6 +53,6 @@
         <baudrate>115200</baudrate>
         <bytesize>8</bytesize>
         <stopbits>1</stopbits>
-        <timeout>5</timeout>
+        <timeout>1</timeout>
     </serial>
 </ui>

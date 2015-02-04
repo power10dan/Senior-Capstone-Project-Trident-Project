@@ -8,6 +8,10 @@ from collections import deque
 import geodetic
 import MultipathDetector
 import xml.etree.ElementTree as ET
+import logging
+
+LOG_FILENAME = '.\logs\log_'+ datetime.datetime.now().strftime('%Y-%m-%d') +'.log'
+logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG,format='%(asctime)s %(levelname)s: %(message)s')
 
 
 ser = []
@@ -52,21 +56,25 @@ class connectOutput:
         signal.signal(signal.SIGINT, self.signalHandler)
         print "How many receivers are you connecting?"
         r = raw_input()
+        logging.info('user devices input: %s'%(r))
         if not r.isdigit():
             print "Invalid number of receivers, exiting!!!"
+            logging.warn('Bad Input')
             sys.exit(0)
         r = int(r)
         if r == 3:
             self.createQueue()
             multiQueueFlag = 1
         print "Use existing(e) devices or scan(s) for devices?"
-        input = raw_input()    
+        input = raw_input()
+        logging.info('user search input: %s'%(input))
         log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a')
         #print log.name      
         for i in range(0, r):
             thread = threading.Thread(target=self.initSerial(i,input))
             thread.daemon = True
             thread.start()
+            logging.info('Created Thread: %s'%(i))
         while True:
             for i in range(0, r):
                 thread = threading.Thread(target=self.streamSerial(str(i))).run()
@@ -77,24 +85,6 @@ class connectOutput:
                 multipathing = M.multipathQueueHandler(multiQueue)
                 mult = "Multipathing: " + str(multipathing)
                 print mult
-                
-    
-    # Scan for available ports. Return a list of tuples (num, name)
-    # Called from: portSearch
-    def scan(self, ports, loc = []*256):
-        global active
-        available = []
-        for i,loc in zip(ports,loc):
-            try:
-                s = serial.Serial(i)
-                if s.name in active:
-                    break
-                else:
-                    available.append((s.name,loc))
-                    s.close()   # explicit close 'cause of delayed GC in java
-            except serial.SerialException:
-                pass
-        return available
 
     # Outputs stuff from serial to console and log file
     # Called from: thread
@@ -116,7 +106,12 @@ class connectOutput:
                 if int(data.gps_qual) == 4:
                     self.queueAppend(name, (northing, easting))
                     #self.queueAppend(name, (northing, easting, data.antenna_altitude))
-        line_str = name + ":" + str(line)
+                line_str = name + ":" + str(line)
+        else:
+            if line == 0:
+                line_str = "Nothing received from GPS " + name  
+            else:
+                line_str = "Received somthing other than GGA message from receiver: " + name
         print line_str
         log.writelines(str(line))
         
@@ -148,6 +143,7 @@ class connectOutput:
         else:
             degrees = float(coor[:3])
             minutes = float(coor[3:])/60
+        log.debug('original Degree minutes: %s \t Converted Degree decimal degree: %s'%(coor,(degrees+minutes)))
         return degrees + minutes
     
     # Signal handler function, closes log, and closes serial connections
@@ -156,9 +152,41 @@ class connectOutput:
         global ser, log
         if log != 0:
             log.close()
-        for	n in range(0, len(ser)):
+            logging.info('Closed log file')
+        for n in range(0, len(ser)):
             ser[n].close()
+            logging.info('Closing serial port: %s'%(ser[n]))
         sys.exit(0)
+
+        # Scan for available ports. Return a list of tuples (num, name)
+    # Called from: portSearch
+    def scan(self, ports, loc = ['']*256):
+        global active
+        available = []
+        for i,loc in zip(ports,loc):
+            try:
+                s = serial.Serial(i)
+                if s.name in active:
+                    break
+                else:
+                    available.append((s.name,loc))
+                    s.close()   # explicit close 'cause of delayed GC in java
+            except serial.SerialException:
+                pass
+        return available
+
+    def portsFound(self, available):
+        print "Found Devices:"
+        for s, loc in available:
+            print "%s" % s
+            logging.info('Found ports: %s'%(s))
+        print "Choose a COM port #. Enter # only, then enter"
+        temp = raw_input()
+        if temp == 'q' or not temp.isdigit():
+            print "Invalid Port, exiting!!!"
+            logging.info('Bad input port, exiting program')
+            sys.exit(0)
+        return 'COM' + temp #concatenate COM and the port number to define serial port
     
     # Searches for devices or ports available and returns COM number
     # Called from: initSerial
@@ -185,38 +213,31 @@ class connectOutput:
             print available
             available = self.scan(available,location)
             if multiQueueFlag == 1 and len(available) == 3:
-                    for s, loc in available:
-                        if int(threadNum) == 0 and loc == 'L':
-                            return s
-                        if int(threadNum) == 1 and loc == 'C':
-                            return s
-                        if int(threadNum) == 2 and loc == 'R':
-                            return s
-            if len(available) != 0:
-                print "Found Devices:"
                 for s, loc in available:
-                    print "%s" % s
-                print "Choose a COM port #. Enter # only, then enter"
-                temp = raw_input()
-                if temp == 'q' or not temp.isdigit():
-                    print "Invalid Port, exiting!!!"
-                    sys.exit(0)
-                return 'COM' + temp #concatenate COM and the port number to define serial port  
+                    if int(threadNum) == 0 and loc == 'L':
+                        logging.info('Using %s for left receiver'%(s))
+                        return s
+                    if int(threadNum) == 1 and loc == 'C':
+                        logging.info('Using %s for center receiver'%(s))
+                        return s
+                    if int(threadNum) == 2 and loc == 'R':
+                        logging.info('Using %s for right receiver'%(s))
+                        return s
+            if len(available) != 0:
+                return self.portsFound(available)
             else:
                 print "No active devices found. Switching to scan mode"
+                logging.info('No active devices selected, switching to scan mode')
                 self.portSearch(threadNum,'s')  
         elif input == 's':
-            print "Found Ports:"
-            for s, loc in self.scan(range(256)):
-                print "%s" % s
-            print " "
-            print "Choose a COM port #. Enter # only, then enter"
-            temp = raw_input()
-            if temp == 'q' or not temp.isdigit():
-                print "Invalid Port, exiting!!!"
+            available = self.scan(range(256))
+            if len(available) != 0:   
+                return self.portsFound(available)
+            else:
+                print "No ports found, exiting!!!"
                 sys.exit(0)
-            return 'COM' + temp #concatenate COM and the port number to define serial port
         else:
+            logging.info('Invalid User input for port search')
             print "Invalid input, exiting!!!"
             sys.exit(0)
                
