@@ -16,7 +16,7 @@ def degrees(coor):
         minutes = float(coor[3:])/60
     return degrees + minutes
     
-with open('.\output\output_2014-11-17 - Copy.txt', 'r') as data_file:
+with open('.\output\output_2015-02-05.txt', 'r') as data_file:
     streamer = pynmea.streamer.NMEAStream(data_file)
     next_data = streamer.get_strings()
     data = []
@@ -24,9 +24,9 @@ with open('.\output\output_2014-11-17 - Copy.txt', 'r') as data_file:
         data += next_data
         next_data = streamer.get_strings()
 
-talker = []
-talkerData = []
-cartesianQueue = []  
+talker = []             #queue of receivers
+talkerData = []         #list of receiver data
+cartesianQueue = []     #Queue of converted cartesian
 length = []
       
 for i in data:
@@ -47,21 +47,24 @@ for i in range(len(talker)):
     length.append(len(talkerData[i]))
     for j in range(len(talkerData[i])):
         if len(talkerData[i][j]) > 40:
-            d.parse(talkerData[i][j])
-            lat = degrees(d.latitude)
-            long = degrees(d.longitude)
-            cartesian = G.geo(lat,long)
-            northing, easting, k ,gamma = cartesian
-            cartesianQueue[i].append((northing,easting,float(d.antenna_altitude)))
-            cart.writelines("\t" + str(northing) + "\t" + str(easting) + "\t" + str(d.gps_qual) + "\t" + str(d.antenna_altitude) + "\n")           
+            d.parse(talkerData[i][j])       
+            if int(d.gps_qual) == 4:
+                lat = degrees(d.latitude)
+                long = degrees(d.longitude)
+                cartesian = G.geo(lat,long)
+                northing, easting, k ,gamma = cartesian
+                cartesianQueue[i].append((d.timestamp,northing,easting,float(d.antenna_altitude)))
+                cart.writelines("\t%s\t%s\t%s\t%s\t%s\n"%(d.timestamp,northing,easting,d.gps_qual,d.antenna_altitude))           
 cart.close()
 
-for i in range(min(length)):
-    Queue = []
-    for j in range(len(talker)):
-        Queue.append(cartesianQueue[j][i:(i+10)])
-    if len(Queue[0]) == 10 and len(Queue[1]) == 10 and len(Queue[2]) == 10:
-        print M.multipathQueueHandler(Queue)
+
+# for i in range(min(length)):
+    # Queue = []
+    # for j in range(len(talker)):
+        # Queue.append(cartesianQueue[j][i:(i+10)])
+        # print Queue
+    # if len(Queue[0]) == 10 and len(Queue[1]) == 10 and len(Queue[2]) == 10:
+        # print M.multipathQueueHandler(Queue)
         
     
 # parse_map = (

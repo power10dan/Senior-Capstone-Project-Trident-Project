@@ -12,14 +12,14 @@
             <use>T</use>
             <left>F</left>
             <right>F</right>
-            <center>F</center>
+            <center>T</center>
             <serialNumber>2811390</serialNumber>
             <port>26</port>
         </receiver>
         <receiver>
             <use>T</use>
-            <left>F</left>
-            <right>F</right>
+            <left>T</left>
+            <right></right>
             <center>F</center>
             <serialNumber>2811371</serialNumber>
             <port>23</port>
@@ -43,7 +43,7 @@
         <receiver>
             <use>T</use>
             <left>F</left>
-            <right>F</right>
+            <right>T</right>
             <center>F</center>
             <serialNumber>2811388</serialNumber>
             <port>13</port>

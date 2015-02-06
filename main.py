@@ -10,10 +10,11 @@ import MultipathDetector
 import xml.etree.ElementTree as ET
 import logging
 
+
 LOG_FILENAME = '.\logs\log_'+ datetime.datetime.now().strftime('%Y-%m-%d') +'.log'
 logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG,format='%(asctime)s %(levelname)s: %(message)s')
 
-
+timeout = []
 ser = []
 active = []
 multiQueue = []
@@ -21,7 +22,7 @@ log = 0
 G = geodetic.geodetic()   # TODO : we might want to make geodetic a static method?
 M = MultipathDetector.MultipathDetector()
 xmlFilePath = 'ui.xml'
-multiQueueFlag = 0  #used to check if multipath queues are allocated and used to auto select receivers
+multiQueueFlag = False  #used to check if multipath queues are allocated and used to auto select receivers
 
 class connectOutput:
     # Searches and opens serial connections
@@ -52,7 +53,7 @@ class connectOutput:
     # Handles thread logistics, creates logs, calls multipathQueueHandler
     # Called from: main
     def thread(self):
-        global log, multiQueue, M
+        global log, multiQueue, M, multiQueueFlag
         signal.signal(signal.SIGINT, self.signalHandler)
         print "How many receivers are you connecting?"
         r = raw_input()
@@ -62,19 +63,20 @@ class connectOutput:
             logging.warn('Bad Input')
             sys.exit(0)
         r = int(r)
+        
         if r == 3:
             self.createQueue()
-            multiQueueFlag = 1
+            multiQueueFlag = True
         print "Use existing(e) devices or scan(s) for devices?"
         input = raw_input()
         logging.info('user search input: %s'%(input))
-        log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a')
-        #print log.name      
+        log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
         for i in range(0, r):
             thread = threading.Thread(target=self.initSerial(i,input))
             thread.daemon = True
             thread.start()
             logging.info('Created Thread: %s'%(i))
+            timeout.append(0)
         while True:
             for i in range(0, r):
                 thread = threading.Thread(target=self.streamSerial(str(i))).run()
@@ -92,27 +94,34 @@ class connectOutput:
         global log
         line = ser[int(name)].readline()
         if line[3:6] == 'GGA':
+            timeout[int(name)] = 0
             data = nmea.GPGGA()
             data.parse(line)
             if len(line) > 50:
                 lat = self.degrees(data.latitude)
                 lon = self.degrees(data.longitude)
-                #print str(name) + " latitude: " + str(lat)
-                #print str(name) + " longitude: " + str(lon)
                 cartesian = G.geo(lat, lon)
                 northing, easting, k , gamma = cartesian
                 c = "cartesian: " + str(cartesian)
-                print c
                 if int(data.gps_qual) == 4:
-                    self.queueAppend(name, (northing, easting))
-                    #self.queueAppend(name, (northing, easting, data.antenna_altitude))
+                    self.queueAppend(name, (northing, easting, data.antenna_altitude))
                 line_str = name + ":" + str(line)
-        else:
-            if line == 0:
-                line_str = "Nothing received from GPS " + name  
             else:
-                line_str = "Received somthing other than GGA message from receiver: " + name
-        print line_str
+                line_str = "Bad Signal: " + line  
+            print line_str
+        else:
+            if len(line) == 0:
+                timeout[int(name)] += 1
+                if(timeout[int(name)] >= 10):
+                    print "Receiver %s disconnected"%(name)
+                    ser[int(name)].close()
+                    try:
+                        ser[int(name)] = serial.Serial(active[int(name)])
+                        print "Re-established connection to receiver %s"%(name)
+                    except serial.SerialException:
+                        print "failed to re-establish connection to receiver %s"%(name)
+            else:
+                print "Received something other than GGA message from receiver: " + line
         log.writelines(str(line))
         
     # Creates a list of queues inside of global list named multiQueue
@@ -143,7 +152,7 @@ class connectOutput:
         else:
             degrees = float(coor[:3])
             minutes = float(coor[3:])/60
-        log.debug('original Degree minutes: %s \t Converted Degree decimal degree: %s'%(coor,(degrees+minutes)))
+        #logging.debug('original Degree minutes: %s \t Converted Degree decimal degree: %s'%(coor,str(degrees + "." + minutes)))
         return degrees + minutes
     
     # Signal handler function, closes log, and closes serial connections
@@ -210,9 +219,8 @@ class connectOutput:
                         location.append('C')
                     else:
                         available.append((int(list(r)[5].text)-1))
-            print available
             available = self.scan(available,location)
-            if multiQueueFlag == 1 and len(available) == 3:
+            if multiQueueFlag == True:
                 for s, loc in available:
                     if int(threadNum) == 0 and loc == 'L':
                         logging.info('Using %s for left receiver'%(s))

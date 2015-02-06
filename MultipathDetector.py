@@ -160,6 +160,9 @@ class MultipathDetector():
     def altitudeCheck(verticalTolerance,alt1, alt2, alt3, debug = False):
         log.info('Altitude Check Debugging Mode')
         altMultipath = False
+        alt1 = float(alt1)
+        alt2 = float(alt2)
+        alt3 = float(alt3)
         if abs(alt1 - alt2) > verticalTolerance:
             log.info('abs(alt1 - alt2) > verticalTolerance')
             altMultipath = True
