@@ -57,7 +57,24 @@ for i in range(len(talker)):
                 cart.writelines("\t%s\t%s\t%s\t%s\t%s\n"%(d.timestamp,northing,easting,d.gps_qual,d.antenna_altitude))           
 cart.close()
 
+common = open('.\output\common_'+ str(datetime.date.today())+'.txt','w')
+commoni = [i for i in cartesianQueue[0] if i[0] in [j[0] for j in cartesianQueue[1]] and i[0] in [k[0] for k in cartesianQueue[2]]]
+commonj = [j for j in cartesianQueue[1] if j[0] in [i[0] for i in cartesianQueue[0]] and j[0] in [k[0] for k in cartesianQueue[2]]]
+commonk = [k for k in cartesianQueue[2] if k[0] in [i[0] for i in cartesianQueue[0]] and k[0] in [j[0] for j in cartesianQueue[1]]]
 
+for com in commoni:
+    common.writelines("0")
+    common.write("\t%s\t%s\t%s\t%s\n"%(com[0],com[1],com[2],com[3]))
+
+for com in commonj:
+    common.writelines("1")
+    common.write("\t%s\t%s\t%s\t%s\n"%(com[0],com[1],com[2],com[3]))
+
+for com in commonk:
+    common.writelines("2")
+    common.write("\t%s\t%s\t%s\t%s\n"%(com[0],com[1],com[2],com[3]))
+
+common.close()
 # for i in range(min(length)):
     # Queue = []
     # for j in range(len(talker)):
