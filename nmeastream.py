@@ -27,7 +27,7 @@ with open('.\output\output_2015-02-05.txt', 'r') as data_file:
 talker = []             #queue of receivers
 talkerData = []         #list of receiver data
 cartesianQueue = []     #Queue of converted cartesian
-length = []
+#length = []
       
 for i in data:
     i.partition(':')
@@ -44,7 +44,7 @@ d = pynmea.nmea.GPGGA()
 
 for i in range(len(talker)):
     cart.writelines(str(i) + "\n")
-    length.append(len(talkerData[i]))
+    # length.append(len(talkerData[i]))
     for j in range(len(talkerData[i])):
         if len(talkerData[i][j]) > 40:
             d.parse(talkerData[i][j])       
@@ -58,30 +58,31 @@ for i in range(len(talker)):
 cart.close()
 
 common = open('.\output\common_'+ str(datetime.date.today())+'.txt','w')
-commoni = [i for i in cartesianQueue[0] if i[0] in [j[0] for j in cartesianQueue[1]] and i[0] in [k[0] for k in cartesianQueue[2]]]
-commonj = [j for j in cartesianQueue[1] if j[0] in [i[0] for i in cartesianQueue[0]] and j[0] in [k[0] for k in cartesianQueue[2]]]
-commonk = [k for k in cartesianQueue[2] if k[0] in [i[0] for i in cartesianQueue[0]] and k[0] in [j[0] for j in cartesianQueue[1]]]
+commonQueue = []
+commonQueue.append([i for i in cartesianQueue[0] if i[0] in [j[0] for j in cartesianQueue[1]] and i[0] in [k[0] for k in cartesianQueue[2]]])
+commonQueue.append([j for j in cartesianQueue[1] if j[0] in [i[0] for i in cartesianQueue[0]] and j[0] in [k[0] for k in cartesianQueue[2]]])
+commonQueue.append([k for k in cartesianQueue[2] if k[0] in [i[0] for i in cartesianQueue[0]] and k[0] in [j[0] for j in cartesianQueue[1]]])
 
-for com in commoni:
-    common.writelines("0")
-    common.write("\t%s\t%s\t%s\t%s\n"%(com[0],com[1],com[2],com[3]))
-
-for com in commonj:
-    common.writelines("1")
-    common.write("\t%s\t%s\t%s\t%s\n"%(com[0],com[1],com[2],com[3]))
-
-for com in commonk:
-    common.writelines("2")
-    common.write("\t%s\t%s\t%s\t%s\n"%(com[0],com[1],com[2],com[3]))
-
+for i in range(len(commonQueue)):
+    common.writelines("%i\n"%(i))
+    for com in commonQueue[i]:
+        common.write("\t%s\t%s\t%s\t%s\n"%(com[0],com[1],com[2],com[3]))
 common.close()
-# for i in range(min(length)):
-    # Queue = []
-    # for j in range(len(talker)):
-        # Queue.append(cartesianQueue[j][i:(i+10)])
-        # print Queue
-    # if len(Queue[0]) == 10 and len(Queue[1]) == 10 and len(Queue[2]) == 10:
-        # print M.multipathQueueHandler(Queue)
+
+print len(commonQueue[0])
+print len(commonQueue[1])
+print len(commonQueue[2])
+
+for i in range(len(commonQueue[0])):
+    Queue = [[],[],[]]
+    for j in range(len(talker)):
+        for k in range(i,i+10):
+            Queue[j].append(commonQueue[j][k][1:])
+    if len(Queue[0]) == 10 and len(Queue[1]) == 10 and len(Queue[2]) == 10:
+        mult = M.multipathQueueHandler(Queue)
+        print mult
+        if not mult:
+            print Queue
         
     
 # parse_map = (
