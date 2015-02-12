@@ -3,25 +3,28 @@
 #:import Factory kivy.factory.Factory
 
 <ActionSpinnerOptions@SpinnerOption>:
-    background_color: .4, .4, .4,1
+    background_color: .4, .4, .4, 1
 
 <ActionSpinner@Spinner+ActionItem>:
     canvas.before:
         Color:
-            rgba: 0.128, 0.128, 0.128, 1
+            rgba: .6, .6, .4, 1
+
         Rectangle:
-            size: self.size
+            size:self.size
             pos: self.pos
     border: 27, 20, 12, 12
     option_cls: Factory.ActionSpinnerOptions
 
-<Data_Showcase>:
+<DataShowcase>:
     ScrollView:
         do_scroll_x: False
         do_scroll_y: False if root.fullscreen else (content.height > root.height - dp(16))
+
         AnchorLayout:
             size_hint_y: None
             height: root.height if root.fullscreen else max(root.height, content.height)
+
             GridLayout:
                 id: content
                 cols: 1
@@ -31,7 +34,7 @@
                 height: self.height if root.fullscreen else self.minimum_height
 
 <ActionDropDown>:
-    on_size: self.width = '220dp'
+    on_size: self.width = '100sp'
 
 BoxLayout:
     orientation: 'vertical'
@@ -45,15 +48,13 @@ BoxLayout:
         ActionView:
             id: av
             ActionPrevious:
-                with_previous: (False if sm.current_screen.name == 'button' else True) if sm.current_screen else False
                 title: 'Poseidon'
-                on_release: app.go_hierarchy_previous()
 
             ActionSpinner:
                 id: spnr
+                text: "Options"
                 important: True
-                text: 'Tolerance Settings'
-                values: ["Vertical Tolerance", "Horizontal Tolerance", "Height Tolerance"]
+                values: ["Set Tolerances", "Select Ports"]
 
             ActionButton:
                 text: '<'
@@ -62,11 +63,10 @@ BoxLayout:
             ActionButton:
                 text: '>'
                 on_release: app.go_next_screen()
-                important: True
+                mportant: True
 
     ScreenManager:
         id: sm
         on_current_screen:
-            spnr.text = args[1].name
             idx = app.screen_names.index(args[1].name)
             if idx > -1: app.hierarchy.append(idx)

@@ -8,8 +8,8 @@
             pos: self.x + sp(2), self.y+ sp(2)
             size: self.width-sp(4), self.height - sp(4)
 
-Data_Showcase:
-    name: 'Carousel'
+DataShowcase:
+    name: 'DataCarousel'
     fullscreen: True
 
     BoxLayout:
@@ -21,17 +21,18 @@ Data_Showcase:
             width: self.height
             text: 'Prev'
             on_release: carousel.load_previous()
+
         Button:
             size_hint_x:None
             width: self.height
             text: 'Next'
             on_release: carousel.load_next()
 
-        Carousel:
-            id: carousel
+    Carousel:
+        id: carousel
 
-            ColorLabel:
-                text: 'Data Dummy Slide 1'
+        ColoredLabel:
+            text: 'Data Dummy Slide 1'
 
-            ColorLabel:
-                text: 'Data Dummy Slide 2'
+        ColoredLabel:
+            text: 'Data Dummy Slide 2'
