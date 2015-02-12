@@ -115,11 +115,12 @@ class connectOutput:
                 if(timeout[int(name)] >= 10):
                     print "Receiver %s disconnected"%(name)
                     ser[int(name)].close()
-                    try:
-                        ser[int(name)] = serial.Serial(active[int(name)])
-                        print "Re-established connection to receiver %s"%(name)
-                    except serial.SerialException:
-                        print "failed to re-establish connection to receiver %s"%(name)
+                    while not ser[int(name)].isOpen():
+                        try:
+                            ser[int(name)] = serial.Serial(active[int(name)])
+                            print "Re-established connection to receiver %s"%(name)
+                        except serial.SerialException:
+                            print "failed to re-establish connection to receiver %s"%(name)
             else:
                 print "Received something other than GGA message from receiver: " + line
         log.writelines(str(line))
