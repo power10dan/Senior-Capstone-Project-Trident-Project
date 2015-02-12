@@ -1,40 +1,42 @@
 DataShowcase:
     name:'TextInputs'
-    padding: 150
     focused: ti_default
     on_parent:
         if not args[1] and self.focused: self.focused.focus = False
         if args[1]: ti_default.focus = True
 
-    CTextInput
-        id: ti_default
+    BoxLayout:
         size_hint_y: None
-        height: '32dp'
-        text: 'Height Tolerance Input'
-        focus: True
+        orientation: 'vertical'
 
-    CTextInput:
+        CTextInput
+            id: ti_default
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+            text: 'Height Tolerance Input'
+            focus: True
+
+        CTextInput:
+            size_hint_y: .12,.12
+            height: '32dp'
+            multiline: False
+            text: 'Horizontal Tolerance Input'
+
+        CTextInput:
+            size_hint_y: .4, .4
+            height: '32dp'
+            multiline: False
+            text: 'Vertical Tolerance Input'
+
+    BoxLayout:
         size_hint_y: None
-        height: '32dp'
-        multiline: False
-        text: 'Horizontal Tolerance Input'
+        orientation: 'vertical'
 
-    Slider:
-        id: slider
-        max: 100
-        value: 20
-        padding: '32dp'
-
-    CTextInput:
-        size_hint_y: None
-        height: '32dp'
-        multiline: False
-        text: 'Vertical Tolerance Input'
-
-    Button:
-        text: 'Submit'
-        size_hint_x: None
-        width: 100
+        Button:
+            text: 'Submit'
+            size_hint_x: None
+            width: '100dp'
 
 <CTextInput@TextInput>
     on_focus:

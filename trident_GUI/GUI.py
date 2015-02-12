@@ -30,13 +30,13 @@ class TridentLayoutApp(App):
         self.index = (self.index - 1) % len(self.available_screens)
         screen = self.load_screen(self.index)
         sm = self.root.ids.sm
-        sm.switch_to(screen, direction='left')
+        sm.switch_to(screen, direction='right')
 
     def go_next_screen(self):
         self.index = (self.index +1) % len(self.available_screens)
         screen = self.load_screen(self.index)
         sm = self.root.ids.sm
-        sm.switch_to(screen, direction='right')
+        sm.switch_to(screen, direction='left')
 
     def go_screen(self, idx):
         self.index = idx
