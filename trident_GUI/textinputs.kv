@@ -31,13 +31,19 @@ DataShowcase:
 
     BoxLayout:
         size_hint_y: None
-        orientation: 'vertical'
+        orientation: 'horizontal'
 
         Button:
             text: 'Submit'
             size_hint_x: None
             width: '100dp'
 
+        Button:
+            text: 'Connect to router'
+            size_hint_x: None
+            width: '150dp'
+            on_release:
+                app.popup_open()
 <CTextInput@TextInput>
     on_focus:
         screen = self.parent.parent.parent.parent

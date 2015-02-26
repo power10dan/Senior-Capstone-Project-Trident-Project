@@ -8,7 +8,7 @@
 <ActionSpinner@Spinner+ActionItem>:
     canvas.before:
         Color:
-            rgba: .6, .6, .4, 1
+            rgba: .6, .6, .6, 1
 
         Rectangle:
             size:self.size
@@ -38,13 +38,7 @@
 
 BoxLayout:
     orientation: 'vertical'
-
-    canvas.before:
-        Color:
-            rgb: .6, .6, .6
-
     ActionBar:
-
         ActionView:
             id: av
             ActionPrevious:
@@ -54,7 +48,11 @@ BoxLayout:
                 id: spnr
                 text: "Options"
                 important: True
-                values: ["Set Tolerances", "Select Ports"]
+                values: app.screen_names
+                on_text:
+                    if sm.current != args[1]:\
+                    idx = app.screen_names.index(args[1]);\
+                    app.go_screen(idx)
 
             ActionButton:
                 text: '<'
@@ -63,7 +61,7 @@ BoxLayout:
             ActionButton:
                 text: '>'
                 on_release: app.go_next_screen()
-                mportant: True
+                important: True
 
     ScreenManager:
         id: sm

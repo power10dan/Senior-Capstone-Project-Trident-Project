@@ -1,9 +1,16 @@
+from kivy.uix.boxlayout import BoxLayout
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.uix.screenmanager import Screen
-from kivy.properties import NumericProperty, BooleanProperty, ListProperty
+from kivy.properties import NumericProperty, BooleanProperty, ListProperty, StringProperty
 from os.path import dirname, join
-
+from kivy.uix.settings import SettingsWithSidebar
+from kivy.uix.popup import Popup
+from kivy.core.window import Window
+from kivy.properties import ObjectProperty, OptionProperty
+from kivy.uix.label import Label
+from kivy.adapters.simplelistadapter import SimpleListAdapter
+from kivy.uix.listview import ListView
 class DataShowcase(Screen):
     fullscreen = BooleanProperty(False)
 
@@ -18,7 +25,7 @@ class TridentLayoutApp(App):
     hierarchy = ListProperty([])
 
     def build(self):
-        self.buildtitle = "Hello World"
+        self.buildtitle = "Poseidon Build"
         self.screens = {}
         self.available_screens = ['TextInputs','DataCarousel']
         self.screen_names = self.available_screens
@@ -37,7 +44,11 @@ class TridentLayoutApp(App):
         screen = self.load_screen(self.index)
         sm = self.root.ids.sm
         sm.switch_to(screen, direction='left')
-
+    def popup_open(self):
+        list_simple_adapter = SimpleListAdapter(data = ["Router 1", "Router 2", "Router 3"], cls=Label)
+        list_view = ListView(adapter = list_simple_adapter)
+        popup = Popup(title="Router Selections", content=list_view,size_hint = (None, None), size=(250,250))
+        popup.open()
     def go_screen(self, idx):
         self.index = idx
         self.root.ids.sm.switch_to(self.load_screen(idx), direction='left')
@@ -52,12 +63,27 @@ class TridentLayoutApp(App):
             idx = ahr.pop()
             self.go_screen(idx)
 
-    def  load_screen(self, index):
+    def load_screen(self, index):
         if index in self.screens:
             return self.screens[index]
         screen = Builder.load_file(self.available_screens[index].lower())
         self.screens[index] = screen
         return screen
+    def display_settings(self, settings):
+        p = self.settings_popup;
+        if p is None:
+            self.settings_popup = p = Popup(content=settings,
+                                            title= 'Settings',
+                                            size_hint=(0.8, 0.8))
+        if p.content is not settings:
+            p.content = settings
+        p.open()
+
+    def set_settings_cls(self, panel_type):
+        self.settings_cls = panel_type
+    def set_display_type(self, display_type):
+        self.destroy_settings()
+        self.display_type = display_type
 
 
 TridentLayoutApp().run()
