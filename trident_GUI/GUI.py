@@ -11,6 +11,10 @@ from kivy.properties import ObjectProperty, OptionProperty
 from kivy.uix.label import Label
 from kivy.adapters.simplelistadapter import SimpleListAdapter
 from kivy.uix.listview import ListView
+import logging
+
+LOG_FILENAME = 'GUI_log.log'
+logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
 
 
 class DataShowcase(Screen):
@@ -100,6 +104,21 @@ class TridentLayoutApp(App):
     def set_display_type(self, display_type):
         self.destroy_settings()
         self.display_type = display_type
+
+
+    # Checks tolerance inputs to ensure they are within the allowed range
+    # Returns 'False' if values are unacceptable, 'True' otherwise, and creates a warning in GUI_log.log
+    def verifyToleranceValues(self, horizontalToleranceInput, altitudeToleranceInput):
+        # NOTE: units are in meters
+
+        if horizontalToleranceInput < 0 or horizontalToleranceInput > 0.10:
+            logging.warn('horizontal tolerance outside of allowed range - input value between 0.0m and 0.10m')
+            return False
+        elif altitudeToleranceInput < 0 or altitudeToleranceInput > 0.15:
+            logging.warn('altitude tolerance outside of allowed range - input value between 0.0m and 0.10m')
+            return False
+        else:
+            return True
 
 
 TridentLayoutApp().run()
