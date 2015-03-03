@@ -1,33 +1,39 @@
 DataShowcase:
     name:'TextInputs'
-    focused: ti_default
+    focused: vertical_tolerance
     on_parent:
         if not args[1] and self.focused: self.focused.focus = False
-        if args[1]: ti_default.focus = True
+        if args[1]: vertical_tolerance.focus = True
 
     BoxLayout:
         size_hint_y: None
-        orientation: 'vertical'
-
+        ##orientation: 'vertical'
+        
+        Label:
+            text: 'vertical tolerance'
+            size_hint_y: None
         CTextInput
-            id: ti_default
+            id: vertical_tolerance
             size_hint_y: None
             height: '32dp'
             multiline: False
-            text: 'Height Tolerance Input'
-            focus: True
-
+            text: str(root.vertical_tolerance)
+            
+        Label:
+            text: 'horizontal tolerance'
         CTextInput:
+            id: horizontal_tolerance
             size_hint_y: .12,.12
             height: '32dp'
             multiline: False
-            text: 'Horizontal Tolerance Input'
-
+            text: str(root.horizontal_tolerance)
+            
         CTextInput:
-            size_hint_y: .4, .4
+            id: gps_spacing
+            size_hint_y: .12,.12
             height: '32dp'
             multiline: False
-            text: 'Vertical Tolerance Input'
+            text: str(root.gps_spacing)
 
     BoxLayout:
         size_hint_y: None
@@ -37,6 +43,7 @@ DataShowcase:
             text: 'Submit'
             size_hint_x: None
             width: '100dp'
+            on_release: app.submit()
 
         Button:
             text: 'Connect to router'
@@ -44,6 +51,7 @@ DataShowcase:
             width: '150dp'
             on_release:
                 app.popup_open()
+                
 <CTextInput@TextInput>
     on_focus:
         screen = self.parent.parent.parent.parent
