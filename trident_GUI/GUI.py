@@ -14,16 +14,14 @@ from kivy.uix.listview import ListView
 import logging
 import xml.etree.ElementTree as ET
 
+
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
-
-
-
 xmlFilePath = '..\ui.xml'
+
 
 class DataShowcase(Screen):
     fullscreen = BooleanProperty(False)
-    
     tree = ET.parse(xmlFilePath)
     
     vertical_tolerance = float(list(tree.iter('vertical'))[0].text)
@@ -35,15 +33,13 @@ class DataShowcase(Screen):
             return self.ids.content.add_widget(*args)
         return super(DataShowcase, self).add_widget(*args)
 
+
 class TridentLayoutApp(App):
     index = NumericProperty(-1)
     screen_names = ListProperty([])
     hierarchy = ListProperty([])
 
-    
     def build(self):
-        
-        
         self.buildtitle = "Poseidon Build"
         self.screens = {}
         self.available_screens = ['TextInputs','DataCarousel']
@@ -59,15 +55,15 @@ class TridentLayoutApp(App):
         sm.switch_to(screen, direction='right')
 
     def go_next_screen(self):
-        self.index = (self.index +1) % len(self.available_screens)
+        self.index = (self.index + 1) % len(self.available_screens)
         screen = self.load_screen(self.index)
         sm = self.root.ids.sm
         sm.switch_to(screen, direction='left')
         
     def popup_open(self):
-        list_simple_adapter = SimpleListAdapter(data = ["Router 1", "Router 2", "Router 3"], cls=Label)
-        list_view = ListView(adapter = list_simple_adapter)
-        popup = Popup(title="Router Selections", content=list_view,size_hint = (None, None), size=(250,250))
+        list_simple_adapter = SimpleListAdapter(data=["Router 1", "Router 2", "Router 3"], cls=Label)
+        list_view = ListView(adapter=list_simple_adapter)
+        popup = Popup(title="Router Selections", content=list_view, size_hint=(None, None), size=(250, 250))
         popup.open()
         
     def go_screen(self, idx):
@@ -94,7 +90,7 @@ class TridentLayoutApp(App):
     def display_settings(self, settings):
         p = self.settings_popup
         if p is None:
-            self.settings_popup = p = Popup(content=settings, title= 'Settings', size_hint=(0.8, 0.8))
+            self.settings_popup = p = Popup(content=settings, title='Settings', size_hint=(0.8, 0.8))
         if p.content is not settings:
             p.content = settings
         p.open()
@@ -116,14 +112,17 @@ class TridentLayoutApp(App):
         
     # Checks tolerance inputs to ensure they are within the allowed range
     # Returns 'False' if values are unacceptable, 'True' otherwise, and creates a warning in GUI_log.log
-    def verifyToleranceValues(self, horizontalToleranceInput, altitudeToleranceInput):
+    def verifyToleranceValues(self, horizontalToleranceInput, altitudeToleranceInput, gps_distance):
         # NOTE: units are in meters
 
         if horizontalToleranceInput < 0 or horizontalToleranceInput > 0.10:
             logging.warn('horizontal tolerance outside of allowed range - input value between 0.0m and 0.10m')
             return False
         elif altitudeToleranceInput < 0 or altitudeToleranceInput > 0.15:
-            logging.warn('altitude tolerance outside of allowed range - input value between 0.0m and 0.10m')
+            logging.warn('altitude tolerance outside of allowed range - input value between 0.0m and 0.15m')
+            return False
+        elif gps_distance != 0.50:
+            logging.warn('gps_distance outside of allowed range - only currently accepted value is 0.50m')
             return False
         else:
             return True
