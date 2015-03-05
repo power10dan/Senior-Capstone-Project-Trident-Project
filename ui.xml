@@ -2,9 +2,15 @@
     <Debugging>T</Debugging>
 	<zone>3601</zone>
 	<tolerances>
+<<<<<<< HEAD
+		<gps_spacing>0.5</gps_spacing>
+		<vertical>0.1</vertical>
+		<horizontal>0.05</horizontal>
+=======
 		<gps_spacing gps_spacing="0.5">0.5</gps_spacing>
 		<vertical vertical="0.1">0.1</vertical>
 		<horizontal horizontal="0.05">0.05</horizontal>
+>>>>>>> 4c298eec7f6dbf27836baaf5bdaa349226f28ee8
 		<units>m</units>
 	</tolerances>	
 	<receivers>

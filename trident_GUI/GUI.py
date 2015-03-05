@@ -7,7 +7,11 @@ from os.path import dirname, join
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
+<<<<<<< HEAD
+from kivy.properties import ObjectProperty, OptionProperty, BoundedNumericProperty
+=======
 from kivy.properties import ObjectProperty, OptionProperty
+>>>>>>> 4c298eec7f6dbf27836baaf5bdaa349226f28ee8
 from kivy.uix.label import Label
 from kivy.adapters.simplelistadapter import SimpleListAdapter
 from kivy.uix.listview import ListView
@@ -17,6 +21,10 @@ import xml.etree.ElementTree as ET
 
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
+<<<<<<< HEAD
+
+=======
+>>>>>>> 4c298eec7f6dbf27836baaf5bdaa349226f28ee8
 xmlFilePath = '..\ui.xml'
 
 
@@ -24,8 +32,13 @@ class DataShowcase(Screen):
     fullscreen = BooleanProperty(False)
     tree = ET.parse(xmlFilePath)
     
+<<<<<<< HEAD
+    vertical_tolerance = BoundedNumericProperty(float(list(tree.iter('vertical'))[0].text),min = 0.0,max = 0.15)
+    horizontal_tolerance = BoundedNumericProperty(float(list(tree.iter('horizontal'))[0].text),min = 0,max = 0.10)
+=======
     vertical_tolerance = float(list(tree.iter('vertical'))[0].text)
     horizontal_tolerance = float(list(tree.iter('horizontal'))[0].text)
+>>>>>>> 4c298eec7f6dbf27836baaf5bdaa349226f28ee8
     gps_spacing = float(list(tree.iter('gps_spacing'))[0].text)
     
     def add_widget(self, *args):
@@ -33,7 +46,10 @@ class DataShowcase(Screen):
             return self.ids.content.add_widget(*args)
         return super(DataShowcase, self).add_widget(*args)
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> 4c298eec7f6dbf27836baaf5bdaa349226f28ee8
 class TridentLayoutApp(App):
     index = NumericProperty(-1)
     screen_names = ListProperty([])
@@ -101,6 +117,45 @@ class TridentLayoutApp(App):
     def set_display_type(self, display_type):
         self.destroy_settings()
         self.display_type = display_type
+<<<<<<< HEAD
+    
+    def dropdown(self):
+        receiverList = []
+        tree = ET.parse(xmlFilePath)
+        RSearch = tree.iter('receiver')
+        for r in RSearch:
+            if (list(r)[0].text).upper() == 'F':
+                receiverList.append(str(list(r)[4].text))
+        print receiverList        
+        list_simple_adapter = SimpleListAdapter(data=receiverList, cls=Label)
+        list_view = ListView(adapter=list_simple_adapter)
+        popup = Popup(title="Receivers", content=list_view, size_hint=(None, None), size=(250, 250))
+        popup.open()
+    
+
+    def toleranceReset(self,horizontal,vertical,gps_spacing):
+        DataShowcase.horizontal_tolerance.set(horizontal)
+        DataShowcase.vertical_tolerance.value = vertical
+        DataShowcase.gps_spacing.value = gps_spacing
+        
+    def submit(self,horizontal,vertical,gps_spacing):
+        tree = ET.parse(xmlFilePath)
+        horizontal = float(horizontal)
+        vertical = float(vertical)
+        gps_spacing = float(gps_spacing)
+        
+        if self.verifyToleranceValues(horizontal,vertical,gps_spacing):
+            if vertical != DataShowcase.vertical_tolerance:
+                list(tree.iter('vertical'))[0].text = str(vertical)
+            if horizontal != DataShowcase.horizontal_tolerance:
+                list(tree.iter('horizontal'))[0].text = str(horizontal)
+            if gps_spacing != DataShowcase.gps_spacing:
+                list(tree.iter('gps_spacing'))[0].text = str(gps_spacing)
+            if horizontal != DataShowcase.horizontal_tolerance or \
+               vertical != DataShowcase.vertical_tolerance or \
+               gps_spacing != DataShowcase.gps_spacing:
+                tree.write(xmlFilePath)
+=======
 
     def submit(self):
         tree = ET.parse(xmlFilePath)
@@ -109,6 +164,7 @@ class TridentLayoutApp(App):
         list(tree.iter('horizontal'))[0].text = str(DataShowcase.horizontal_tolerance)
         list(tree.iter('gps_spacing'))[0].text = str(DataShowcase.gps_spacing)
         tree.write(xmlFilePath)
+>>>>>>> 4c298eec7f6dbf27836baaf5bdaa349226f28ee8
         
     # Checks tolerance inputs to ensure they are within the allowed range
     # Returns 'False' if values are unacceptable, 'True' otherwise, and creates a warning in GUI_log.log

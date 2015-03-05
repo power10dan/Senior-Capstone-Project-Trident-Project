@@ -1,9 +1,53 @@
+<<<<<<< HEAD
+#:import sla kivy.adapters.simplelistadapter
+=======
+>>>>>>> 4c298eec7f6dbf27836baaf5bdaa349226f28ee8
 DataShowcase:
     name:'TextInputs'
     focused: vertical_tolerance
     on_parent:
         if not args[1] and self.focused: self.focused.focus = False
         if args[1]: vertical_tolerance.focus = True
+<<<<<<< HEAD
+    
+    GridLayout:
+        ##size_hint_y: None
+        
+        cols: 2
+        size: self.size
+        spacing: "10dp"
+        padding: "10dp"
+        
+        Label:
+            text: 'Left Receiver'
+        Button:
+            id: 'leftReceiver'
+            text: '-'
+            size: (100,200)
+            on_release:
+                app.dropdown()
+
+        Label:
+            text: 'Center Receiver'
+        Button:
+            id: 'centerReceiver'
+            text: '-'
+            size_hint_y: .12,.12
+            on_release:
+                app.dropdown()
+
+        Label:
+            text: 'Right Receiver'
+        Button:
+            id: 'rightReceiver'
+            text: '-'
+            size_hint_y: .12,.12
+            on_release:
+                app.dropdown()
+        
+        Label:
+            text: 'Vertical Tolerance:'
+=======
 
     BoxLayout:
         size_hint_y: None
@@ -12,6 +56,7 @@ DataShowcase:
         Label:
             text: 'vertical tolerance'
             size_hint_y: None
+>>>>>>> 4c298eec7f6dbf27836baaf5bdaa349226f28ee8
         CTextInput
             id: vertical_tolerance
             size_hint_y: None
@@ -20,6 +65,25 @@ DataShowcase:
             text: str(root.vertical_tolerance)
             
         Label:
+<<<<<<< HEAD
+            text: 'Horizontal Tolerance:'
+        CTextInput:
+            id: horizontal_tolerance
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+            text: str(root.horizontal_tolerance)
+
+        Label:
+            text: 'GPS Spacing:'    
+        CTextInput:
+            id: gps_spacing
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+            text: str(root.gps_spacing)
+            
+=======
             text: 'horizontal tolerance'
         CTextInput:
             id: horizontal_tolerance
@@ -39,10 +103,32 @@ DataShowcase:
         size_hint_y: None
         orientation: 'horizontal'
 
+>>>>>>> 4c298eec7f6dbf27836baaf5bdaa349226f28ee8
         Button:
             text: 'Submit'
             size_hint_x: None
             width: '100dp'
+<<<<<<< HEAD
+            on_release: 
+                app.submit(horizontal_tolerance.text,vertical_tolerance.text,gps_spacing.text)
+
+        Button:
+            text: 'Reset Tolerances'
+            size_hint_x: None
+            width: '100dp'
+            on_release:
+                vertical_tolerance.bind(text="0.1")
+                horizontal_tolerance.bind(text="0.05")
+                app.submit("0.05","0.1","0.5")
+                
+
+<dropdown>:
+    ListView:
+        adapter:
+            sla.SimpleListAdapter([{i} for i in app.dropdown()])
+
+        
+=======
             on_release: app.submit()
 
         Button:
@@ -51,6 +137,7 @@ DataShowcase:
             width: '150dp'
             on_release:
                 app.popup_open()
+>>>>>>> 4c298eec7f6dbf27836baaf5bdaa349226f28ee8
                 
 <CTextInput@TextInput>
     on_focus:
