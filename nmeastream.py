@@ -166,12 +166,5 @@ plt.show()
             # ('Geoidal Separation', 'geo_sep'),
             # ('Units of Geoidal Separation (meters)', 'geo_sep_units'),
             # ('Age of Differential GPS Data (secs)', 'age_gps_data'),
-<<<<<<< HEAD
-<<<<<<< HEAD
             # ('Differential Reference Station ID', 'ref_station_id'))
-=======
-            # ('Differential Reference Station ID', 'ref_station_id'))
->>>>>>> 41c95f2c400b134f3db7276de3b27bcf75c5fa06
-=======
-            # ('Differential Reference Station ID', 'ref_station_id'))
->>>>>>> 4c298eec7f6dbf27836baaf5bdaa349226f28ee8
+
