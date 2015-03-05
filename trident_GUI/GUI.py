@@ -7,7 +7,7 @@ from os.path import dirname, join
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
-from kivy.properties import ObjectProperty, OptionProperty, BoundedNumericProperty
+from kivy.properties import ObjectProperty, OptionProperty
 from kivy.uix.label import Label
 from kivy.adapters.simplelistadapter import SimpleListAdapter
 from kivy.uix.listview import ListView
@@ -24,10 +24,9 @@ xmlFilePath = '..\ui.xml'
 class DataShowcase(Screen):
     fullscreen = BooleanProperty(False)
     tree = ET.parse(xmlFilePath)
-    
+
     vertical_tolerance = float(list(tree.iter('vertical'))[0].text)
     horizontal_tolerance = float(list(tree.iter('horizontal'))[0].text)
-
     gps_spacing = float(list(tree.iter('gps_spacing'))[0].text)
     
     def add_widget(self, *args):
@@ -143,7 +142,6 @@ class TridentLayoutApp(App):
     # Returns 'False' if values are unacceptable, 'True' otherwise, and creates a warning in GUI_log.log
     def verifyToleranceValues(self, horizontalToleranceInput, altitudeToleranceInput, gps_distance):
         # NOTE: units are in meters
-
         if horizontalToleranceInput < 0 or horizontalToleranceInput > 0.10:
             logging.warn('horizontal tolerance outside of allowed range - input value between 0.0m and 0.10m')
             return False
