@@ -16,8 +16,8 @@
     border: 27, 20, 12, 12
     option_cls: Factory.ActionSpinnerOptions
 
-<ActionDropDown>:
-    on_size: self.width = '100sp'
+##<ActionDropDown>:
+##    on_size: self.width = '100sp'
 
 BoxLayout:
     orientation: 'vertical'
@@ -27,15 +27,15 @@ BoxLayout:
             ActionPrevious:
                 title: 'Poseidon'
 
-            ActionSpinner:
-                id: spnr
-                text: "Options"
-                important: True
-                values: app.screen_names
-                on_text:
-                    if sm.current != args[1]:\
-                    idx = app.screen_names.index(args[1]);\
-                    app.go_screen(idx)
+##            ActionSpinner:
+##                id: spnr
+##                text: "Options"
+##                important: True
+##                values: app.screen_names
+##                on_text:
+##                    if sm.current != args[1]:\
+##                    idx = app.screen_names.index(args[1]);\
+##                    app.go_screen(idx)
 
             ActionButton:
                 text: '<'

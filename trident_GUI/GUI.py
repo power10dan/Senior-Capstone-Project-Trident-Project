@@ -10,6 +10,8 @@ from kivy.core.window import Window
 from kivy.properties import ObjectProperty, OptionProperty
 from kivy.uix.label import Label
 from kivy.adapters.simplelistadapter import SimpleListAdapter
+from kivy.adapters.listadapter import ListAdapter
+from kivy.uix.listview import ListItemButton
 from kivy.uix.listview import ListView
 import logging
 import xml.etree.ElementTree as ET
@@ -18,16 +20,17 @@ import xml.etree.ElementTree as ET
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
 
-xmlFilePath = '..\ui.xml'
+xmlFilePath = '..//ui.xml'
 
 
 class DataShowcase(Screen):
     fullscreen = BooleanProperty(False)
     tree = ET.parse(xmlFilePath)
 
-    vertical_tolerance = float(list(tree.iter('vertical'))[0].text)
-    horizontal_tolerance = float(list(tree.iter('horizontal'))[0].text)
-    gps_spacing = float(list(tree.iter('gps_spacing'))[0].text)
+    vertical_tolerance = NumericProperty(float(list(tree.iter('vertical'))[0].text))
+    horizontal_tolerance = NumericProperty(float(list(tree.iter('horizontal'))[0].text))
+    gps_spacing = NumericProperty(float(list(tree.iter('gps_spacing'))[0].text))
+    
     
     def add_widget(self, *args):
         if 'content' in self.ids:
@@ -102,23 +105,20 @@ class TridentLayoutApp(App):
         self.destroy_settings()
         self.display_type = display_type
 
-    def dropdown(self):
+    def dropdown(self,loc):
         receiverList = []
         tree = ET.parse(xmlFilePath)
         RSearch = tree.iter('receiver')
         for r in RSearch:
             if (list(r)[0].text).upper() == 'F':
                 receiverList.append(str(list(r)[4].text))
-        print receiverList        
-        list_simple_adapter = SimpleListAdapter(data=receiverList, cls=Label)
-        list_view = ListView(adapter=list_simple_adapter)
+        list_adapter = ListAdapter(data=receiverList, allow_empty_selection=True,selection_mode='single',on_selection_change=self.choiceReceiver(loc), cls=ListItemButton)
+        list_view = ListView(adapter=list_adapter)
         popup = Popup(title="Receivers", content=list_view, size_hint=(None, None), size=(250, 250))
         popup.open()
-    
-    def toleranceReset(self,horizontal,vertical,gps_spacing):
-        DataShowcase.horizontal_tolerance.set(horizontal)
-        DataShowcase.vertical_tolerance.value = vertical
-        DataShowcase.gps_spacing.value = gps_spacing
+        
+    def choiceReceiver(self,loc):
+        print "chose %s for %s receiver"%(ListAdapter.selection,loc)
         
     def submit(self,horizontal,vertical,gps_spacing):
         tree = ET.parse(xmlFilePath)
