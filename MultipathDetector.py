@@ -197,16 +197,16 @@ class MultipathDetector():
 
         outlierMultiplier = 3
         multipathFlag = False
-        multipathFlag = linearToleranceCheck(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3, multipathFlag)
-        outlierFlag = outlierCheck(outlierMultiplier, gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3)
+        multipathFlag = MultipathDetector.linearToleranceCheck(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3, multipathFlag)
+        outlierFlag = MultipathDetector.outlierCheck(outlierMultiplier, gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3)
 
         # NOTE: at this point in the code, the only way multipathing can occur is by failing the linearTolerance check
         # This means that the gps units could possibly be mislabeled as having the center receiver in the wrong position
         if multipathFlag is True:
             mislabledFlag = MultipathDetector.checkForMislabeledGPSUnits(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3)
 
-        outlierFlag = outlierDotProductCheck(dotProduct, dotProductTolerance, outlierMultiplier, outlierFlag)
-        multipathFlag = dotProductCheck(dotProduct, dotProductTolerance, multipathFlag)
+        outlierFlag = MultipathDetector.outlierDotProductCheck(dotProduct, dotProductTolerance, outlierMultiplier, outlierFlag)
+        multipathFlag = MultipathDetector.dotProductCheck(dotProduct, dotProductTolerance, multipathFlag)
 
         return multipathFlag, outlierFlag
 
