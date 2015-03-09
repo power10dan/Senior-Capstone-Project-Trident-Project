@@ -196,6 +196,7 @@ class MultipathDetector():
         outlierMultiplier = 3
         multipathFlag = False
         outlierFlag = False
+        
         if MultipathDetector.linearToleranceCheck(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3, verticalTolerance, multipathFlag):
             multipathFlag = True
         if MultipathDetector.altitudeCheck(verticalTolerance, coord1[2], coord2[2], coord3[2]):
@@ -212,7 +213,7 @@ class MultipathDetector():
             outlierFlag = True
         if MultipathDetector.dotProductCheck(dotProduct, dotProductTolerance, multipathFlag):
             multipathFlag = True
-            
+
         return multipathFlag, outlierFlag
 
 
