@@ -25,7 +25,7 @@ class MultipathDetector():
                 log.warn("GPS Units may be mislabeled!!! Make sure the center unit is labeled as #2!")
                 return True
 
-
+                
     @staticmethod
     def computeDistance(coord1, coord2):
         coord1_x, coord1_y = coord1
@@ -108,9 +108,9 @@ class MultipathDetector():
 
         return outlierFlag
 
-
+    
     @staticmethod
-    def linearToleranceCheck(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3, multipathFlag):
+    def linearToleranceCheck(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3, verticalTolerance, multipathFlag):
         log.info('Checking linear tolerance')
 
         if dist1_2 < (gpsDistance - linearTolerance):
@@ -130,8 +130,6 @@ class MultipathDetector():
             multipathFlag = True
         elif dist1_3 > (2*gpsDistance) + linearTolerance:
             log.info('dist1_3 > (2*gpsDistance) + linearTolerance')
-            multipathFlag = True
-        elif MultipathDetector.altitudeCheck(verticalTolerance, coord1[2], coord2[2], coord3[2], True):
             multipathFlag = True
 
         return multipathFlag
@@ -176,8 +174,8 @@ class MultipathDetector():
         
         dotProductTolerance = MultipathDetector.computeDotProductTolerance(gpsDistance, linearTolerance)
          
-        log.info('MultipathDetect Algorithm Debugging Mode')
-        log.info('Compute Distance Debugging Mode:')
+        log.info('MultipathDetect Algorithm:')
+        log.info('Compute Distance:')
         log.info('GPS 1 and 2')
         dist1_2 = MultipathDetector.computeDistance(coord1[:-1], coord2[:-1])
         log.info('GPS 2 and 3')
@@ -197,22 +195,29 @@ class MultipathDetector():
 
         outlierMultiplier = 3
         multipathFlag = False
-        multipathFlag = linearToleranceCheck(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3, multipathFlag)
-        outlierFlag = outlierCheck(outlierMultiplier, gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3)
-
+        outlierFlag = False
+        if MultipathDetector.linearToleranceCheck(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3, verticalTolerance, multipathFlag):
+            multipathFlag = True
+        if MultipathDetector.altitudeCheck(verticalTolerance, coord1[2], coord2[2], coord3[2]):
+            multipathFlag = True
+        if MultipathDetector.outlierCheck(outlierMultiplier, gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3):
+            outlierFlag = True
+            
         # NOTE: at this point in the code, the only way multipathing can occur is by failing the linearTolerance check
         # This means that the gps units could possibly be mislabeled as having the center receiver in the wrong position
         if multipathFlag is True:
             mislabledFlag = MultipathDetector.checkForMislabeledGPSUnits(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3)
 
-        outlierFlag = outlierDotProductCheck(dotProduct, dotProductTolerance, outlierMultiplier, outlierFlag)
-        multipathFlag = dotProductCheck(dotProduct, dotProductTolerance, multipathFlag)
-
+        if MultipathDetector.outlierDotProductCheck(dotProduct, dotProductTolerance, outlierMultiplier, outlierFlag):
+            outlierFlag = True
+        if MultipathDetector.dotProductCheck(dotProduct, dotProductTolerance, multipathFlag):
+            multipathFlag = True
+            
         return multipathFlag, outlierFlag
 
 
     @staticmethod
-    def altitudeCheck(verticalTolerance, alt1, alt2, alt3, debug = False):
+    def altitudeCheck(verticalTolerance, alt1, alt2, alt3):
         log.info('Altitude Check Debugging Mode')
         altMultipath = False
         alt1 = float(alt1)

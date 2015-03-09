@@ -1,13 +1,13 @@
 <ui>
     <Debugging>T</Debugging>
-	<zone>3601</zone>
-	<tolerances>
-		<gps_spacing>0.5</gps_spacing>
-		<vertical>0.1</vertical>
-		<horizontal>0.05</horizontal>
-		<units>m</units>
-	</tolerances>	
-	<receivers>
+    <zone>3601</zone>
+    <tolerances>
+        <gps_spacing>0.5</gps_spacing>
+        <vertical>0.1</vertical>
+        <horizontal>0.05</horizontal>
+        <units>m</units>
+    </tolerances>
+    <receivers>
         <receiver>
             <use>T</use>
             <left>F</left>

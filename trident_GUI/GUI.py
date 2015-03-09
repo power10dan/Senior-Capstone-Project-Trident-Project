@@ -7,14 +7,16 @@ from os.path import dirname, join
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.uix.popup import Popup
 from kivy.core.window import Window
-from kivy.properties import ObjectProperty, OptionProperty
+from kivy.properties import ObjectProperty, OptionProperty, BoundedNumericProperty
 from kivy.uix.label import Label
 from kivy.adapters.simplelistadapter import SimpleListAdapter
 from kivy.adapters.listadapter import ListAdapter
 from kivy.uix.listview import ListItemButton
 from kivy.uix.listview import ListView
+from kivy.uix.button import Button
 import logging
 import xml.etree.ElementTree as ET
+import re
 
 
 LOG_FILENAME = 'GUI_log.log'
@@ -22,7 +24,11 @@ logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctim
 
 xmlFilePath = '..//ui.xml'
 
-
+class DataItem(object):
+    def __init__(self, text='', is_selected=False):
+        self.text = text
+        self.is_selected = is_selected
+        
 class DataShowcase(Screen):
     fullscreen = BooleanProperty(False)
     tree = ET.parse(xmlFilePath)
@@ -110,21 +116,31 @@ class TridentLayoutApp(App):
         tree = ET.parse(xmlFilePath)
         RSearch = tree.iter('receiver')
         for r in RSearch:
-            if (list(r)[0].text).upper() == 'F':
-                receiverList.append(str(list(r)[4].text))
-        list_adapter = ListAdapter(data=receiverList, allow_empty_selection=True,selection_mode='single',on_selection_change=self.choiceReceiver(loc), cls=ListItemButton)
+            if (list(r)[0].text).upper() == 'T':
+                receiverList.append(Button(text="%s"%(str(list(r)[4].text))))
+                Button.bind(on_release=self.choiceReceiver(loc))
+#        list_item_args_converter = lambda row_index, obj: {'text': obj.text,
+#                                                       'size_hint_y': None,
+#                                                       'height': 25}
+        list_adapter = ListAdapter(data=receiverList,
+#                                    args_converter=list_item_args_converter,
+                                    allow_empty_selection=False,
+                                    selection_mode='single', 
+                                    cls=ListItemButton)
         list_view = ListView(adapter=list_adapter)
         popup = Popup(title="Receivers", content=list_view, size_hint=(None, None), size=(250, 250))
+        #popup.bind(on_dismiss=self.choiceReceiver(loc))
         popup.open()
+        
         
     def choiceReceiver(self,loc):
         print "chose %s for %s receiver"%(ListAdapter.selection,loc)
         
     def submit(self,horizontal,vertical,gps_spacing):
         tree = ET.parse(xmlFilePath)
-        horizontal = float(horizontal)
-        vertical = float(vertical)
-        gps_spacing = float(gps_spacing)
+        horizontal = float(re.sub('[^\.0-9]','',horizontal))
+        vertical = float(re.sub('[^\.0-9]','',vertical))
+        gps_spacing = float(re.sub('[^\.0-9]','',gps_spacing))
         
         if self.verifyToleranceValues(horizontal,vertical,gps_spacing):
             if vertical != DataShowcase.vertical_tolerance:

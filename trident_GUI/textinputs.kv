@@ -20,7 +20,7 @@ DataShowcase:
             text: '-'
             size: (100,200)
             on_release:
-                app.dropdown('L')
+                app.dropdown('leftReceiver')
 
         Label:
             text: 'Center Receiver'
@@ -29,7 +29,7 @@ DataShowcase:
             text: '-'
             size_hint_y: .12,.12
             on_release:
-                app.dropdown('C')
+                app.dropdown('centerReceiver')
 
         Label:
             text: 'Right Receiver'
@@ -38,7 +38,7 @@ DataShowcase:
             text: '-'
             size_hint_y: .12,.12
             on_release:
-                app.dropdown('R')
+                app.dropdown('rightReceiver')
         
         Label:
             text: 'Vertical Tolerance:'
@@ -82,7 +82,7 @@ DataShowcase:
                 vertical_tolerance.text = str(0.1)
                 horizontal_tolerance.text = str(0.05)
                 gps_spacing.text = str(0.5)
-                app.submit(float(0.05),float(0.1),float(0.5))
+                app.submit('0.05','0.1','0.5')
 
 <CTextInput@TextInput>
     on_focus:
