@@ -16,6 +16,8 @@ from kivy.uix.listview import ListView
 from kivy.uix.button import Button
 import logging
 import xml.etree.ElementTree as ET
+import math
+import re
 import re
 
 
@@ -28,7 +30,7 @@ class DataItem(object):
     def __init__(self, text='', is_selected=False):
         self.text = text
         self.is_selected = is_selected
-        
+
 class DataShowcase(Screen):
     fullscreen = BooleanProperty(False)
     tree = ET.parse(xmlFilePath)
@@ -36,8 +38,7 @@ class DataShowcase(Screen):
     vertical_tolerance = NumericProperty(float(list(tree.iter('vertical'))[0].text))
     horizontal_tolerance = NumericProperty(float(list(tree.iter('horizontal'))[0].text))
     gps_spacing = NumericProperty(float(list(tree.iter('gps_spacing'))[0].text))
-    
-    
+
     def add_widget(self, *args):
         if 'content' in self.ids:
             return self.ids.content.add_widget(*args)
@@ -62,19 +63,116 @@ class TridentLayoutApp(App):
         screen = self.load_screen(self.index)
         sm = self.root.ids.sm
         sm.switch_to(screen, direction='right')
-
     def go_next_screen(self):
         self.index = (self.index + 1) % len(self.available_screens)
         screen = self.load_screen(self.index)
         sm = self.root.ids.sm
         sm.switch_to(screen, direction='left')
-        
+
+    def lat_long_to_Oregon_Grid(self, lat, lon, zone):
+        # this is a direct translation of the MATLAB code Geodetic2SPS
+        # check input
+        if ((lat > 360 and lat < 0) or (long > 360 and long < 0)):
+            print 'Your input for lat or long has to be in degrees'
+            return
+        #init variables
+        Lat0 = 0
+        LatS = 0
+        LatN = 0
+        Eo = 0
+        #load GRS80 constants.
+        a = 6378137.0 # meters
+        f = float(1/298.257222101)
+        e = math.sqrt(2*f-math.pow(f,2))
+        #define zones in NAD83
+        OREGON_N_ZONE = 3601
+        OREGON_S_ZONE = 3602
+        lambdacm = 120.5
+        Nb = 0
+        # check which zone
+        if zone == OREGON_N_ZONE:
+            Lat0 = float(43.0+40.0/60.0)
+            LatS = float(44.0+20.0/60.0)
+            LatN = 46.0
+            Eo = 2500000.0
+
+        if zone == OREGON_S_ZONE:
+            Lat0 = float(41.0+40.0/60.0)
+            LatS = float(42.0+20.0/60.0)
+            LatN = 44.0
+            Eo = 1500000.0 #meters
+
+        if zone != OREGON_S_ZONE and zone != OREGON_N_ZONE:
+            print 'Your zone input is wrong'
+            return
+
+        sin_lat_d = float(math.sin(float(lat*math.pi/180)))
+        cos_lat_d = float(math.cos(float(lat*math.pi/180)))
+        LatS_d = float(math.sin(float(LatS)*math.pi/180))
+        LatN_d = float(math.sin(float(LatN*math.pi/180)))
+        Lat0_d = float(math.sin(float(Lat0)*math.pi/180))
+
+
+        W = float(math.sqrt(1-math.pow(e,2)*(math.pow(sin_lat_d, 2))))
+        M = float(cos_lat_d / W)
+        T = float(math.sqrt(float(((1-sin_lat_d)/ (1+sin_lat_d)) * math.pow(((1+e*sin_lat_d) / (1-e*sin_lat_d)), e))))
+
+        w1 = float(math.sqrt(float(1-math.pow(e,2)*(math.pow(LatS_d,2)))))
+        w2 = float(math.sqrt(float(1-math.pow(e,2)*(math.pow(LatN_d, 2)))))
+
+        m1 = float(math.cos(LatS*math.pi/180) / w1)
+        m2 = float(math.cos(LatN*math.pi/180) / w2)
+
+        t0 = float(math.sqrt(float(((1-Lat0_d) /(1+Lat0_d))*math.pow(((1+e*Lat0_d)/(1-e*Lat0_d)),e))))
+        t1 = float(math.sqrt(float(((1-LatS_d) /(1+LatS_d))*math.pow(((1+e*LatS_d)/(1-e*LatS_d)),e))))
+        t2 = float(math.sqrt(float(((1-LatN_d) /(1+LatN_d))*math.pow(((1+e*LatN_d)/(1-e*LatN_d)),e))))
+
+        n = float((math.log(m1)- math.log(m2)) / (math.log(t1)- math.log(t2)))
+
+        F =float(m1 / (n*math.pow(t1,n)))
+        Rb = float(a*F*math.pow(t0,n))
+        gamma = float((lambdacm-lon) *n)
+
+        R = a*F*math.pow(T,n)
+        k =(R*n) / (a*M)
+
+        easting = R*math.sin(gamma*math.pi/180) + Eo
+        northing = Rb - R*math.cos(gamma*math.pi/180)+Nb
+        result = "%f   %f  %f  %f\n" % (northing, easting, k, gamma)
+        return result
+
+    def quality_reader(self):
+        #this part is solely for demoing.
+        #basically read from a known output file
+        #and check of the coordinates are of output value of 4
+        with open('../output/cart_2014-11-17-1.txt') as f:
+            lines = [next(f).strip().split('\n') for x in xrange(1027)]
+        count = 0
+        for x in xrange(1027):
+            if (lines[x][0].isdigit()):
+                print 'bad data'
+            else:
+                count = count + 1
+        result = 'There are %d quality points' % count
+        return result
+        # quality points
     def popup_open(self):
         list_simple_adapter = SimpleListAdapter(data=["Router 1", "Router 2", "Router 3"], cls=Label)
         list_view = ListView(adapter=list_simple_adapter)
         popup = Popup(title="Router Selections", content=list_view, size_hint=(None, None), size=(250, 250))
         popup.open()
-        
+
+    def dms_degree_conversion(self, DMS):
+        #split DMS string into array and
+        #perform conversion
+        result = re.split('\s+', DMS)
+        degree = int(result[0])
+        dec_min = float(result[1]) / 60.0
+        dec_sec = float(result[2]) / 3600.00
+        decimal_degrees = float(degree+dec_min+dec_sec)
+
+        result = '%d %f' % (degree, decimal_degrees)
+        return result
     def go_screen(self, idx):
         self.index = idx
         self.root.ids.sm.switch_to(self.load_screen(idx), direction='left')
@@ -95,7 +193,7 @@ class TridentLayoutApp(App):
         screen = Builder.load_file(self.available_screens[index].lower())
         self.screens[index] = screen
         return screen
-        
+
     def display_settings(self, settings):
         p = self.settings_popup
         if p is None:
@@ -106,7 +204,7 @@ class TridentLayoutApp(App):
 
     def set_settings_cls(self, panel_type):
         self.settings_cls = panel_type
-        
+
     def set_display_type(self, display_type):
         self.destroy_settings()
         self.display_type = display_type
@@ -119,29 +217,27 @@ class TridentLayoutApp(App):
             if (list(r)[0].text).upper() == 'T':
                 receiverList.append(Button(text="%s"%(str(list(r)[4].text))))
                 Button.bind(on_release=self.choiceReceiver(loc))
-#        list_item_args_converter = lambda row_index, obj: {'text': obj.text,
-#                                                       'size_hint_y': None,
-#                                                       'height': 25}
         list_adapter = ListAdapter(data=receiverList,
-#                                    args_converter=list_item_args_converter,
                                     allow_empty_selection=False,
-                                    selection_mode='single', 
+                                    selection_mode='single',
                                     cls=ListItemButton)
         list_view = ListView(adapter=list_adapter)
         popup = Popup(title="Receivers", content=list_view, size_hint=(None, None), size=(250, 250))
-        #popup.bind(on_dismiss=self.choiceReceiver(loc))
         popup.open()
-        
-        
+
     def choiceReceiver(self,loc):
         print "chose %s for %s receiver"%(ListAdapter.selection,loc)
-        
+
     def submit(self,horizontal,vertical,gps_spacing):
         tree = ET.parse(xmlFilePath)
+        horizontal = float(horizontal)
+        vertical = float(vertical)
+        gps_spacing = float(gps_spacing)
+
         horizontal = float(re.sub('[^\.0-9]','',horizontal))
         vertical = float(re.sub('[^\.0-9]','',vertical))
         gps_spacing = float(re.sub('[^\.0-9]','',gps_spacing))
-        
+
         if self.verifyToleranceValues(horizontal,vertical,gps_spacing):
             if vertical != DataShowcase.vertical_tolerance:
                 list(tree.iter('vertical'))[0].text = str(vertical)
@@ -169,7 +265,7 @@ class TridentLayoutApp(App):
             return False
         else:
             return True
-            
-            
+
+
 TridentLayoutApp().run()
 
