@@ -145,17 +145,17 @@ class TridentLayoutApp(App):
         #this part is solely for demoing.
         #basically read from a known output file
         #and check of the coordinates are of output value of 4
-        with open('../output/cart_2014-11-17-1.txt') as f:
-            lines = [next(f).strip().split('\n') for x in xrange(1027)]
         count = 0
-        for x in xrange(1027):
+        with open('../output/cart_2014-11-17-1.txt') as f:
+            lines = f.readlines()
+        for x in range(len(lines)):
             if (lines[x][0].isdigit()):
+                print lines[x][0]
                 print 'bad data'
             else:
                 count = count + 1
         result = 'There are %d quality points' % count
         return result
-        # quality points
     def popup_open(self):
         list_simple_adapter = SimpleListAdapter(data=["Router 1", "Router 2", "Router 3"], cls=Label)
         list_view = ListView(adapter=list_simple_adapter)
