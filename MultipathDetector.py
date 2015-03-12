@@ -8,26 +8,40 @@ xmlFilePath = 'ui.xml'
 
 class MultipathDetector():
 
+    # Global variable representing the ordering of the GPS units
+    # 0 --> Ordering is good (it is acceptable for the left and right units to be mislabeled, so long as the center unit is labeled as such)
+    # 1 --> Center unit (#2) is confused for the left unit (#1)
+    # 2 --> Center unit (#2) is confused for right unit (#3)
+    goodGPSOrdering_Flag = 0
+
+
     # This function contains a check for mislabeled GPS units - The center unit MUST be labeled #2
     # TODO: we could theoretically add functionality that re-assigns the units to their appropriate positions, but this is lower priority
     @staticmethod
     def checkForMislabeledGPSUnits(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3):
         try:
+            global goodGPSOrdering_Flag
             outOfOrderMult = 3
+
             # CASE 1: Center-unit (#2) is mislabeled as right-unit (#3)
             if (dist1_2 < (2*gpsDistance) + (outOfOrderMult*linearTolerance)) and (dist1_2 > (2*gpsDistance) - (outOfOrderMult*linearTolerance)):
                 if (dist1_3 < gpsDistance + (outOfOrderMult*linearTolerance)) and (dist1_3 > gpsDistance - (outOfOrderMult*linearTolerance)):
                     log.warn("GPS Units may be mislabeled!!! Make sure the center unit is labeled as #2!")
-                    return True
+                    goodGPSOrdering_Flag = 2
+                    return 2
 
             # CASE 2: Center-unit (#2) is mislabeled as left-unit (#1)
-            if (dist2_3 < (2*gpsDistance) + (outOfOrderMult*linearTolerance)) and (dist2_3 > (2*gpsDistance) - (outOfOrderMult*linearTolerance)):
+            elif (dist2_3 < (2*gpsDistance) + (outOfOrderMult*linearTolerance)) and (dist2_3 > (2*gpsDistance) - (outOfOrderMult*linearTolerance)):
                 if (dist1_2 < gpsDistance + (outOfOrderMult*linearTolerance)) and (dist1_2 > gpsDistance - (outOfOrderMult*linearTolerance)):
                     log.warn("GPS Units may be mislabeled!!! Make sure the center unit is labeled as #2!")
-                    return True
+                    goodGPSOrdering_Flag = 1
+                    return 1
+            else:
+                return 0
         except:
             log.error("Error in MultipathDetector.checkForMislabeledGPSUnits")
-                
+
+
     @staticmethod
     def computeDistance(coord1, coord2):
         try:
@@ -55,6 +69,7 @@ class MultipathDetector():
         except:
             log.error("Error in MultipathDetector.computeDistance")
 
+
     @staticmethod
     def computeUnitVector(coord1, coord2):
         try:
@@ -69,6 +84,7 @@ class MultipathDetector():
         except:
             log.error("Error in MultipathDetector.computeUnitVector")
 
+
     @staticmethod
     # NOTE: coord2 needs to be the center receiver's coordinates
     def computeDotProduct(coord1, coord2, coord3):
@@ -79,6 +95,7 @@ class MultipathDetector():
             return dotProduct
         except:
             log.error("Error in MultipathDetector.computeDotProduct")
+
 
     @staticmethod
     def computeDotProductTolerance(distance, tolerance):
@@ -91,6 +108,7 @@ class MultipathDetector():
             return dotProductTolerance
         except:
             log.error("Error in computeDotProductTolerance")
+
 
     @staticmethod
     def outlierCheck(outlierMultiplier, gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3):
@@ -120,7 +138,8 @@ class MultipathDetector():
             return outlierFlag
         except:
             log.error("Error in MultipathDetector.outlierCheck")
-    
+
+
     @staticmethod
     def linearToleranceCheck(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3, multipathFlag):
         try:
@@ -149,6 +168,7 @@ class MultipathDetector():
         except:
             log.error("Error in MultipathDetector.linearToleranceCheck")
 
+
     @staticmethod
     def dotProductCheck(dotProduct, dotProductTolerance, multipathFlag):
         try:
@@ -166,6 +186,7 @@ class MultipathDetector():
         except:
             log.error("Error in MultipathDetector.dotProductCheck")
 
+
     @staticmethod
     def outlierDotProductCheck(dotProduct, dotProductTolerance, outlierMultiplier, outlierFlag):
         try:
@@ -179,6 +200,7 @@ class MultipathDetector():
             return outlierFlag
         except:
             log.error("Error in MultipathDetector.outlierDotProductCheck")
+
 
     # returns a tuple of booleans (Bool_A, Bool_B), where Bool_A is True if multipathing is detected and false otherwise
     # and Bool_B is True if outlier-multipathing is detected (meaning VERY bad multipathing)
@@ -237,6 +259,7 @@ class MultipathDetector():
         except:
             log.error("Error in MultipathDetector.multipathDetect")
 
+
     @staticmethod
     def altitudeCheck(verticalTolerance, alt1, alt2, alt3):
         try:
@@ -257,7 +280,8 @@ class MultipathDetector():
             return altMultipath
         except:
             log.error("Error in MultipathDetector.altitudeCheck")
-  
+
+
     # This will take a queue of (usually 3) sets of tuples, where each set of tuples contains one location-tuple from each receiver
     # Then, we will compute 3 tuples that are the averaged x-, y-, and z-values of each tuple from a given receiver over a 10-epoch sample
     # Finally, we will use those 3 averaged tuples to call multipathDetect
@@ -270,15 +294,37 @@ class MultipathDetector():
 
             gpsDistance = float(list(tree.iter('gps_spacing'))[0].text)
             linearTolerance = float(list(tree.iter('horizontal'))[0].text)
-            verticalTolerance = float(list(tree.iter('vertical'))[0].text)
 
             if len(listOfQueues) != 3:
                 print "ERROR: List of queues contains an incorrect number of queues (exactly 3 needed)"
                 log.info('ERROR: List of queues contains an incorrect number of queues (exactly 3 needed)')
 
-            queue1 = listOfQueues[0]
-            queue2 = listOfQueues[1]
-            queue3 = listOfQueues[2]
+            # This else-if block reorders the input queues if they were detected as being incorrectly labeled
+            global goodGPSOrdering_Flag
+            if goodGPSOrdering_Flag == 0:
+                queue1 = listOfQueues[0]
+                queue2 = listOfQueues[1]
+                queue3 = listOfQueues[2]
+            elif goodGPSOrdering_Flag == 1:
+                log.info("Left and Center units detected as swapped - switching them to correct order!")
+                queue1 = listOfQueues[2]
+                queue2 = listOfQueues[1]
+                queue3 = listOfQueues[3]
+                goodGPSOrdering_Flag = 0
+            elif goodGPSOrdering_Flag == 2:
+                log.info("Right and Center units detected as swapped - switching them to correct order!")
+                queue1 = listOfQueues[1]
+                queue2 = listOfQueues[3]
+                queue3 = listOfQueues[2]
+                goodGPSOrdering_Flag = 0
+            else:
+                log.error("goodGPSOrdering_Flag is not an expected value (1, 2, or 3)")
+                print "goodGPSOrdering_Flag is not an expected value (1, 2, or 3)"
+                queue1 = None
+                queue2 = None
+                queue3 = None
+                assert(goodGPSOrdering_Flag >= 0)
+                assert(goodGPSOrdering_Flag <= 3)
 
             if len(queue1) != len(queue2) or len(queue1) != len(queue3) or len(queue2) != len(queue3):
                 print "ERROR: Queues are not of equal length"
@@ -304,6 +350,7 @@ class MultipathDetector():
             multipathCounter = 0
             finalOutlierFlag = False
 
+            # determines multipathing for each element of the queues
             for i in range(len(queue1)):
                 (multipathFlag, outlierFlag) = MultipathDetector.multipathDetect(queue1[i], queue2[i], queue3[i])
                 if multipathFlag is True:
@@ -343,15 +390,17 @@ class MultipathDetector():
 
             # prints the dot product tolerance, the average dot product of the queue, and the most recent data points' dot product
             # for testing purposes
-            dotProductTolerance = MultipathDetector.computeDotProductTolerance(gpsDistance,linearTolerance)
+            dotProductTolerance = MultipathDetector.computeDotProductTolerance(gpsDistance, linearTolerance)
             dotProductAvg = MultipathDetector.computeDotProduct((xCoordAvg_1, yCoordAvg_1), (xCoordAvg_2, yCoordAvg_2), (xCoordAvg_3, yCoordAvg_3))
             dotProductSingle = MultipathDetector.computeDotProduct(queue1[9][:-1], queue2[9][:-1], queue3[9][:-1])
             log.info('Tolerance =%s\t Avg=%s\t Recent=%s' % (dotProductTolerance, dotProductAvg, dotProductSingle))
 
+            # computes multipathing for the averaged values in the queues
             avgMultipath = MultipathDetector.multipathDetect((xCoordAvg_1, yCoordAvg_1, zCoordAvg_1), (xCoordAvg_2, yCoordAvg_2, zCoordAvg_2), (xCoordAvg_3, yCoordAvg_3, zCoordAvg_3))
 
 
             if multipathCounter >= 3:
+                # more than 3 elements of the queue contain multipathing 
                 log.info('multipathCounter')
                 return True
             elif finalOutlierFlag is True:
