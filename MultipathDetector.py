@@ -310,13 +310,11 @@ class MultipathDetector():
                 queue1 = listOfQueues[2]
                 queue2 = listOfQueues[1]
                 queue3 = listOfQueues[3]
-                goodGPSOrdering_Flag = 0
             elif goodGPSOrdering_Flag == 2:
                 log.info("Right and Center units detected as swapped - switching them to correct order!")
                 queue1 = listOfQueues[1]
                 queue2 = listOfQueues[3]
                 queue3 = listOfQueues[2]
-                goodGPSOrdering_Flag = 0
             else:
                 log.error("goodGPSOrdering_Flag is not an expected value (1, 2, or 3)")
                 print "goodGPSOrdering_Flag is not an expected value (1, 2, or 3)"
