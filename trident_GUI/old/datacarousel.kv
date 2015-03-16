@@ -1,0 +1,45 @@
+<ColoredLabel@Label>:
+    fort_size: '48sp'
+    color: (.6, .6, .6, 1)
+    canvas.before:
+        Color:
+            rgb: (.9, .9, .9)
+        Rectangle:
+            pos: self.x + sp(2), self.y+ sp(2)
+            size: self.width-sp(4), self.height - sp(1)
+
+DataShowcase:
+    name: 'DataCarousel'
+
+    BoxLayout:
+        orientation: 'vertical'
+  
+        BoxLayout:
+            size_hint_y: .05
+            Button:
+                size_hint_x: None
+                width: self.height*1.75
+                text: 'Prev'
+                on_release: carousel.load_previous()
+
+            Button:
+                size_hint_x:None
+                width: self.height*1.75
+                text: 'Next'
+                on_release: carousel.load_next()
+
+        Carousel:
+            id: carousel
+            loop: True
+            
+            ColoredLabel:
+                text: 'Data Dummy Slide 1'
+
+            ColoredLabel:
+                text: 'Data Dummy Slide 2'
+            
+            ColoredLabel:
+                text: 'Data Dummy Slide 3'
+                
+            ColoredLabel:
+                text: 'Data Dummy Slide 4'

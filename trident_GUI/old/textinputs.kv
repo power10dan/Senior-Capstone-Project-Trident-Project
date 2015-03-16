@@ -1,0 +1,81 @@
+DataShowcase:
+    name:'TextInputs'
+    
+    GridLayout:
+        ##size_hint_y: None
+        
+        cols: 2
+        size: self.size
+        spacing: "10dp"
+        padding: "10dp"
+        
+        Label:
+            text: 'Left Receiver'
+        Button:
+            id: 'leftReceiver'
+            text: '-'
+            size: (100,200)
+            on_release:
+                app.dropdown('leftReceiver')
+
+        Label:
+            text: 'Center Receiver'
+        Button:
+            id: 'centerReceiver'
+            text: '-'
+            size_hint_y: .12,.12
+            on_release:
+                app.dropdown('centerReceiver')
+
+        Label:
+            text: 'Right Receiver'
+        Button:
+            id: 'rightReceiver'
+            text: '-'
+            size_hint_y: .12,.12
+            on_release:
+                app.dropdown('rightReceiver')
+        
+        Label:
+            text: 'Vertical Tolerance:'
+        TextInput
+            id: vertical_tolerance
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+            text: str(root.vertical_tolerance)
+            
+        Label:
+            text: 'Horizontal Tolerance:'
+        TextInput:
+            id: horizontal_tolerance
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+            text: str(root.horizontal_tolerance)
+
+        Label:
+            text: 'GPS Spacing:'    
+        TextInput:
+            id: gps_spacing
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+            text: str(root.gps_spacing)
+
+        Button:
+            text: 'Submit'
+            size_hint_x: None
+            width: '100dp'
+            on_release:
+                app.submit(horizontal_tolerance.text,vertical_tolerance.text,gps_spacing.text)
+
+        Button:
+            text: 'Reset Tolerances'
+            size_hint_x: None
+            width: '100dp'
+            on_release:
+                vertical_tolerance.text = str(0.1)
+                horizontal_tolerance.text = str(0.05)
+                gps_spacing.text = str(0.5)
+                app.submit('0.05','0.1','0.5')

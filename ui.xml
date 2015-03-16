@@ -5,6 +5,8 @@
         <gps_spacing>0.5</gps_spacing>
         <vertical>0.1</vertical>
         <horizontal>0.05</horizontal>
+        <antennaHeight>2.02</antennaHeight>
+        <phaseCenter>0.05</phaseCenter>
         <units>m</units>
     </tolerances>
     <receivers>
