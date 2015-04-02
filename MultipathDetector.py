@@ -13,6 +13,9 @@ class MultipathDetector():
     # 1 --> Center unit (#2) is confused for the left unit (#1)
     # 2 --> Center unit (#2) is confused for right unit (#3)
     goodGPSOrdering_Flag = 0
+    goodGPSOrdering_Counter1 = 0  # counts the number of times units #2 and #3 (center and right) are detected as swapped
+    goodGPSOrdering_Counter2 = 0  # counts the number of times units #2 and #1 (center and left) are detected as swapped
+    mislabeledFlag = 0
 
 
     # This function contains a check for mislabeled GPS units - The center unit MUST be labeled #2
@@ -21,6 +24,9 @@ class MultipathDetector():
     def checkForMislabeledGPSUnits(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3):
         try:
             global goodGPSOrdering_Flag
+            global goodGPSOrdering_Counter1
+            global goodGPSOrdering_Counter2
+            global mislabeledFlag
             outOfOrderMult = 3
 
             # CASE 1: Center-unit (#2) is mislabeled as right-unit (#3)
@@ -28,13 +34,18 @@ class MultipathDetector():
                 if (dist1_3 < gpsDistance + (outOfOrderMult*linearTolerance)) and (dist1_3 > gpsDistance - (outOfOrderMult*linearTolerance)):
                     log.warn("GPS Units may be mislabeled!!! Make sure the center unit is labeled as #2!")
                     goodGPSOrdering_Flag = 2
+                    goodGPSOrdering_Counter1 += 1
+                    if goodGPSOrdering_Counter1 >= 10:
+                        mislabeledFlag = 1  # 1 indicates center unit is mislabeled as right unit
                     return 2
-
             # CASE 2: Center-unit (#2) is mislabeled as left-unit (#1)
             elif (dist2_3 < (2*gpsDistance) + (outOfOrderMult*linearTolerance)) and (dist2_3 > (2*gpsDistance) - (outOfOrderMult*linearTolerance)):
                 if (dist1_2 < gpsDistance + (outOfOrderMult*linearTolerance)) and (dist1_2 > gpsDistance - (outOfOrderMult*linearTolerance)):
                     log.warn("GPS Units may be mislabeled!!! Make sure the center unit is labeled as #2!")
                     goodGPSOrdering_Flag = 1
+                    goodGPSOrdering_Counter2 += 1
+                    if goodGPSOrdering_Counter2 >= 10:
+                        mislabeledFlag = 2  # 2 indicates center unit is mislabeled as left unit
                     return 1
             else:
                 return 0
@@ -248,6 +259,7 @@ class MultipathDetector():
             # NOTE: at this point in the code, the only way multipathing can occur is by failing the linearTolerance check
             # This means that the gps units could possibly be mislabeled as having the center receiver in the wrong position
             if multipathFlag is True:
+                global mislabledFlag
                 mislabledFlag = MultipathDetector.checkForMislabeledGPSUnits(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3)
 
             if MultipathDetector.outlierDotProductCheck(dotProduct, dotProductTolerance, outlierMultiplier, outlierFlag):
@@ -290,6 +302,9 @@ class MultipathDetector():
     @staticmethod
     def multipathQueueHandler(listOfQueues):
         try:
+            if mislabeledFlag != 0:
+                return mislabeledFlag
+
             tree = ET.parse(xmlFilePath)
 
             gpsDistance = float(list(tree.iter('gps_spacing'))[0].text)
@@ -299,30 +314,31 @@ class MultipathDetector():
                 print "ERROR: List of queues contains an incorrect number of queues (exactly 3 needed)"
                 log.info('ERROR: List of queues contains an incorrect number of queues (exactly 3 needed)')
 
-            # This else-if block reorders the input queues if they were detected as being incorrectly labeled
-            global goodGPSOrdering_Flag
-            if goodGPSOrdering_Flag == 0:
-                queue1 = listOfQueues[0]
-                queue2 = listOfQueues[1]
-                queue3 = listOfQueues[2]
-            elif goodGPSOrdering_Flag == 1:
-                log.info("Left and Center units detected as swapped - switching them to correct order!")
-                queue1 = listOfQueues[2]
-                queue2 = listOfQueues[1]
-                queue3 = listOfQueues[3]
-            elif goodGPSOrdering_Flag == 2:
-                log.info("Right and Center units detected as swapped - switching them to correct order!")
-                queue1 = listOfQueues[1]
-                queue2 = listOfQueues[3]
-                queue3 = listOfQueues[2]
-            else:
-                log.error("goodGPSOrdering_Flag is not an expected value (1, 2, or 3)")
-                print "goodGPSOrdering_Flag is not an expected value (1, 2, or 3)"
-                queue1 = None
-                queue2 = None
-                queue3 = None
-                assert(goodGPSOrdering_Flag >= 0)
-                assert(goodGPSOrdering_Flag <= 3)
+
+            # # This else-if block reorders the input queues if they were detected as being incorrectly labeled
+            # global goodGPSOrdering_Flag
+            # if goodGPSOrdering_Flag == 0:
+            #     queue1 = listOfQueues[0]
+            #     queue2 = listOfQueues[1]
+            #     queue3 = listOfQueues[2]
+            # elif goodGPSOrdering_Flag == 1:
+            #     log.info("Left and Center units detected as swapped - switching them to correct order!")
+            #     queue1 = listOfQueues[2]
+            #     queue2 = listOfQueues[1]
+            #     queue3 = listOfQueues[3]
+            # elif goodGPSOrdering_Flag == 2:
+            #     log.info("Right and Center units detected as swapped - switching them to correct order!")
+            #     queue1 = listOfQueues[1]
+            #     queue2 = listOfQueues[3]
+            #     queue3 = listOfQueues[2]
+            # else:
+            #     log.error("goodGPSOrdering_Flag is not an expected value (1, 2, or 3)")
+            #     print "goodGPSOrdering_Flag is not an expected value (1, 2, or 3)"
+            #     queue1 = None
+            #     queue2 = None
+            #     queue3 = None
+            #     assert(goodGPSOrdering_Flag >= 0)
+            #     assert(goodGPSOrdering_Flag <= 3)
 
             if len(queue1) != len(queue2) or len(queue1) != len(queue3) or len(queue2) != len(queue3):
                 print "ERROR: Queues are not of equal length"
@@ -395,7 +411,6 @@ class MultipathDetector():
 
             # computes multipathing for the averaged values in the queues
             avgMultipath = MultipathDetector.multipathDetect((xCoordAvg_1, yCoordAvg_1, zCoordAvg_1), (xCoordAvg_2, yCoordAvg_2, zCoordAvg_2), (xCoordAvg_3, yCoordAvg_3, zCoordAvg_3))
-
 
             if multipathCounter >= 3:
                 # more than 3 elements of the queue contain multipathing 
