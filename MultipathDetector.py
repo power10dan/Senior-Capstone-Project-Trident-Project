@@ -12,10 +12,10 @@ class MultipathDetector():
     # 0 --> Ordering is good (it is acceptable for the left and right units to be mislabeled, so long as the center unit is labeled as such)
     # 1 --> Center unit (#2) is confused for the left unit (#1)
     # 2 --> Center unit (#2) is confused for right unit (#3)
-    goodGPSOrdering_Flag = 0
-    goodGPSOrdering_Counter1 = 0  # counts the number of times units #2 and #3 (center and right) are detected as swapped
-    goodGPSOrdering_Counter2 = 0  # counts the number of times units #2 and #1 (center and left) are detected as swapped
-    mislabeledFlag = 0
+    self.goodGPSOrdering_Flag = 0
+    self.goodGPSOrdering_Counter1 = 0  # counts the number of times units #2 and #3 (center and right) are detected as swapped
+    self.goodGPSOrdering_Counter2 = 0  # counts the number of times units #2 and #1 (center and left) are detected as swapped
+    self.mislabeledFlag = 0  # indicates that the center unit has been (officially) confused with one of the other units
 
 
     # This function contains a check for mislabeled GPS units - The center unit MUST be labeled #2
@@ -23,29 +23,25 @@ class MultipathDetector():
     @staticmethod
     def checkForMislabeledGPSUnits(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3):
         try:
-            global goodGPSOrdering_Flag
-            global goodGPSOrdering_Counter1
-            global goodGPSOrdering_Counter2
-            global mislabeledFlag
             outOfOrderMult = 3
 
             # CASE 1: Center-unit (#2) is mislabeled as right-unit (#3)
             if (dist1_2 < (2*gpsDistance) + (outOfOrderMult*linearTolerance)) and (dist1_2 > (2*gpsDistance) - (outOfOrderMult*linearTolerance)):
                 if (dist1_3 < gpsDistance + (outOfOrderMult*linearTolerance)) and (dist1_3 > gpsDistance - (outOfOrderMult*linearTolerance)):
                     log.warn("GPS Units may be mislabeled!!! Make sure the center unit is labeled as #2!")
-                    goodGPSOrdering_Flag = 2
-                    goodGPSOrdering_Counter1 += 1
-                    if goodGPSOrdering_Counter1 >= 10:
-                        mislabeledFlag = 1  # 1 indicates center unit is mislabeled as right unit
+                    self.goodGPSOrdering_Flag = 2
+                    self.goodGPSOrdering_Counter1 += 1
+                    if self.goodGPSOrdering_Counter1 >= 10:
+                        self.mislabeledFlag = 1  # 1 indicates center unit is mislabeled as right unit
                     return 2
             # CASE 2: Center-unit (#2) is mislabeled as left-unit (#1)
             elif (dist2_3 < (2*gpsDistance) + (outOfOrderMult*linearTolerance)) and (dist2_3 > (2*gpsDistance) - (outOfOrderMult*linearTolerance)):
                 if (dist1_2 < gpsDistance + (outOfOrderMult*linearTolerance)) and (dist1_2 > gpsDistance - (outOfOrderMult*linearTolerance)):
                     log.warn("GPS Units may be mislabeled!!! Make sure the center unit is labeled as #2!")
-                    goodGPSOrdering_Flag = 1
-                    goodGPSOrdering_Counter2 += 1
-                    if goodGPSOrdering_Counter2 >= 10:
-                        mislabeledFlag = 2  # 2 indicates center unit is mislabeled as left unit
+                    self.goodGPSOrdering_Flag = 1
+                    self.goodGPSOrdering_Counter2 += 1
+                    if self.goodGPSOrdering_Counter2 >= 10:
+                        self.mislabeledFlag = 2  # 2 indicates center unit is mislabeled as left unit
                     return 1
             else:
                 return 0
@@ -259,8 +255,8 @@ class MultipathDetector():
             # NOTE: at this point in the code, the only way multipathing can occur is by failing the linearTolerance check
             # This means that the gps units could possibly be mislabeled as having the center receiver in the wrong position
             if multipathFlag is True:
-                global mislabledFlag
-                mislabledFlag = MultipathDetector.checkForMislabeledGPSUnits(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3)
+                # global mislabledFlag
+                self.mislabledFlag = MultipathDetector.checkForMislabeledGPSUnits(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3)
 
             if MultipathDetector.outlierDotProductCheck(dotProduct, dotProductTolerance, outlierMultiplier, outlierFlag):
                 outlierFlag = True
@@ -302,8 +298,8 @@ class MultipathDetector():
     @staticmethod
     def multipathQueueHandler(listOfQueues):
         try:
-            if mislabeledFlag != 0:
-                return mislabeledFlag
+            if self.mislabeledFlag != 0:
+                return self.mislabeledFlag
 
             tree = ET.parse(xmlFilePath)
 

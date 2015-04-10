@@ -88,6 +88,11 @@ class connectOutput:
                 mult = "Multipathing: " + str(multipathing)
                 print mult
 
+                # if the units are out of order (mislabeled), then exit this loop
+                if M.mislabeledFlag != 0:
+                    break
+
+
     # Outputs stuff from serial to console and log file
     # Called from: thread
     def streamSerial(self, name):
