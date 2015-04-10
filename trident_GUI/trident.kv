@@ -7,7 +7,7 @@
         ActionBar:
             ActionView:
                 ActionPrevious:
-                    title: 'Poseidon'
+##                    title: 'Poseidon'
 
                 ActionButton:
                     text: '<'
@@ -24,8 +24,12 @@
             SettingsMenu:
             
             DataOutput:
-        
+       
 <SettingsMenu>:
+    leftReceiver: leftReceiver
+    centerReceiver: centerReceiver
+    rightReceiver: rightReceiver
+    
     GridLayout:
         orientation: 'vertical'
         cols: 2
@@ -36,26 +40,26 @@
         Label:
             text: 'Left Receiver'
         Button:
-            id: 'leftReceiver'
-            text: '-'
-            on_release:
-                root.dropdown('leftReceiver')
+            id: leftReceiver
+            text: leftReceiver.text
+            on_press:
+                root.dropdown(self)
 
         Label:
             text: 'Center Receiver'
         Button:
-            id: 'centerReceiver'
-            text: '-'
+            id: centerReceiver
+            text: centerReceiver.text
             on_press:
-                root.dropdown('centerReceiver')
+                root.dropdown(self)
 
         Label:
             text: 'Right Receiver'
         Button:
-            id: 'rightReceiver'
-            text: '-'
+            id: rightReceiver
+            text: rightReceiver.text
             on_press:
-                root.dropdown("rightReceiver")
+                root.dropdown(self)
         
         Label:
             text: 'Vertical Tolerance (m):'
@@ -87,7 +91,7 @@
         Label:
             text: 'Antenna Height (m):'
         TextInput:
-            id: horizontal_tolerance
+            id: antennaHeight
             size_hint_y: None
             height: '32dp'
             multiline: False
@@ -96,19 +100,18 @@
         Label:
             text: 'Phase Center (m):'
         TextInput:
-            id: horizontal_tolerance
+            id: phaseCenter
             size_hint_y: None
             height: '32dp'
             multiline: False
             text: str(root.phaseCenter)    
         
-
         Button:
             text: 'Submit'
             size_hint_x: None
             width: '100dp'
             on_release:
-                root.submit(horizontal_tolerance.text,vertical_tolerance.text,gps_spacing.text)
+                root.submit(horizontal_tolerance.text,vertical_tolerance.text,gps_spacing.text,antennaHeight.text,phaseCenter.text)
 
         Button:
             text: 'Reset Tolerances'
@@ -118,57 +121,53 @@
                 vertical_tolerance.text = str(0.1)
                 horizontal_tolerance.text = str(0.05)
                 gps_spacing.text = str(0.5)
-                root.submit('0.05','0.1','0.5')
+                antennaHeight.text = root.antennaHeight
+                phaseCenter.text = root.phaseCenter
+                root.submit('0.05','0.1','0.5',str(root.antennaHeight),str(root.phaseCenter))
         
-    Button:
-        text: 'Start Survey'
-        width: self.height*3
-                
-<DataOutput>:  
+        Button:
+            text: 'Start Survey'
+               
+<DataOutput>:
     BoxLayout:
         orientation: 'vertical'
         size: root.size
         BoxLayout:
+            id: navigation
             size_hint_y: .05
             Button:
                 size_hint_x: None
                 width: self.height*1.75
                 text: 'Prev'
-                on_release: carousel.load_previous()
+                on_release: DataCarousel.load_previous()
 
             Button:
                 size_hint_x:None
                 width: self.height*1.75
                 text: 'Next'
-                on_release: carousel.load_next()  
-
+                on_release: DataCarousel.load_next()  
+            
+            Label:
+                id: screenName
+                text: "hi"
         Carousel:
-            id: carousel
+            id: DataCarousel
             loop: True
             
-            ##Label:
-            ##    id: currentScreenLabel
-            ##    text = self.text
-            
-            ColoredLabel:
-                text: 'Data Dummy Slide 1'
-
-            ColoredLabel:
-                text: 'Data Dummy Slide 2'
-            
-            ColoredLabel:
-                text: 'Data Dummy Slide 3'
-                
-            ColoredLabel:
-                text: 'Data Dummy Slide 4'
-
-<ColoredLabel@Label>:
-    fort_size: '48sp'
-    color: (.6, .6, .6, 1)
-    canvas.before:
-        Color:
-            rgb: (.9, .9, .9)
-        Rectangle:
-            pos: self.x + sp(2), self.y+ sp(2)
-            size: self.width-sp(4), self.height - sp(4)
+<SurveyPoint>:
+    Button:
+        text: 'My first Item'
+        size_hint_y: None
+        height: 44
+        on_release: root.select('item1')
+    Label:
+        text: 'Unselectable item'
+        size_hint_y: None
+        height: 44
+    Button:
+        text: 'My second Item'
+        size_hint_y: None
+        height: 44
+        on_release: root.select('item2') 
+              
             
