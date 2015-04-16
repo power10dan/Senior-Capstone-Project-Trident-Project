@@ -24,6 +24,11 @@
             SettingsMenu:
             
             DataOutput:
+                Button:
+                    id: settingsButton
+                    text: 'Settings'
+                    on_press: 
+                        
        
 <SettingsMenu>:
     leftReceiver: leftReceiver
@@ -43,7 +48,7 @@
             id: leftReceiver
             text: leftReceiver.text
             on_press:
-                root.dropdown(self)
+                root.dropdown("Left Receiver")
 
         Label:
             text: 'Center Receiver'
@@ -51,7 +56,7 @@
             id: centerReceiver
             text: centerReceiver.text
             on_press:
-                root.dropdown(self)
+                root.dropdown("Center Receiver")
 
         Label:
             text: 'Right Receiver'
@@ -59,7 +64,7 @@
             id: rightReceiver
             text: rightReceiver.text
             on_press:
-                root.dropdown(self)
+                root.dropdown("Right Receiver")
         
         Label:
             text: 'Vertical Tolerance (m):'
@@ -127,6 +132,8 @@
         
         Button:
             text: 'Start Survey'
+            on_press:
+                self.Threads()
                
 <DataOutput>:
     BoxLayout:

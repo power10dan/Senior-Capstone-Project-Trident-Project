@@ -3,13 +3,15 @@ from kivy.properties import NumericProperty, BooleanProperty, ListProperty, Stri
 from kivy.uix.label import Label
 from kivy.adapters.listadapter import ListAdapter
 from kivy.uix.listview import ListView
-from kivy.uix.dropdown import DropDown
+from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 from kivy.uix.button import Button
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 import logging
 import xml.etree.ElementTree as ET
 import re
+from kivy.core.window import Window
 
 
 LOG_FILENAME = 'GUI_log.log'
@@ -17,7 +19,7 @@ logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctim
 
 xmlFilePath = '..//ui.xml'
      
-class SettingsMenu(GridLayout):
+class SettingsMenu(Widget):
     tree = ET.parse(xmlFilePath)
     leftReceiver = ObjectProperty(None)
     centerReceiver = ObjectProperty(None)
@@ -33,17 +35,28 @@ class SettingsMenu(GridLayout):
         receiverList = []
         tree = ET.parse(xmlFilePath)
         RSearch = tree.iter('receiver')
+        layout = BoxLayout(orientation='vertical')
+        popup = Popup(attach_to=self,title=str(button),title_align = 'center', size_hint=(None, None), size=(400, 400))
         for r in RSearch:
             if (list(r)[0].text).upper() == 'T':
-                receiverList.append(str(list(r)[4].text))
+                btn = Button(text='%s' % str(list(r)[4].text),size_hint_y=None, height=44)
+                btn.bind(on_press = self.useReceiver)
+                layout.add_widget(btn)
         
-        drop = DropDown()
-        for receiver in receiverList:
-            btn = Button(text='%s' % receiver, size_hint_y=None, height=44)
-            btn.bind(on_press=lambda btn: drop.select(btn.text))
-            drop.add_widget(btn)
-        button.bind(on_release=drop.open)
-        drop.bind(on_select=lambda instance, x: setattr(button, 'text', x))
+        layout.bind(on_release = popup.dismiss)
+        popup.open()
+        
+        # drop = DropDown()
+        # for receiver in receiverList:
+            # btn = Button(text='%s' % receiver, size_hint_y=None, height=44)
+            # btn.bind(on_press=lambda btn: drop.select(btn.text))
+            # drop.add_widget(btn)
+        # button.bind(on_release=drop.open)
+        # drop.bind(on_select=lambda instance, x: setattr(button, 'text', x))
+        
+    def useReceiver(self,receiver):
+        print receiver.text
+        #self.receiver.text = receiver.text
         
     def submit(self,horizontal,vertical,gps_spacing,antennaHeight,phaseCenter):
         tree = ET.parse(xmlFilePath)
@@ -96,15 +109,14 @@ class SettingsMenu(GridLayout):
 class DataOutput(Widget):
     def Page(screen):
         DataOutput.navigation.screenName.text = screen
-               
+
 class Poseidon(Widget):
     pass
     
 class TridentApp(App):
     def build(self):
-        gui = Poseidon()
-        return gui
-                
+        self.root = Poseidon(app=self)
+  
 if __name__ == "__main__":
     TridentApp().run()
 
