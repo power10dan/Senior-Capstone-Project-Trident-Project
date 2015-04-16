@@ -31,32 +31,24 @@ class SettingsMenu(Widget):
     antennaHeight = NumericProperty(float(list(tree.iter('antennaHeight'))[0].text))
     phaseCenter = NumericProperty(float(list(tree.iter('phaseCenter'))[0].text))
     
-    def dropdown(self,button):
+    def dropdown(self,button,title):
         receiverList = []
         tree = ET.parse(xmlFilePath)
         RSearch = tree.iter('receiver')
         layout = BoxLayout(orientation='vertical')
-        popup = Popup(attach_to=self,title=str(button),title_align = 'center', size_hint=(None, None), size=(400, 400))
+        popup = Popup(attach_to=self,title=str(title),title_align = 'center', size_hint=(None, None), size=(400, 400))
         for r in RSearch:
-            if (list(r)[0].text).upper() == 'T':
+            if (list(r)[0].text).upper() == 'F':
                 btn = Button(text='%s' % str(list(r)[4].text),size_hint_y=None, height=44)
+                btn.bind(on_press = lambda x: setattr(button, 'text', str(x.text)))
                 btn.bind(on_press = self.useReceiver)
+                btn.bind(on_release = popup.dismiss)
                 layout.add_widget(btn)
-        
-        layout.bind(on_release = popup.dismiss)
+        popup.content = layout
         popup.open()
-        
-        # drop = DropDown()
-        # for receiver in receiverList:
-            # btn = Button(text='%s' % receiver, size_hint_y=None, height=44)
-            # btn.bind(on_press=lambda btn: drop.select(btn.text))
-            # drop.add_widget(btn)
-        # button.bind(on_release=drop.open)
-        # drop.bind(on_select=lambda instance, x: setattr(button, 'text', x))
         
     def useReceiver(self,receiver):
         print receiver.text
-        #self.receiver.text = receiver.text
         
     def submit(self,horizontal,vertical,gps_spacing,antennaHeight,phaseCenter):
         tree = ET.parse(xmlFilePath)

@@ -55,7 +55,7 @@
             id: leftReceiver
             text: leftReceiver.text
             on_press:
-                root.dropdown("Left Receiver")
+                root.dropdown(self,"Left Receiver")
 
 
         Label:
@@ -64,7 +64,7 @@
             id: centerReceiver
             text: centerReceiver.text
             on_press:
-                root.dropdown("Center Receiver")
+                root.dropdown(self,"Center Receiver")
 
         Label:
             text: 'Right Receiver'
@@ -72,7 +72,7 @@
             id: rightReceiver
             text: rightReceiver.text
             on_press:
-                root.dropdown("Right Receiver")
+                root.dropdown(self,"Right Receiver")
         
         Label:
             text: 'Vertical Tolerance (m):'
