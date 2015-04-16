@@ -1,0 +1,187 @@
+#:kivy 1.8.0
+
+<Poseidon>:
+    BoxLayout:
+        size: root.width,root.height
+        orientation: 'vertical'
+        ActionBar:
+            ActionView:
+                ActionPrevious:
+##                    title: 'Poseidon'
+
+                ActionButton:
+                    text: '<'
+                    on_release: screen.load_previous()
+
+                ActionButton:
+                    text: '>'
+                    on_release: screen.load_next()
+        Carousel:
+            id:screen
+            scroll_timeout: 0
+            loop: True
+
+            SettingsMenu:
+
+            DataOutput:
+                Button:
+                    id: settingsButton
+                    text: 'Settings'
+                    on_press: 
+
+<SettingsMenu>:
+    leftReceiver: leftReceiver
+    centerReceiver: centerReceiver
+    rightReceiver: rightReceiver
+
+    GridLayout:
+        orientation: 'vertical'
+        cols: 2
+        size: root.size
+        spacing: "10dp"
+        padding: "10dp"
+
+        Label:
+            text: 'Job Name'
+        TextInput
+            id: 'Job Name'
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+
+        Label:
+            text: 'Left Receiver'
+        Button:
+            id: leftReceiver
+            text: leftReceiver.text
+            on_press:
+                root.dropdown(self,"Left Receiver")
+
+
+        Label:
+            text: 'Center Receiver'
+        Button:
+            id: centerReceiver
+            text: centerReceiver.text
+            on_press:
+                root.dropdown(self,"Center Receiver")
+
+        Label:
+            text: 'Right Receiver'
+        Button:
+            id: rightReceiver
+            text: rightReceiver.text
+            on_press:
+                root.dropdown(self,"Right Receiver")
+        
+        Label:
+            text: 'Vertical Tolerance (m):'
+        TextInput
+            id: vertical_tolerance
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+            text: str(root.vertical_tolerance)
+        Label:
+            text: 'Horizontal Tolerance (m):'
+        TextInput:
+            id: horizontal_tolerance
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+            text: str(root.horizontal_tolerance)
+
+        Label:
+            text: 'GPS Spacing (m):'
+        TextInput:
+            id: gps_spacing
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+            text: str(root.gps_spacing)
+
+        Label:
+            text: 'Antenna Height (m):'
+        TextInput:
+            id: antennaHeight
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+            text: str(root.antennaHeight)
+
+        Label:
+            text: 'Phase Center (m):'
+        TextInput:
+            id: phaseCenter
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+            text: str(root.phaseCenter)
+
+        Button:
+            text: 'Submit'
+            size_hint_x: None
+            width: '100dp'
+            on_release:
+                root.submit(horizontal_tolerance.text,vertical_tolerance.text,gps_spacing.text,antennaHeight.text,phaseCenter.text)
+
+        Button:
+            text: 'Reset Tolerances'
+            size_hint_x: None
+            width: '100dp'
+            on_release:
+                vertical_tolerance.text = str(0.1)
+                horizontal_tolerance.text = str(0.05)
+                gps_spacing.text = str(0.5)
+                antennaHeight.text = root.antennaHeight
+                phaseCenter.text = root.phaseCenter
+                root.submit('0.05','0.1','0.5',str(root.antennaHeight),str(root.phaseCenter))
+
+        Button:
+            text: 'Start Survey'
+            on_press:
+                self.Threads()
+               
+<DataOutput>:
+    BoxLayout:
+        orientation: 'vertical'
+        size: root.size
+        BoxLayout:
+            id: navigation
+            size_hint_y: .05
+            Button:
+                size_hint_x: None
+                width: self.height*1.75
+                text: 'Prev'
+                on_release: DataCarousel.load_previous()
+
+            Button:
+                size_hint_x:None
+                width: self.height*1.75
+                text: 'Next'
+                on_release: DataCarousel.load_next()
+
+            Label:
+                id: screenName
+                text: "hi"
+        Carousel:
+            id: DataCarousel
+            loop: True
+
+<SurveyPoint>:
+    Button:
+        text: 'My first Item'
+        size_hint_y: None
+        height: 44
+        on_release: root.select('item1')
+    Label:
+        text: 'Unselectable item'
+        size_hint_y: None
+        height: 44
+    Button:
+        text: 'My second Item'
+        size_hint_y: None
+        height: 44
+        on_release: root.select('item2')
+
+
