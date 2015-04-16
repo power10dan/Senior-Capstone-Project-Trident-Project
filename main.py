@@ -22,7 +22,7 @@ log = 0
 G = geodetic.geodetic()   # TODO : we might want to make geodetic a static method?
 M = MultipathDetector.MultipathDetector()
 xmlFilePath = 'ui.xml'
-multiQueueFlag = False  #used to check if multipath queues are allocated and used to auto select receivers
+multiQueueFlag = False  # used to check if multipath queues are allocated and used to auto select receivers
 
 class connectOutput:
     # Searches and opens serial connections

@@ -20,28 +20,35 @@
             id:screen
             scroll_timeout: 0
             loop: True
-            
+
             SettingsMenu:
-            
+
             DataOutput:
                 Button:
                     id: settingsButton
                     text: 'Settings'
                     on_press: 
-                        
-       
+
 <SettingsMenu>:
     leftReceiver: leftReceiver
     centerReceiver: centerReceiver
     rightReceiver: rightReceiver
-    
+
     GridLayout:
         orientation: 'vertical'
         cols: 2
         size: root.size
         spacing: "10dp"
         padding: "10dp"
-        
+
+        Label:
+            text: 'Job Name'
+        TextInput
+            id: 'Job Name'
+            size_hint_y: None
+            height: '32dp'
+            multiline: False
+
         Label:
             text: 'Left Receiver'
         Button:
@@ -49,6 +56,7 @@
             text: leftReceiver.text
             on_press:
                 root.dropdown("Left Receiver")
+
 
         Label:
             text: 'Center Receiver'
@@ -74,7 +82,6 @@
             height: '32dp'
             multiline: False
             text: str(root.vertical_tolerance)
-            
         Label:
             text: 'Horizontal Tolerance (m):'
         TextInput:
@@ -85,14 +92,14 @@
             text: str(root.horizontal_tolerance)
 
         Label:
-            text: 'GPS Spacing (m):'    
+            text: 'GPS Spacing (m):'
         TextInput:
             id: gps_spacing
             size_hint_y: None
             height: '32dp'
             multiline: False
             text: str(root.gps_spacing)
-            
+
         Label:
             text: 'Antenna Height (m):'
         TextInput:
@@ -101,7 +108,7 @@
             height: '32dp'
             multiline: False
             text: str(root.antennaHeight)
-            
+
         Label:
             text: 'Phase Center (m):'
         TextInput:
@@ -109,8 +116,8 @@
             size_hint_y: None
             height: '32dp'
             multiline: False
-            text: str(root.phaseCenter)    
-        
+            text: str(root.phaseCenter)
+
         Button:
             text: 'Submit'
             size_hint_x: None
@@ -129,7 +136,7 @@
                 antennaHeight.text = root.antennaHeight
                 phaseCenter.text = root.phaseCenter
                 root.submit('0.05','0.1','0.5',str(root.antennaHeight),str(root.phaseCenter))
-        
+
         Button:
             text: 'Start Survey'
             on_press:
@@ -152,15 +159,15 @@
                 size_hint_x:None
                 width: self.height*1.75
                 text: 'Next'
-                on_release: DataCarousel.load_next()  
-            
+                on_release: DataCarousel.load_next()
+
             Label:
                 id: screenName
                 text: "hi"
         Carousel:
             id: DataCarousel
             loop: True
-            
+
 <SurveyPoint>:
     Button:
         text: 'My first Item'
@@ -175,6 +182,6 @@
         text: 'My second Item'
         size_hint_y: None
         height: 44
-        on_release: root.select('item2') 
-              
-            
+        on_release: root.select('item2')
+
+
