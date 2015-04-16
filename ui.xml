@@ -11,17 +11,17 @@
     </tolerances>
     <receivers>
         <receiver>
-            <use>T</use>
+            <use>F</use>
             <left>F</left>
             <right>F</right>
-            <center>T</center>
+            <center>F</center>
             <serialNumber>2811390</serialNumber>
             <port>26</port>
         </receiver>
         <receiver>
-            <use>T</use>
-            <left>T</left>
-            <right />
+            <use>F</use>
+            <left>F</left>
+            <right>F</right>
             <center>F</center>
             <serialNumber>2811371</serialNumber>
             <port>23</port>
@@ -43,9 +43,9 @@
             <port>10</port>
         </receiver>
         <receiver>
-            <use>T</use>
+            <use>F</use>
             <left>F</left>
-            <right>T</right>
+            <right>F</right>
             <center>F</center>
             <serialNumber>2811388</serialNumber>
             <port>13</port>

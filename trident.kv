@@ -1,5 +1,14 @@
 #:kivy 1.8.0
 
+<ColoredLabel@Label>:
+    font_size: '48sp'
+    color: (.6, .6, .6, 1)
+    canvas.before:
+        Color:
+            rgb: (.9, .9, .9)
+        Rectangle:
+            pos: self.x + sp(2), self.y + sp(2)
+            size: self.width - sp(4), self.height - sp(4)
 <Poseidon>:
     BoxLayout:
         size: root.width,root.height
@@ -27,7 +36,7 @@
                 Button:
                     id: settingsButton
                     text: 'Settings'
-                    on_press: 
+                    on_press:
 
 <SettingsMenu>:
     leftReceiver: leftReceiver
@@ -72,8 +81,13 @@
             id: rightReceiver
             text: rightReceiver.text
             on_press:
+<<<<<<< HEAD:trident_GUI/trident.kv
                 root.dropdown(self,"Right Receiver")
         
+=======
+                root.dropdown("Right Receiver")
+
+>>>>>>> fad1fdcdf6a5e84ca16f9c2c193d6e504c050563:trident.kv
         Label:
             text: 'Vertical Tolerance (m):'
         TextInput
@@ -141,7 +155,7 @@
             text: 'Start Survey'
             on_press:
                 self.Threads()
-               
+
 <DataOutput>:
     BoxLayout:
         orientation: 'vertical'
@@ -161,13 +175,16 @@
                 text: 'Next'
                 on_release: DataCarousel.load_next()
 
-            Label:
-                id: screenName
-                text: "hi"
         Carousel:
             id: DataCarousel
             loop: True
 
+            ColoredLabel:
+                text: 'dummy1'
+            ColoredLabel:
+                text: 'dummy2'
+            ColoredLabel:
+                text: 'dummy3'
 <SurveyPoint>:
     Button:
         text: 'My first Item'
