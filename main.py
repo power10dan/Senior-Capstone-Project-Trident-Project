@@ -11,44 +11,39 @@ from kivy.uix.gridlayout import GridLayout
 import logging
 import xml.etree.ElementTree as ET
 import re
-from kivy.core.window import Window
+
 
 
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
 
-xmlFilePath = '..//ui.xml'
+xmlFilePath = './/ui.xml'
      
-class SettingsMenu(Widget):
+class SettingsMenu(GridLayout):
     tree = ET.parse(xmlFilePath)
-    leftReceiver = ObjectProperty(None)
-    centerReceiver = ObjectProperty(None)
-    rightReceiver = ObjectProperty(None)
-    
+
     vertical_tolerance = NumericProperty(float(list(tree.iter('vertical'))[0].text))
     horizontal_tolerance = NumericProperty(float(list(tree.iter('horizontal'))[0].text))
     gps_spacing = NumericProperty(float(list(tree.iter('gps_spacing'))[0].text))
     antennaHeight = NumericProperty(float(list(tree.iter('antennaHeight'))[0].text))
     phaseCenter = NumericProperty(float(list(tree.iter('phaseCenter'))[0].text))
-    
+      
+    def setReceiver(self, receiver):
+        print receiver
+        
     def dropdown(self,button,title):
-        receiverList = []
-        tree = ET.parse(xmlFilePath)
-        RSearch = tree.iter('receiver')
+        RSearch = ET.parse(xmlFilePath).iter('receiver')
         layout = BoxLayout(orientation='vertical')
-        popup = Popup(attach_to=self,title=str(title),title_align = 'center', size_hint=(None, None), size=(400, 400))
+        popup = Popup(attach_to=self,title=str(title),title_align = 'center',size_hint = (.5,.5))
         for r in RSearch:
             if (list(r)[0].text).upper() == 'F':
-                btn = Button(text='%s' % str(list(r)[4].text),size_hint_y=None, height=44)
+                btn = Button(text='%s' % str(list(r)[4].text))
                 btn.bind(on_press = lambda x: setattr(button, 'text', str(x.text)))
-                btn.bind(on_press = self.useReceiver)
                 btn.bind(on_release = popup.dismiss)
                 layout.add_widget(btn)
         popup.content = layout
+        #popup.bind(on_dismiss = self.setReceiver)
         popup.open()
-        
-    def useReceiver(self,receiver):
-        print receiver.text
         
     def submit(self,horizontal,vertical,gps_spacing,antennaHeight,phaseCenter):
         tree = ET.parse(xmlFilePath)
@@ -103,11 +98,19 @@ class DataOutput(Widget):
         DataOutput.navigation.screenName.text = screen
 
 class Poseidon(Widget):
-    pass
+    settings_popup = None
+    
+    def Settings_Button_pressed(self):
+        if self.settings_popup is None:
+            self.settings_popup = Popup(attach_to=self, title='Trident Settings', size_hint=(0.7,0.8))
+            self.settings_popup.content = SettingsMenu(root = self)
+        self.settings_popup.open()
+        
     
 class TridentApp(App):
     def build(self):
         self.root = Poseidon(app=self)
+        
   
 if __name__ == "__main__":
     TridentApp().run()
