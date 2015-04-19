@@ -12,10 +12,10 @@ class MultipathDetector():
     # 0 --> Ordering is good (it is acceptable for the left and right units to be mislabeled, so long as the center unit is labeled as such)
     # 1 --> Center unit (#2) is confused for the left unit (#1)
     # 2 --> Center unit (#2) is confused for right unit (#3)
-    self.goodGPSOrdering_Flag = 0
-    self.goodGPSOrdering_Counter1 = 0  # counts the number of times units #2 and #3 (center and right) are detected as swapped
-    self.goodGPSOrdering_Counter2 = 0  # counts the number of times units #2 and #1 (center and left) are detected as swapped
-    self.mislabeledFlag = 0  # indicates that the center unit has been (officially) confused with one of the other units
+    goodGPSOrdering_Flag = 0
+    goodGPSOrdering_Counter1 = 0  # counts the number of times units #2 and #3 (center and right) are detected as swapped
+    goodGPSOrdering_Counter2 = 0  # counts the number of times units #2 and #1 (center and left) are detected as swapped
+    mislabeledFlag = 0  # indicates that the center unit has been (officially) confused with one of the other units
 
 
     # This function contains a check for mislabeled GPS units - The center unit MUST be labeled #2

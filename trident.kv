@@ -1,103 +1,173 @@
 #:kivy 1.8.0
 
 <Poseidon>:
+    survey: survey
     BoxLayout:
         size: root.width,root.height
         orientation: 'vertical'
-##        ActionBar:
-##            ActionView:
-##                ActionPrevious:
-##                    title: 'Poseidon'
-##
-##              ActionButton:
-##                  text: '<'
-##                  on_release: screen.load_previous()
-##
-##              ActionButton:
-##                  text: '>'
-##                  on_release: screen.load_next()
+        top:99
+        BoxLayout:
+            id: navigation
+            size_hint_y: .05
+            Button:
+                size_hint_x:None
+                text: 'Prev'
+                on_release: DataCarousel.load_previous()
+
+            Button:
+                size_hint_x:None
+                text: 'Next'
+                on_release: DataCarousel.load_next()
+
+            Label:
+                id: screenName
+            
+            Button:
+                id: settingsButton
+                text: 'Settings'
+                size_hint_x: None
+
+                on_press: 
+                    root.Settings_Button_pressed()
+            
+            Button:
+                id: survey
+                size_hint_x: None
+                text: 'Start Survey' 
+                
         Carousel:
-            id:screen
-            scroll_timeout: 0
+            id: DataCarousel
             loop: True
+        
 
-            DataOutput:
-                Button:
-                    id: settingsButton
-                    text: 'Settings'
-                    on_press: 
-                        root.Settings_Button_pressed()
-
+        
 <SettingsMenu>:
-    cols: 2
+    cols: 3
     padding: 10
     spacing: 10
-    
-    Label:
-        text: 'Job Name'
-    TextInput
-        id: 'Job Name'
-        multiline: False
 
+    vertical_tolerance: vertical_tolerance
+    horizontal_tolerance: horizontal_tolerance
+    gps_spacing: gps_spacing
+    antennaHeight: antennaHeight
+    phaseCenter: phaseCenter
+    leftReceiver: leftReceiver
+    centerReceiver: centerReceiver
+    rightReceiver: rightReceiver
+    verticalLabel: verticalLabel
+    horizontalLabel: horizontalLabel
+    gpsSpacingLabel: gpsSpacingLabel
+    antennaLabel: antennaLabel
+    phaseLabel: phaseLabel
+    
     Label:
         text: 'Left Receiver'
     Button:
         id: leftReceiver
-        text: leftReceiver.text
         on_press:
-            root.dropdown(self,"Left Receiver")
+            root.updateLR = True
+            root.popup(self,"Left Receiver")
+    Button:
+        id: clearLR
+        text: "X"
+        size_hint_x: None
+        width: 25
+        on_press:
+            leftReceiver.text = ''
+            root.clearReceiver('leftReceiver')
 
     Label:
         text: 'Center Receiver'
     Button:
         id: centerReceiver
-        text: centerReceiver.text
         on_press:
-            root.dropdown(self,"Center Receiver")
-
+            root.updateCR = True
+            root.popup(self,"Center Receiver")
+    Button:
+        id: clearCR
+        text: "X"
+        size_hint_x: None
+        width: 25
+        on_press:
+            centerReceiver.text = ''
+            root.clearReceiver('centerReceiver')
+            
     Label:
         text: 'Right Receiver'
     Button:
         id: rightReceiver
-        text: rightReceiver.text
         on_press:   
-            root.dropdown(self,"Right Receiver")
-    
+            root.updateRR = True
+            root.popup(self,"Right Receiver")
+    Button:
+        id: clearRR
+        text: "X"
+        size_hint_x: None
+        width: 25
+        on_press:
+            rightReceiver.text = ''
+            root.clearReceiver('rightReceiver')
+        
     Label:
         text: 'Vertical Tolerance (m):'
-    TextInput
+    FloatInput
         id: vertical_tolerance
         multiline: False
-        text: str(root.vertical_tolerance)
+    Label:
+        id: verticalLabel
+        text: ''
+        color: 1,0,0,1
+        size_hint_x: None
+        width: 25
     
     Label:
         text: 'Horizontal Tolerance (m):'
-    TextInput:
+    FloatInput:
         id: horizontal_tolerance
         multiline: False
-        text: str(root.horizontal_tolerance)
+    Label:
+        id: horizontalLabel
+        text: ''
+        color: 1,0,0,1
+        size_hint_x: None
+        width: 25
 
     Label:
         text: 'GPS Spacing (m):'
-    TextInput:
+    FloatInput:
         id: gps_spacing
         multiline: False
-        text: str(root.gps_spacing)
+    Label:
+        id: gpsSpacingLabel
+        text: ''
+        color: 1,0,0,1
+        size_hint_x: None
+        width: 25
 
     Label:
         text: 'Antenna Height (m):'
-    TextInput:
+    FloatInput:
         id: antennaHeight
         multiline: False
-        text: str(root.antennaHeight)
+    Label:
+        id: antennaLabel
+        text: ''
+        color: 1,0,0,1
+        size_hint_x: None
+        width: 25
 
     Label:
         text: 'Phase Center (m):'
-    TextInput:
+    FloatInput:
         id: phaseCenter
         multiline: False
-        text: str(root.phaseCenter)
-
+    Label:
+        id: phaseLabel
+        text: ''
+        color: 1,0,0,1
+        size_hint_x: None
+        width: 25
+        
     Button:
         text: 'Submit'
         on_release:
@@ -109,55 +179,8 @@
             vertical_tolerance.text = str(0.1)
             horizontal_tolerance.text = str(0.05)
             gps_spacing.text = str(0.5)
-            antennaHeight.text = root.antennaHeight
-            phaseCenter.text = root.phaseCenter
-            root.submit('0.05','0.1','0.5',str(root.antennaHeight),str(root.phaseCenter))
-
-    Button:
-        text: 'Start Survey'
-        on_press:
-            self.Threads()
-               
-<DataOutput>:
-    BoxLayout:
-        orientation: 'vertical'
-        size: root.size
-        BoxLayout:
-            id: navigation
-            size_hint_y: .05
-            Button:
-                size_hint_x: None
-                width: self.height*1.75
-                text: 'Prev'
-                on_release: DataCarousel.load_previous()
-
-            Button:
-                size_hint_x:None
-                width: self.height*1.75
-                text: 'Next'
-                on_release: DataCarousel.load_next()
-
-            Label:
-                id: screenName
-                text: "hi"
-        Carousel:
-            id: DataCarousel
-            loop: True
-
-<SurveyPoint>:
-    Button:
-        text: 'My first Item'
-        size_hint_y: None
-        height: 44
-        on_release: root.select('item1')
-    Label:
-        text: 'Unselectable item'
-        size_hint_y: None
-        height: 44
-    Button:
-        text: 'My second Item'
-        size_hint_y: None
-        height: 44
-        on_release: root.select('item2')
+            antennaHeight.text = str(2.02)
+            phaseCenter.text = str(0.05)
+            root.submit('0.05','0.1','0.5','2.02','0.05')
 
 

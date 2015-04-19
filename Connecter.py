@@ -14,7 +14,7 @@ import logging
 LOG_FILENAME = '.\logs\log_'+ datetime.datetime.now().strftime('%Y-%m-%d') +'.log'
 logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG,format='%(asctime)s %(levelname)s: %(message)s')
 
-timeout = []
+timeout = [] #used for checking if signal to receiver lost
 ser = []
 active = []
 multiQueue = []
@@ -52,7 +52,7 @@ class connectOutput:
         
     # Handles thread logistics, creates logs, calls multipathQueueHandler
     # Called from: main
-    def thread(self):
+    def threads(self):
         global log, multiQueue, M, multiQueueFlag
         signal.signal(signal.SIGINT, self.signalHandler)
         print "How many receivers are you connecting?"
@@ -73,7 +73,7 @@ class connectOutput:
         log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
         for i in range(0, r):
             thread = threading.Thread(target=self.initSerial(i,input))
-            thread.daemon = True
+            thread.setDaemon(True)
             thread.start()
             logging.info('Created Thread: %s'%(i))
             timeout.append(0)
@@ -258,11 +258,4 @@ class connectOutput:
 
 def outputToCSV():
     pass
-
-
-
-run = connectOutput()
-run.thread()
-
-
 
