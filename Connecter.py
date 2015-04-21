@@ -49,10 +49,40 @@ class connectOutput:
         except serial.SerialException:
             print "Error opening port, exiting!!!"
             sys.exit(0)
+    
+    def passiveThreads(self, r, input):
+        global log, multiQueue, M, multiQueueFlag
+
+        r = int(r)
+        self.createQueue()
+        multiQueueFlag = True
+        
+        logging.info('user search input: %s'%(input))
+        log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
+        for i in range(0, r):
+            thread = threading.Thread(target=self.initSerial(i,input))
+            thread.daemon = True
+            thread.start()
+            logging.info('Created Thread: %s'%(i))
+            timeout.append(0)
+        while True:
+            for i in range(0, r):
+                thread = threading.Thread(target=self.streamSerial(str(i))).run()
+            if (r == 3 and len(multiQueue[0]) == 10 and 
+                    len(multiQueue[1]) == 10 and 
+                    len(multiQueue[2]) == 10):
+                #print multiQueue
+                multipathing = M.multipathQueueHandler(multiQueue)
+                mult = "Multipathing: " + str(multipathing)
+                print mult
+
+                # if the units are out of order (mislabeled), then exit this loop
+                if M.mislabeledFlag != 0:
+                    break
         
     # Handles thread logistics, creates logs, calls multipathQueueHandler
     # Called from: main
-    def threads(self):
+    def thread(self):
         global log, multiQueue, M, multiQueueFlag
         signal.signal(signal.SIGINT, self.signalHandler)
         print "How many receivers are you connecting?"
@@ -73,7 +103,7 @@ class connectOutput:
         log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
         for i in range(0, r):
             thread = threading.Thread(target=self.initSerial(i,input))
-            thread.setDaemon(True)
+            thread.daemon = True
             thread.start()
             logging.info('Created Thread: %s'%(i))
             timeout.append(0)
@@ -259,3 +289,5 @@ class connectOutput:
 def outputToCSV():
     pass
 
+if __name__ == "__main__":
+    connectOutput().thread()

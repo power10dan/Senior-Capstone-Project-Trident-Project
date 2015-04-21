@@ -12,6 +12,7 @@ import re
 import Connecter
 from kivy.clock import Clock
 import threading
+from multiprocessing import Process
 
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
@@ -194,6 +195,10 @@ class Poseidon(Widget):
     settings_popup = None
     app = ObjectProperty(None)
     survey = ObjectProperty(None)
+    thread = ObjectProperty(None)
+    multipathingAlert = ObjectProperty(None)
+    nonMultipathQueue = ObjectProperty(None)
+    
     
     def __init__(self, **kwargs):
         super(Poseidon, self).__init__(**kwargs)
@@ -231,12 +236,12 @@ class Poseidon(Widget):
             self.settings_popup.open()
         
     def startSurvey(self):
-        thread = threading.Thread(target=Connecter.connectOutput().threads())
-        thread.start()
+        self.thread = threading.Thread(target=Connecter.connectOutput().passiveThreads,args=(3,'e',multipathingAlert,nonMultipathQueue,))
+        self.thread.daemon = True
+        self.thread.start()
         
-            
     def endSurvey(self):
-        pass
+        self.thread.join()
             
 class TridentApp(App):
     def build(self):
