@@ -263,7 +263,7 @@ class Poseidon(Widget):
 			self.settings_popup.open()
 		
 	def startSurvey(self):
-		self.thread = threading.Thread(target=Connecter.connectOutput().passiveThreads,args=(3,'e',multipathingAlert,nonMultipathQueue,))
+		self.thread = threading.Thread(target=Connecter.connectOutput().passiveThreads,args=(3,'e',))
 		self.thread.daemon = True
 		self.thread.start()
 		
