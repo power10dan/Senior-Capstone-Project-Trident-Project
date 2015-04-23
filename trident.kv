@@ -1,181 +1,205 @@
 #:kivy 1.8.0
 
 <Poseidon>:
-    survey: survey
-    BoxLayout:
-        size: root.width,root.height
-        orientation: 'vertical'
-        top:99
-        BoxLayout:
-            id: navigation
-            size_hint_y: .05
-            Button:
-                size_hint_x:None
-                text: 'Prev'
-                on_release: DataCarousel.load_previous()
-
-            Button:
-                size_hint_x:None
-                text: 'Next'
-                on_release: DataCarousel.load_next()
-
-            Label:
-                id: screenName
-            
-            Button:
-                id: settingsButton
-                text: 'Settings'
-                size_hint_x: None
-
-                on_press: 
-                    root.Settings_Button_pressed()
-            
-            Button:
-                id: survey
-                size_hint_x: None
-                text: 'Start Survey' 
-                
-        Carousel:
-            id: DataCarousel
-            loop: True
-        
-
-        
+	survey: survey
+	jobName: jobName
+	pointName: pointName
+	BoxLayout:
+		size: root.width,root.height
+		orientation: 'vertical'
+		top:99
+		BoxLayout:
+			id: navigation
+			size_hint_y: .05
+			Button:
+				size_hint_x:None
+				text: 'Prev'
+				on_release: DataCarousel.load_previous()
+	
+			Button:
+				size_hint_x:None
+				text: 'Next'
+				on_release: DataCarousel.load_next()
+	
+			Label:
+				id: jobName
+			Label:
+				text:"-"
+			Label:
+				id: pointName
+			
+			Button:
+				id: settingsButton
+				text: 'Settings'
+				size_hint_x: None
+	
+				on_press: 
+					root.Settings_Button_pressed()
+			
+			Button:
+				id: survey
+				size_hint_x: None
+				text: 'Start Survey' 
+				
+		Carousel:
+			id: DataCarousel
+			loop: True
+		
+			SurveyPage
+		
 <SettingsMenu>:
-    cols: 3
-    padding: 10
-    spacing: 10
+	cols: 3
+	padding: 10
+	spacing: 10
+	
+	vertical_tolerance: vertical_tolerance
+	horizontal_tolerance: horizontal_tolerance
+	gps_spacing: gps_spacing
+	antennaHeight: antennaHeight
+	phaseCenter: phaseCenter
+	leftReceiver: leftReceiver
+	centerReceiver: centerReceiver
+	rightReceiver: rightReceiver
+	verticalLabel: verticalLabel
+	horizontalLabel: horizontalLabel
+	gpsSpacingLabel: gpsSpacingLabel
+	antennaLabel: antennaLabel
+	phaseLabel: phaseLabel
+	
+	Label:
+		text: 'Left Receiver'
+	Button:
+		id: leftReceiver
+		on_press:
+			root.updateLR = True
+			root.popup(self,"Left Receiver")
+	RButton:
+		id: clearLR
+		on_press:
+			leftReceiver.text = ''
+			root.clearReceiver('leftReceiver')
+	
+	Label:
+		text: 'Center Receiver'
+	Button:
+		id: centerReceiver
+		on_press:
+			root.updateCR = True
+			root.popup(self,"Center Receiver")
+	RButton:
+		id: clearCR
+		on_press:
+			centerReceiver.text = ''
+			root.clearReceiver('centerReceiver')
+			
+	Label:
+		text: 'Right Receiver'
+	Button:
+		id: rightReceiver
+		on_press:   
+			root.updateRR = True
+			root.popup(self,"Right Receiver")
+	RButton:
+		id: clearRR
+		on_press:
+			rightReceiver.text = ''
+			root.clearReceiver('rightReceiver')
+		
+	Label:
+		text: 'Vertical Tolerance (m):'
+	FInput
+		id: vertical_tolerance
+	errorLabel:
+		id: verticalLabel
+	
+	Label:
+		text: 'Horizontal Tolerance (m):'
+	FInput:
+		id: horizontal_tolerance
+	errorLabel:
+		id: horizontalLabel
+	
+	Label:
+		text: 'GPS Spacing (m):'
+	FInput:
+		id: gps_spacing
+	errorLabel:
+		id: gpsSpacingLabel
+	
+	Label:
+		text: 'Antenna Height (m):'
+	FInput:
+		id: antennaHeight   
+	errorLabel:
+		id: antennaLabel
+	
+	Label:
+		text: 'Phase Center (m):'
+	FInput:
+		id: phaseCenter
+	errorLabel:
+		id: phaseLabel
+		
+	Button:
+		text: 'Submit'
+		on_release:
+			root.submit(horizontal_tolerance.text,vertical_tolerance.text,gps_spacing.text,antennaHeight.text,phaseCenter.text)
+	
+	Button:
+		text: 'Reset Tolerances'
+		on_release:
+			vertical_tolerance.text = str(0.1)
+			horizontal_tolerance.text = str(0.05)
+			gps_spacing.text = str(0.5)
+			antennaHeight.text = str(2.02)
+			phaseCenter.text = str(0.05)
+			root.submit('0.05','0.1','0.5','2.02','0.05')
 
-    vertical_tolerance: vertical_tolerance
-    horizontal_tolerance: horizontal_tolerance
-    gps_spacing: gps_spacing
-    antennaHeight: antennaHeight
-    phaseCenter: phaseCenter
-    leftReceiver: leftReceiver
-    centerReceiver: centerReceiver
-    rightReceiver: rightReceiver
-    verticalLabel: verticalLabel
-    horizontalLabel: horizontalLabel
-    gpsSpacingLabel: gpsSpacingLabel
-    antennaLabel: antennaLabel
-    phaseLabel: phaseLabel
+<RButton@Button>
+	text: "X"
+	size_hint_x: None
+	width: 25	
+	
+<FInput@FloatInput>
+	multiline: False
     
-    Label:
-        text: 'Left Receiver'
-    Button:
-        id: leftReceiver
-        on_press:
-            root.updateLR = True
-            root.popup(self,"Left Receiver")
-    Button:
-        id: clearLR
-        text: "X"
-        size_hint_x: None
-        width: 25
-        on_press:
-            leftReceiver.text = ''
-            root.clearReceiver('leftReceiver')
-
-    Label:
-        text: 'Center Receiver'
-    Button:
-        id: centerReceiver
-        on_press:
-            root.updateCR = True
-            root.popup(self,"Center Receiver")
-    Button:
-        id: clearCR
-        text: "X"
-        size_hint_x: None
-        width: 25
-        on_press:
-            centerReceiver.text = ''
-            root.clearReceiver('centerReceiver')
-            
-    Label:
-        text: 'Right Receiver'
-    Button:
-        id: rightReceiver
-        on_press:   
-            root.updateRR = True
-            root.popup(self,"Right Receiver")
-    Button:
-        id: clearRR
-        text: "X"
-        size_hint_x: None
-        width: 25
-        on_press:
-            rightReceiver.text = ''
-            root.clearReceiver('rightReceiver')
-        
-    Label:
-        text: 'Vertical Tolerance (m):'
-    FloatInput
-        id: vertical_tolerance
-        multiline: False
-    Label:
-        id: verticalLabel
-        color: 1,0,0,1
-        size_hint_x: None
-        width: 25
-    
-    Label:
-        text: 'Horizontal Tolerance (m):'
-    FloatInput:
-        id: horizontal_tolerance
-        multiline: False
-    Label:
-        id: horizontalLabel
-        color: 1,0,0,1
-        size_hint_x: None
-        width: 25
-
-    Label:
-        text: 'GPS Spacing (m):'
-    FloatInput:
-        id: gps_spacing
-        multiline: False
-    Label:
-        id: gpsSpacingLabel
-        color: 1,0,0,1
-        size_hint_x: None
-        width: 25
-
-    Label:
-        text: 'Antenna Height (m):'
-    FloatInput:
-        id: antennaHeight
-        multiline: False
-    Label:
-        id: antennaLabel
-        color: 1,0,0,1
-        size_hint_x: None
-        width: 25
-
-    Label:
-        text: 'Phase Center (m):'
-    FloatInput:
-        id: phaseCenter
-        multiline: False
-    Label:
-        id: phaseLabel
-        color: 1,0,0,1
-        size_hint_x: None
-        width: 25
-        
-    Button:
-        text: 'Submit'
-        on_release:
-            root.submit(horizontal_tolerance.text,vertical_tolerance.text,gps_spacing.text,antennaHeight.text,phaseCenter.text)
-
-    Button:
-        text: 'Reset Tolerances'
-        on_release:
-            vertical_tolerance.text = str(0.1)
-            horizontal_tolerance.text = str(0.05)
-            gps_spacing.text = str(0.5)
-            antennaHeight.text = str(2.02)
-            phaseCenter.text = str(0.05)
-            root.submit('0.05','0.1','0.5','2.02','0.05')
-
-
+<errorLabel@Label>
+	color: 1,0,0,1
+	size_hint_x: None
+	width: 25
+	
+<SurveyPoint>:
+	cols: 2
+	padding: 10
+	spacing: 10
+	size_hint_x: .4
+	size_hint_y: .4
+	pos_hint: {'center_x': .5, 'center_y': 0.5}
+	
+	Label:
+		text: 'Point Name'
+	TextInput:
+		multiline: False
+	Label:
+		text: 'Point Code'
+	TextInput:
+		multiline: False	
+	Label:
+		text: 'Counter'
+	Label:
+		id:counterLabel	
+	Label:
+		text: 'Epochs:'	
+	TextInput:
+		multiline: False	
+	Button:
+		text: 'Measure Point'	
+		
+<SurveyPage>:
+	BoxLayout:
+		size: root.width,root.height
+		orientation: 'horizontal'
+		SurveyPoint:
+		SurveyPoint:
+			size_hint_x: .2
+		
