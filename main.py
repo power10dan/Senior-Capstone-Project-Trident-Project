@@ -148,7 +148,7 @@ class SettingsMenu(GridLayout):
 		self.root.app.config.set('tolerances','phaseCenter',str(value))
 		self.root.app.config.write()   
 		
-	def popup(self,button,title): 
+	def receiverPopup(self,button,title): 
 		layout = BoxLayout(orientation='vertical')
 		popup = Popup(attach_to=self,title=str(title),title_align = 'center',size_hint = (.5,.5))
 		for r in self.tree.iter('receiver'):
@@ -263,7 +263,7 @@ class Poseidon(Widget):
 			self.settings_popup.open()
 		
 	def startSurvey(self):
-		self.thread = threading.Thread(target=Connecter.connectOutput().passiveThreads,args=(3,'e',))
+		self.thread = threading.Thread(target=Connecter.connectOutput().passiveThreads,args=(3,'e',multipathingAlert,nonMultipathQueue,))
 		self.thread.daemon = True
 		self.thread.start()
 		
