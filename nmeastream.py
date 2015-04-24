@@ -70,8 +70,8 @@ cart.close()
 common = open('.\output\common_'+ str(datetime.date.today())+'.txt','w')
 commonQueue = []
 commonQueue.append([i for i in cartesianQueue[0] if i[0] in [j[0] for j in cartesianQueue[1]] and i[0] in [k[0] for k in cartesianQueue[2]]])
-commonQueue.append([k for k in cartesianQueue[2] if k[0] in [i[0] for i in cartesianQueue[0]] and k[0] in [j[0] for j in cartesianQueue[1]]])
 commonQueue.append([j for j in cartesianQueue[1] if j[0] in [i[0] for i in cartesianQueue[0]] and j[0] in [k[0] for k in cartesianQueue[2]]])
+commonQueue.append([k for k in cartesianQueue[2] if k[0] in [i[0] for i in cartesianQueue[0]] and k[0] in [j[0] for j in cartesianQueue[1]]])
 
 # write cleaned data to file
 for i in range(len(commonQueue)):

@@ -1,9 +1,13 @@
-#:kivy 1.8.0
+#:kivy 1.9.0
 
 <Poseidon>:
 	survey: survey
-	jobName: jobName
-	pointName: pointName
+	jobNameLabel: jobNameLabel
+	pointNameLabel: pointNameLabel
+	jobNameButton:jobNameButton
+	newPointButton: newPointButton
+	dataCarousel: dataCarousel
+	
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'vertical'
@@ -11,43 +15,46 @@
 		BoxLayout:
 			id: navigation
 			size_hint_y: .05
-			Button:
-				size_hint_x:None
-				text: 'Prev'
-				on_release: DataCarousel.load_previous()
-
-			Button:
-				size_hint_x:None
-				text: 'Next'
-				on_release: DataCarousel.load_next()
-
-			Label:
-				id: jobName
-			Label:
-				text:"-"
-			Label:
-				id: pointName
-
+##			Button:
+##				size_hint_x:None
+##				text: 'Prev'
+##				on_release: DataCarousel.load_previous()
+##
+##			Button:
+##				size_hint_x:None
+##				text: 'Next'
+##				on_release: DataCarousel.load_next()
 			Button:
 				id: settingsButton
 				text: 'Settings'
 				size_hint_x: None
-
 				on_press:
 					root.Settings_Button_pressed()
-
+					
+			Button:
+				id: jobNameButton
+				text: 'Survey Name'
+			
+			Label:
+				id: jobNameLabel
+			Label:
+				text:"-"
+			Label:
+				id: pointNameLabel
+				
 			Button:
 				id: survey
 				size_hint_x: None
 				text: 'Start Survey'
+				
+			Button: 
+				id:newPointButton
+				text: 'Add Point'
 
 		Carousel:
-			id: DataCarousel
+			id: dataCarousel
 			loop: True
-
-			SurveyPage:
-
-			SurveyPage:
+			
 
 <SettingsMenu>:
 	cols: 3
@@ -158,14 +165,14 @@
 			gps_spacing.text = str(0.5)
 			antennaHeight.text = str(2.02)
 			phaseCenter.text = str(0.05)
-			root.submit('0.05','0.1','0.5','2.02','0.05')
 
 <RButton@Button>
 	text: "X"
 	size_hint_x: None
 	width: 25
 
-<FInput@FloatInput>
+<FInput@TextInput>
+	input_filter:'float'
 	multiline: False
 
 <errorLabel@Label>
@@ -173,38 +180,44 @@
 	size_hint_x: None
 	width: 25
 
-<SurveyPoint>:
-	cols: 2
-	padding: 10
-	spacing: 10
-	size_hint_x: .4
-	size_hint_y: .4
-	pos_hint: {'center_x': .5, 'center_y': 0.5}
-
-	Label:
-		text: 'Point Name'
-	TextInput:
-		multiline: False
-	Label:
-		text: 'Point Code'
-	TextInput:
-		multiline: False
-	Label:
-		text: 'Counter'
-	Label:
-		id:counterLabel
-	Label:
-		text: 'Epochs:'
-	TextInput:
-		multiline: False
-	Button:
-		text: 'Measure Point'
-
 <SurveyPage>:
+	measureButton: measureButton
+	counterLabel: counterLabel
+	epochInput: epochInput
+	
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'horizontal'
-		SurveyPoint:
-		SurveyPoint:
-			size_hint_x: .2
+		Label
+		GridLayout:
+			cols: 2
+			padding: 10
+			spacing: 10
+			size_hint_x: .5
+			size_hint_y: .4
+		
+		##	Label:
+		##		text: 'Point Name'
+		##	TextInput:
+		##		multiline: False
+		##	Label:
+		##		text: 'Point Code'
+		##	TextInput:
+		##		multiline: False
+			Label:
+				text: 'Counter'
+			Label:
+				id:counterLabel
+			Label:
+				text: 'Epochs to Measure:'
+			TextInput:
+				id: epochInput
+				multiline: False
+				input_filter: 'int'
+			Button:
+				id: measureButton
+				text: 'Measure Point'
+				
+
+	
 

@@ -20,23 +20,27 @@ logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctim
 
 xmlFilePath = 'ui.xml'
 
-#found on http://kivy.org/docs/api-kivy.uix.textinput.html
-class FloatInput(TextInput):
-	pat = re.compile('[^0-9]')
-	def insert_text(self, substring, from_undo=False):
-		pat = self.pat
-		if '.' in self.text:
-			s = re.sub(pat, '', substring)
-		else:
-			s = '.'.join([re.sub(pat, '', s) for s in substring.split('.', 1)])
-		return super(FloatInput, self).insert_text(s, from_undo=from_undo)
-
-class SurveyPoint(GridLayout):
-	pass
-
+	
 class SurveyPage(Widget):
-	pass
-
+	base = ObjectProperty(None)
+	counterLabel = ObjectProperty(None)
+	epochInput = ObjectProperty(None)
+	measureButton = ObjectProperty(None)
+	
+	def __init__(self, **kwargs):
+		super(SurveyPage, self).__init__(**kwargs)
+		self.measureButton.bind(on_release = self.updateMeasureButton)
+		
+	def updateMeasureButton(self,instance):
+		if instance.text == 'Measure Point' and self.base.app.config.get('locks','lockSurvey') == 'True':
+			instance.text = 'Stop'
+			self.base.app.config.set('locks','measuring','True')
+			self.base.app.config.write()
+		else:
+			instance.text = 'Measure Point'
+			self.base.app.config.set('locks','measuring','False')
+			self.base.app.config.write()
+			
 class SettingsMenu(GridLayout):
 	tree = ET.parse(xmlFilePath)
 	root = ObjectProperty(None)
@@ -179,6 +183,7 @@ class SettingsMenu(GridLayout):
 				updateTolerance = True
 				list(self.tree.iter('phaseCenter'))[0].text = phaseCenter
 			if updateTolerance:
+				self.root.settings_popup.dismiss()
 				self.tree.write(xmlFilePath)
 
 	# Checks tolerance inputs to ensure they are within the allowed range
@@ -200,55 +205,76 @@ class SettingsMenu(GridLayout):
 class Poseidon(Widget):
 	settings_popup = None
 	job_popup = None
+	point_popup = None
 	app = ObjectProperty(None)
 	survey = ObjectProperty(None)
 	thread = ObjectProperty(None)
-	multipathingAlert = ObjectProperty(None)
 	nonMultipathQueue = ObjectProperty(None)
-	jobName = ObjectProperty(None)
-	pointName = ObjectProperty(None)
-
+	jobNameLabel = ObjectProperty(None)
+	pointNameLabel = ObjectProperty(None)
+	jobNameButton = ObjectProperty(None)
+	newPointButton = ObjectProperty(None)
+	dataCarousel = ObjectProperty(None)
+	
 	def __init__(self, **kwargs):
 		super(Poseidon, self).__init__(**kwargs)
 
 		self.survey.bind(on_release = self.updateSurveyButton)
-		#self.jobName.bind(on_touch_up = self.updateJob)
-		#self.pointName.bind(on_touch_up = self.updatePointName)
+		self.jobNameButton.bind(on_release = self.updateJob)
+		self.newPointButton.bind(on_release = self.updatePoint)
 
 	def updateSurveyButton(self,instance):
 		if instance.text == 'Start Survey':
 			self.survey.text = 'End Survey'
-			if self.app.config.get('settingsMenu','lockSettings') == 'False':
-				self.app.config.set('settingsMenu','lockSettings','True')
+			if self.app.config.get('locks','lockSettings') == 'False':
+				self.app.config.set('locks','lockSettings','True')
+				self.app.config.set('locks','lockSurvey','True')
+				self.app.config.set('locks','lockPoint','False')
 				self.app.config.write()
 			self.startSurvey()
 		else:
 			self.survey.text = 'Start Survey'
-			if self.app.config.get('settingsMenu','lockSettings') == 'True':
-				self.app.config.set('settingsMenu','lockSettings','False')
+			if self.app.config.get('locks','lockSettings') == 'True':
+				self.app.config.set('locks','lockSettings','False')
+				self.app.config.set('locks','lockSurvey','False')
+				self.app.config.set('locks','lockPoint','True')
 				self.app.config.write()
 			self.endSurvey()
 
-	def updateJob(self,instance,pos):
+	def updateJob(self,instance):
 		if self.job_popup is None:
-			self.job_popup = Popup(attach_to=self, title='Job Name',title_align = 'center',size_hint=(0.5,None),padding=10)
+			self.job_popup = Popup(attach_to=self, title='Survey Name',title_align = 'center',size_hint=(0.5,None),padding=10)
 			job = TextInput(multiline= False)
 			job.bind(on_text_validate = lambda t: self.updateJobName(t.text))
 			self.job_popup.content = job
-		self.job_popup.open()
+		if self.app.config.get('locks','lockSurvey') == 'False':
+			self.job_popup.open()
 
 	def	updateJobName(self, text):
 		self.job_popup.dismiss()
-		self.jobName.text = text
+		self.jobNameLabel.text = text
 		self.app.config.set('job','jobName',str(text))
 		self.app.config.write()
 
-	def updatePointName(self, instance, pos):
-		pass
+	def updatePoint(self, instance):
+		if self.point_popup is None:
+			self.point_popup = Popup(attach_to=self, title='Point Name',title_align = 'center',size_hint=(0.5,None),padding=10)
+			job = TextInput(multiline= False)
+			job.bind(on_text_validate = lambda t: self.updatePointName(t.text))
+			self.point_popup.content = job
+		if self.app.config.get('locks','lockPoint') == 'False':
+			self.point_popup.open()
+		
+	def	updatePointName(self, text):
+		self.point_popup.dismiss()
+		self.pointNameLabel.text = text
+		self.dataCarousel.add_widget(SurveyPage(base=self))
+		#self.app.config.set('job','pointName',str(text))
+		#self.app.config.write()
 
 	def Settings_Button_pressed(self):
 		if self.settings_popup is None:
-			self.settings_popup = Popup(attach_to=self, title='Trident Settings', size_hint=(0.7,0.8))
+			self.settings_popup = Popup(attach_to=self, title='Trident Settings', title_align = 'center', size_hint=(0.7,0.8))
 			self.settings_popup.content = SettingsMenu(root=self)
 
 			self.settings_popup.content.vertical_tolerance.text = self.app.config.get('tolerances','vertical')
@@ -259,15 +285,18 @@ class Poseidon(Widget):
 			self.settings_popup.content.leftReceiver.text = self.app.config.get('receiver','leftReceiver')
 			self.settings_popup.content.centerReceiver.text = self.app.config.get('receiver','centerReceiver')
 			self.settings_popup.content.rightReceiver.text = self.app.config.get('receiver','rightReceiver')
-		if self.app.config.get('settingsMenu','lockSettings') == 'False':
+		if self.app.config.get('locks','lockSettings') == 'False':
 			self.settings_popup.open()
 
 	def startSurvey(self):
-		self.thread = threading.Thread(target=Connecter.connectOutput().passiveThreads,args=(3,'e',multipathingAlert,nonMultipathQueue,))
+		self.thread = threading.Thread(target=Connecter.connectOutput().passiveThreads,args=(3,'e'))
 		self.thread.daemon = True
 		self.thread.start()
 
 	def endSurvey(self):
+		if self.app.config.get('locks','measuring'):
+			self.app.config.set('locks','measuring','False')
+			self.app.config.write()
 		self.thread.join()
 
 class TridentApp(App):
@@ -275,10 +304,18 @@ class TridentApp(App):
 		self.poseidonWidget = Poseidon(app=self)
 		self.root = self.poseidonWidget
 
-		self.root.jobName.text = self.config.get('job','jobName')
+		self.root.jobNameLabel.text = self.config.get('job','jobName')
 
-		if self.config.get('settingsMenu','lockSettings') == 'True':
-			self.config.set('settingsMenu','lockSettings','False')
+		if self.config.get('locks','lockSettings') == 'True':
+			self.config.set('locks','lockSettings','False')
+			self.config.write()
+		
+		if self.config.get('locks','lockPoint') == 'False':
+			self.config.set('locks','lockPoint','True')
+			self.config.write()
+			
+		if self.config.get('locks','lockSurvey') == 'True':
+			self.config.set('locks','lockSurvey','False')
 			self.config.write()
 
 	def build_config(self, config):
@@ -286,9 +323,13 @@ class TridentApp(App):
 		config.adddefaultsection('job')
 		config.setdefault('job','jobName','')
 
-		config.adddefaultsection('settingsMenu')
-		config.setdefault('settingsMenu','lockSettings','False')
-
+		config.adddefaultsection('locks')
+		config.setdefault('locks','lockSettings','False')
+		config.setdefault('locks','lockPoint','True')
+		config.setdefault('locks','lockSurvey','False')
+		config.setdefault('locks','measuring','False')
+		
+		
 		config.adddefaultsection('receiver')
 		config.setdefault('receiver','leftReceiver','')
 		config.setdefault('receiver','centerReceiver','')
