@@ -20,8 +20,7 @@ class MultipathDetector():
 
     # This function contains a check for mislabeled GPS units - The center unit MUST be labeled #2
     # TODO: we could theoretically add functionality that re-assigns the units to their appropriate positions, but this is lower priority
-    @staticmethod
-    def checkForMislabeledGPSUnits(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3):
+    def checkForMislabeledGPSUnits(self, gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3):
         try:
             outOfOrderMult = 3
 
@@ -211,8 +210,7 @@ class MultipathDetector():
 
     # returns a tuple of booleans (Bool_A, Bool_B), where Bool_A is True if multipathing is detected and false otherwise
     # and Bool_B is True if outlier-multipathing is detected (meaning VERY bad multipathing)
-    @staticmethod
-    def multipathDetect(coord1, coord2, coord3):
+    def multipathDetect(self, coord1, coord2, coord3):
         try:
             tree = ET.parse(xmlFilePath)
 
@@ -256,7 +254,7 @@ class MultipathDetector():
             # This means that the gps units could possibly be mislabeled as having the center receiver in the wrong position
             if multipathFlag is True:
                 # global mislabledFlag
-                self.mislabledFlag = MultipathDetector.checkForMislabeledGPSUnits(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3)
+                self.mislabledFlag = self.checkForMislabeledGPSUnits(gpsDistance, linearTolerance, dist1_2, dist2_3, dist1_3)
 
             if MultipathDetector.outlierDotProductCheck(dotProduct, dotProductTolerance, outlierMultiplier, outlierFlag):
                 outlierFlag = True
@@ -297,7 +295,7 @@ class MultipathDetector():
     # queue2 will be the center receiver - this is very important!
     @staticmethod
     def multipathQueueHandler(listOfQueues):
-        try:
+        # try:
             if self.mislabeledFlag != 0:
                 return self.mislabeledFlag
 
@@ -362,7 +360,7 @@ class MultipathDetector():
 
             # determines multipathing for each element of the queues
             for i in range(len(queue1)):
-                (multipathFlag, outlierFlag) = MultipathDetector.multipathDetect(queue1[i], queue2[i], queue3[i])
+                (multipathFlag, outlierFlag) = self.multipathDetect(queue1[i], queue2[i], queue3[i])
                 if multipathFlag is True:
                     multipathCounter += 1
                 if outlierFlag is True:
@@ -406,7 +404,7 @@ class MultipathDetector():
             log.info('Tolerance =%s\t Avg=%s\t Recent=%s' % (dotProductTolerance, dotProductAvg, dotProductSingle))
 
             # computes multipathing for the averaged values in the queues
-            avgMultipath = MultipathDetector.multipathDetect((xCoordAvg_1, yCoordAvg_1, zCoordAvg_1), (xCoordAvg_2, yCoordAvg_2, zCoordAvg_2), (xCoordAvg_3, yCoordAvg_3, zCoordAvg_3))
+            avgMultipath = self.multipathDetect((xCoordAvg_1, yCoordAvg_1, zCoordAvg_1), (xCoordAvg_2, yCoordAvg_2, zCoordAvg_2), (xCoordAvg_3, yCoordAvg_3, zCoordAvg_3))
 
             if multipathCounter >= 3:
                 # more than 3 elements of the queue contain multipathing 
@@ -417,6 +415,6 @@ class MultipathDetector():
                 return True
             else:
                 return avgMultipath
-        except:
-            log.error("Error in MultipathDetector.multipathQueueHandler")
+        # except:
+        #     log.error("Error in MultipathDetector.multipathQueueHandler")
 
