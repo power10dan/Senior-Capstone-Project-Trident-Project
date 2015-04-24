@@ -293,8 +293,7 @@ class MultipathDetector():
     # Finally, we will use those 3 averaged tuples to call multipathDetect
     # The call to multipathQueueHandler must guarantee that the queues are fully populated
     # queue2 will be the center receiver - this is very important!
-    @staticmethod
-    def multipathQueueHandler(listOfQueues):
+    def multipathQueueHandler(self,listOfQueues):
         # try:
             if self.mislabeledFlag != 0:
                 return self.mislabeledFlag
@@ -312,9 +311,9 @@ class MultipathDetector():
             # # This else-if block reorders the input queues if they were detected as being incorrectly labeled
             # global goodGPSOrdering_Flag
             # if goodGPSOrdering_Flag == 0:
-            #     queue1 = listOfQueues[0]
-            #     queue2 = listOfQueues[1]
-            #     queue3 = listOfQueues[2]
+            queue1 = listOfQueues[0]
+            queue2 = listOfQueues[1]
+            queue3 = listOfQueues[2]
             # elif goodGPSOrdering_Flag == 1:
             #     log.info("Left and Center units detected as swapped - switching them to correct order!")
             #     queue1 = listOfQueues[2]
