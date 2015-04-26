@@ -14,7 +14,7 @@
 		top:99
 		BoxLayout:
 			id: navigation
-			size_hint_y: .05
+			size_hint_y: .1
 ##			Button:
 ##				size_hint_x:None
 ##				text: 'Prev'
@@ -54,8 +54,76 @@
 		Carousel:
 			id: dataCarousel
 			loop: True
-			
-
+            BoxLayout:
+                id: commandInterface
+                orientation: 'vertical'
+                size_hint_x: .3
+                size_hint_y: .68
+                pos_hint: {'x': .49, 'y': .3} 
+                spacing: 10
+                
+                Label:
+                    text: 'Command Line Output'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    pos_hint: {'x': .66, 'y': .09}
+                    text_size: self.width, None
+                    
+                TextInput:
+                    pos_hint: {'x': .66, 'y': .31}
+                    size: (30,30)
+                    text: ''
+                    readonly: True
+                
+                Label:
+                    text: 'Receiver Status'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    pos_hint: {'x': .66, 'y': .09}
+                    text_size: self.width, None
+                
+                BoxLayout:
+                    id: commandInterface
+                    size_hint_x: .8
+                    size_hint_y: .26
+                    spacing: 5
+                    pos_hint: {'x': .66, 'y': .25}
+                    
+                    TextInput:
+                        pos_hint: {'x': .05, 'y': .09}
+                        size: (10,10)
+                        text: 'Left'
+                        readonly: True
+                        background_color: [255,0,0,20]
+                    
+                    TextInput:
+                        pos_hint: {'x': .05, 'y': .09}
+                        size: (10,10)
+                        text: 'Center'
+                        readonly: True
+                        background_color: [255,0,0,20]
+                        
+                    TextInput:
+                        pos_hint: {'x': .05, 'y': .09}
+                        size: (10,10)
+                        text: 'Right'
+                        readonly: True
+                        background_color: [255,0,0,20]
+                
+                Label:
+                    text: 'Other Functions'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    pos_hint: {'x': .66, 'y': .09}
+                    text_size: self.width, None
+                    
+                Button:
+                    text: 'Save'
+                    size_hint_y: None
+                    height: 40
+                    pos_hint: {'x': .65, 'y': .09}
+                    text_size: self.width, None
+                    halign: 'center'
 <SettingsMenu>:
 	cols: 3
 	padding: 10
@@ -217,7 +285,3 @@
 			Button:
 				id: measureButton
 				text: 'Measure Point'
-				
-
-	
-
