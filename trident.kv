@@ -15,15 +15,16 @@
 		BoxLayout:
 			id: navigation
 			size_hint_y: .1
-##			Button:
-##				size_hint_x:None
-##				text: 'Prev'
-##				on_release: DataCarousel.load_previous()
-##
-##			Button:
-##				size_hint_x:None
-##				text: 'Next'
-##				on_release: DataCarousel.load_next()
+            
+#			Button:
+#				size_hint_x:None
+#				text: 'Prev'
+#				on_release: DataCarousel.load_previous()
+
+#			Button:
+#				size_hint_x:None
+#				text: 'Next'
+#				on_release: DataCarousel.load_next()
 			Button:
 				id: settingsButton
 				text: 'Settings'
@@ -50,18 +51,19 @@
 			Button: 
 				id:newPointButton
 				text: 'Add Point'
-
 		Carousel:
 			id: dataCarousel
 			loop: True
+            
             BoxLayout:
                 id: commandInterface
                 orientation: 'vertical'
                 size_hint_x: .3
                 size_hint_y: .68
-                pos_hint: {'x': .49, 'y': .3} 
+                pos_hint: {'x': .49, 'y': .20} 
                 spacing: 10
                 
+               
                 Label:
                     text: 'Command Line Output'
                     size_hint_y: None
@@ -70,8 +72,8 @@
                     text_size: self.width, None
                     
                 TextInput:
-                    pos_hint: {'x': .66, 'y': .31}
-                    size: (30,30)
+                    pos_hint: {'x': .66, 'y': .45}
+                    size: (30,50)
                     text: ''
                     readonly: True
                 
@@ -124,6 +126,14 @@
                     pos_hint: {'x': .65, 'y': .09}
                     text_size: self.width, None
                     halign: 'center'
+                Button:
+                    text: 'Open Existing File'
+                    size_hint_y: None
+                    height: 40
+                    pos_hint: {'x': .65, 'y': .09}
+                    text_size: self.width, None
+                    halign: 'center'
+
 <SettingsMenu>:
 	cols: 3
 	padding: 10
