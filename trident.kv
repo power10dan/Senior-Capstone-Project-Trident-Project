@@ -1,4 +1,4 @@
-#:kivy 1.9.0
+#:kivy 1.8.0
 
 <Poseidon>:
 	survey: survey
@@ -7,7 +7,7 @@
 	jobNameButton:jobNameButton
 	newPointButton: newPointButton
 	dataCarousel: dataCarousel
-	
+
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'vertical'
@@ -15,7 +15,7 @@
 		BoxLayout:
 			id: navigation
 			size_hint_y: .1
-            
+
 #			Button:
 #				size_hint_x:None
 #				text: 'Prev'
@@ -31,109 +31,115 @@
 				size_hint_x: None
 				on_press:
 					root.Settings_Button_pressed()
-					
+
 			Button:
 				id: jobNameButton
 				text: 'Survey Name'
-			
+
 			Label:
 				id: jobNameLabel
 			Label:
 				text:"-"
 			Label:
 				id: pointNameLabel
-				
+
 			Button:
 				id: survey
 				size_hint_x: None
 				text: 'Start Survey'
-				
-			Button: 
+
+			Button:
 				id:newPointButton
 				text: 'Add Point'
 		Carousel:
 			id: dataCarousel
 			loop: True
-            
+
             BoxLayout:
                 id: commandInterface
                 orientation: 'vertical'
-                size_hint_x: .3
+                size_hint_x: .5
                 size_hint_y: .68
-                pos_hint: {'x': .49, 'y': .20} 
+                pos_hint: {'x': .0001, 'y': .20}
                 spacing: 10
-                
-               
+
                 Label:
                     text: 'Command Line Output'
                     size_hint_y: None
                     height: self.texture_size[1]
-                    pos_hint: {'x': .66, 'y': .09}
+                    pos_hint: {'x': .55, 'y': .09}
                     text_size: self.width, None
-                    
+
                 TextInput:
-                    pos_hint: {'x': .66, 'y': .45}
-                    size: (30,50)
+                    id: command
+                    pos_hint: {'x': .55, 'y': .65}
+                    size: (500,450)
                     text: ''
                     readonly: True
-                
+
                 Label:
+                    id: right_status
                     text: 'Receiver Status'
                     size_hint_y: None
                     height: self.texture_size[1]
-                    pos_hint: {'x': .66, 'y': .09}
+                    pos_hint: {'x': .55, 'y': .09}
                     text_size: self.width, None
-                
+
                 BoxLayout:
                     id: commandInterface
                     size_hint_x: .8
                     size_hint_y: .26
                     spacing: 5
-                    pos_hint: {'x': .66, 'y': .25}
-                    
+                    pos_hint: {'x': .55, 'y': .25}
+
                     TextInput:
+                        id: left
                         pos_hint: {'x': .05, 'y': .09}
                         size: (10,10)
                         text: 'Left'
                         readonly: True
                         background_color: [255,0,0,20]
-                    
+
                     TextInput:
+                        id: center
                         pos_hint: {'x': .05, 'y': .09}
                         size: (10,10)
                         text: 'Center'
                         readonly: True
                         background_color: [255,0,0,20]
-                        
+
                     TextInput:
+                        id: right
                         pos_hint: {'x': .05, 'y': .09}
                         size: (10,10)
                         text: 'Right'
                         readonly: True
                         background_color: [255,0,0,20]
-                
+
                 Label:
                     text: 'Other Functions'
                     size_hint_y: None
                     height: self.texture_size[1]
-                    pos_hint: {'x': .66, 'y': .09}
+                    pos_hint: {'x': .55, 'y': .09}
                     text_size: self.width, None
-                    
-                Button:
-                    text: 'Save'
-                    size_hint_y: None
-                    height: 40
-                    pos_hint: {'x': .65, 'y': .09}
-                    text_size: self.width, None
-                    halign: 'center'
+
                 Button:
                     text: 'Open Existing File'
                     size_hint_y: None
-                    height: 40
-                    pos_hint: {'x': .65, 'y': .09}
+                    height: 30
+                    pos_hint: {'x': .55, 'y': .09}
                     text_size: self.width, None
                     halign: 'center'
 
+                Button:
+                    text: 'Plot Collected Data'
+                    size_hint_y: None
+                    height: 30
+                    pos_hint: {'x': .55, 'y': .09}
+                    text_size: self.width, None
+                    halign: 'center'
+                    on_press:
+                        root.plot_realtime()
 <SettingsMenu>:
 	cols: 3
 	padding: 10
@@ -160,7 +166,7 @@
 		on_press:
 			root.updateLR = True
 			root.receiverPopup(self,"Left Receiver")
-			
+
 	RButton:
 		id: clearLR
 		on_press:
@@ -262,7 +268,7 @@
 	measureButton: measureButton
 	counterLabel: counterLabel
 	epochInput: epochInput
-	
+
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'horizontal'
@@ -273,7 +279,7 @@
 			spacing: 10
 			size_hint_x: .5
 			size_hint_y: .4
-		
+
 		##	Label:
 		##		text: 'Point Name'
 		##	TextInput:
