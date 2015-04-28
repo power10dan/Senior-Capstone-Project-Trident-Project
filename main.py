@@ -166,27 +166,30 @@ class SettingsMenu(GridLayout):
 		pop.open()
 
     def submit(self,horizontal,vertical,gps_spacing,antennaHeight,phaseCenter):
-		updateTolerance = False
-		if self.verifyToleranceValues(float(horizontal),float(vertical),float(gps_spacing)):
-			if vertical != list(self.tree.iter('vertical'))[0].text:
-				updateTolerance = True
-				list(self.tree.iter('vertical'))[0].text = vertical
-			if horizontal != list(self.tree.iter('horizontal'))[0].text:
-				updateTolerance = True
-				list(self.tree.iter('horizontal'))[0].text = horizontal
-			if gps_spacing != list(self.tree.iter('gps_spacing'))[0].text:
-				updateTolerance = True
-				list(self.tree.iter('gps_spacing'))[0].text = gps_spacing
-			if antennaHeight != list(self.tree.iter('antennaHeight'))[0].text:
-				updateTolerance = True
-				list(self.tree.iter('antennaHeight'))[0].text = antennaHeight
-			if phaseCenter != list(self.tree.iter('phaseCenter'))[0].text:
-				updateTolerance = True
-				list(self.tree.iter('phaseCenter'))[0].text = phaseCenter
-			if updateTolerance:
-				self.root.settings_popup.dismiss()
-				self.tree.write(xmlFilePath)
-
+        updateTolerance = False
+        if self.verifyToleranceValues(float(horizontal),float(vertical),float(gps_spacing)):
+            if vertical != list(self.tree.iter('vertical'))[0].text:
+                updateTolerance = True
+                list(self.tree.iter('vertical'))[0].text = vertical
+            if horizontal != list(self.tree.iter('horizontal'))[0].text:
+                updateTolerance = True
+                list(self.tree.iter('horizontal'))[0].text = horizontal
+            if gps_spacing != list(self.tree.iter('gps_spacing'))[0].text:
+                updateTolerance = True
+                list(self.tree.iter('gps_spacing'))[0].text = gps_spacing
+            if antennaHeight != list(self.tree.iter('antennaHeight'))[0].text:
+                updateTolerance = True
+                list(self.tree.iter('antennaHeight'))[0].text = antennaHeight
+            if phaseCenter != list(self.tree.iter('phaseCenter'))[0].text:
+                updateTolerance = True
+                list(self.tree.iter('phaseCenter'))[0].text = phaseCenter
+            if updateTolerance:
+                self.root.settings_popup.dismiss()
+                self.tree.write(xmlFilePath)
+        self.root.settings_popup.dismiss()
+        content= Label(text='Settings submitted!')
+        popup_notif = Popup(title='Message', content = content, size_hint=(None,None), size=(400,400))
+        popup_notif.open()
 	# Checks tolerance inputs to ensure they are within the allowed range
 	# Returns 'False' if values are unacceptable, 'True' otherwise, and creates a warning in GUI_log.log
     def verifyToleranceValues(self, horizontalToleranceInput, altitudeToleranceInput, gps_distance):
@@ -286,25 +289,26 @@ class Poseidon(Widget):
 			self.settings_popup.content.centerReceiver.text = self.app.config.get('receiver','centerReceiver')
 			self.settings_popup.content.rightReceiver.text = self.app.config.get('receiver','rightReceiver')
 		if self.app.config.get('locks','lockSettings') == 'False':
-			self.settings_popup.open()
-
+ 			self.settings_popup.open()
     def startSurvey(self):
-		self.thread = threading.Thread(target=Connecter.connectOutput().passiveThreads,args=(3,'e'))
-		self.thread.daemon = True
-		self.thread.start()
+        self.notify_command_output('survey started')
+        self.thread = threading.Thread(target=Connecter.connectOutput().passiveThreads,args=(3,'e'))
+        self.thread.daemon = True
+        self.thread.start()
 
     def endSurvey(self):
-		if self.app.config.get('locks','measuring'):
-			self.app.config.set('locks','measuring','False')
-			self.app.config.write()
-		self.thread.join()
+        self.notify_command_output('Ending survey')
+        if self.app.config.get('locks','measuring'):
+            self.app.config.set('locks','measuring','False')
+            self.app.config.write()
+        self.thread.join()
 
     def plot_file(self, filepath, name):
         found_flag = 0
+        full_path = ''
         for root, dirs, files in os.walk(filepath):
             if name in files:
                 full_path = os.path.join(root, name)
-                read_and_plot_file(full_path)
                 found_flag = 1
                 break
         if(found_flag) is 0:
@@ -312,10 +316,15 @@ class Poseidon(Widget):
             box.add_widget(Label(text='I did not find any real-time data'))
             pop = Popup(title='Warning', content=box, size_hint=(.5,.5))
             pop.open()
-
+            self.notify_command_output('File not found error, program stopped')
+        else:
+            read_and_plot_file(full_path)
+            self.notify_command_output('Data plotting complete')
     def plot_realtime(self):
         full_path = os.path.join(os.getcwd(), 'data_collection_set_4_25_15')
-        self.plot_file(full_path, 'control_point_2_trial_1.txt')
+        self.plot_file(full_path, 'control _point_2_trial_1.txt')
+    def notify_command_output(self, notification):
+          self.ids.command.text = notification
 class TridentApp(App):
 	def build(self):
 		self.poseidonWidget = Poseidon(app=self)

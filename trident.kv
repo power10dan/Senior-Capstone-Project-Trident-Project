@@ -71,12 +71,14 @@
                     text_size: self.width, None
 
                 TextInput:
+                    id: command
                     pos_hint: {'x': .55, 'y': .65}
                     size: (500,450)
                     text: ''
                     readonly: True
 
                 Label:
+                    id: right_status
                     text: 'Receiver Status'
                     size_hint_y: None
                     height: self.texture_size[1]
@@ -91,6 +93,7 @@
                     pos_hint: {'x': .55, 'y': .25}
 
                     TextInput:
+                        id: left
                         pos_hint: {'x': .05, 'y': .09}
                         size: (10,10)
                         text: 'Left'
@@ -98,6 +101,7 @@
                         background_color: [255,0,0,20]
 
                     TextInput:
+                        id: center
                         pos_hint: {'x': .05, 'y': .09}
                         size: (10,10)
                         text: 'Center'
@@ -105,6 +109,7 @@
                         background_color: [255,0,0,20]
 
                     TextInput:
+                        id: right
                         pos_hint: {'x': .05, 'y': .09}
                         size: (10,10)
                         text: 'Right'
@@ -117,14 +122,6 @@
                     height: self.texture_size[1]
                     pos_hint: {'x': .55, 'y': .09}
                     text_size: self.width, None
-
-                Button:
-                    text: 'Save'
-                    size_hint_y: None
-                    height: 30
-                    pos_hint: {'x': .55, 'y': .09}
-                    text_size: self.width, None
-                    halign: 'center'
 
                 Button:
                     text: 'Open Existing File'
@@ -141,6 +138,8 @@
                     pos_hint: {'x': .55, 'y': .09}
                     text_size: self.width, None
                     halign: 'center'
+                    on_press:
+                        root.plot_realtime()
 <SettingsMenu>:
 	cols: 3
 	padding: 10
