@@ -9,7 +9,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from multiprocessing import Process
-from nmeastream import read_and_plot_file
+#from nmeastream import read_and_plot_file
 from kivy.clock import Clock
 
 import logging

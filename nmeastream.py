@@ -4,8 +4,8 @@ import datetime
 import geodetic
 import MultipathDetector
 import logging
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+#import matplotlib.pyplot as plt
+#from mpl_toolkits.mplot3d import Axes3D
 
 M = MultipathDetector.MultipathDetector()
 G = geodetic.geodetic()
