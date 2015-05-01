@@ -8,16 +8,14 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
-from multiprocessing import Process
-#from nmeastream import read_and_plot_file
-from kivy.clock import Clock
-
+from kivy.clock import Clock, mainthread
 import logging
 import xml.etree.ElementTree as ET
 import re
 import Connecter
 import threading
 import os
+
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
 
@@ -28,7 +26,7 @@ class SurveyPage(Widget):
 	counterLabel = ObjectProperty(None)
 	epochInput = ObjectProperty(None)
 	measureButton = ObjectProperty(None)
-
+	
 	def __init__(self, **kwargs):
 		super(SurveyPage, self).__init__(**kwargs)
 		self.measureButton.bind(on_release = self.updateMeasureButton)
@@ -43,6 +41,7 @@ class SurveyPage(Widget):
 			self.base.app.config.set('locks','measuring','False')
 			self.base.app.config.write()
 
+	
 class SettingsMenu(GridLayout):
     tree = ET.parse(xmlFilePath)
     root = ObjectProperty(None)
@@ -184,12 +183,14 @@ class SettingsMenu(GridLayout):
                 updateTolerance = True
                 list(self.tree.iter('phaseCenter'))[0].text = phaseCenter
             if updateTolerance:
-                self.root.settings_popup.dismiss()
-                self.tree.write(xmlFilePath)
-        self.root.settings_popup.dismiss()
-        content= Label(text='Settings submitted!')
-        popup_notif = Popup(title='Message', content = content, size_hint=(None,None), size=(400,400))
-        popup_notif.open()
+				self.root.settings_popup.dismiss()
+				self.tree.write(xmlFilePath)
+				popup_notif = Popup(attach_to=self,title='Settings', size_hint=(.3,.2))
+				content= Label(text ='Successfully submitted!')
+				content.bind(on_touch_up = popup_notif.dismiss)
+				popup_notif.content = content
+				popup_notif.open()
+		
 	# Checks tolerance inputs to ensure they are within the allowed range
 	# Returns 'False' if values are unacceptable, 'True' otherwise, and creates a warning in GUI_log.log
     def verifyToleranceValues(self, horizontalToleranceInput, altitudeToleranceInput, gps_distance):
@@ -205,28 +206,41 @@ class SettingsMenu(GridLayout):
             return False
         else:
             return True
+			
 class Poseidon(Widget):
-    settings_popup = None
-    job_popup = None
-    point_popup = None
-    app = ObjectProperty(None)
-    survey = ObjectProperty(None)
-    thread = ObjectProperty(None)
-    nonMultipathQueue = ObjectProperty(None)
-    jobNameLabel = ObjectProperty(None)
-    pointNameLabel = ObjectProperty(None)
-    jobNameButton = ObjectProperty(None)
-    newPointButton = ObjectProperty(None)
-    dataCarousel = ObjectProperty(None)
-
-    def __init__(self, **kwargs):
+	settings_popup = None
+	job_popup = None
+	point_popup = None
+	thread_stop = None
+	app = ObjectProperty(None)
+	survey = ObjectProperty(None)
+	thread = ObjectProperty(None)
+	nonMultipathQueue = ObjectProperty(None)
+	jobNameLabel = ObjectProperty(None)
+	pointNameLabel = ObjectProperty(None)
+	jobNameButton = ObjectProperty(None)
+	newPointButton = ObjectProperty(None)
+	dataCarousel = ObjectProperty(None)
+	newPage = ObjectProperty(None)
+	gpsOutput = ObjectProperty(None)
+	homePage = ObjectProperty(None)
+	
+	def __init__(self, **kwargs):
 		super(Poseidon, self).__init__(**kwargs)
-
+	
 		self.survey.bind(on_release = self.updateSurveyButton)
 		self.jobNameButton.bind(on_release = self.updateJob)
 		self.newPointButton.bind(on_release = self.updatePoint)
-
-    def updateSurveyButton(self,instance):
+		
+		self.gpsOutput = Label()
+		self.homePage = GridLayout(cols = 4)
+		self.homePage.add_widget(self.gpsOutput)
+		self.dataCarousel.add_widget(self.homePage)
+		self.homePage.create_property('name')
+		self.homePage.name = "Home"
+		self.dataCarousel.load_slide(self.homePage)
+	
+	def updateSurveyButton(self,instance):
 		if instance.text == 'Start Survey':
 			self.survey.text = 'End Survey'
 			if self.app.config.get('locks','lockSettings') == 'False':
@@ -243,8 +257,8 @@ class Poseidon(Widget):
 				self.app.config.set('locks','lockPoint','True')
 				self.app.config.write()
 			self.endSurvey()
-
-    def updateJob(self,instance):
+	
+	def updateJob(self,instance):
 		if self.job_popup is None:
 			self.job_popup = Popup(attach_to=self, title='Survey Name',title_align = 'center',size_hint=(0.5,None),padding=10)
 			job = TextInput(multiline= False)
@@ -252,34 +266,40 @@ class Poseidon(Widget):
 			self.job_popup.content = job
 		if self.app.config.get('locks','lockSurvey') == 'False':
 			self.job_popup.open()
-
-    def	updateJobName(self, text):
+	
+	def	updateJobName(self, text):
 		self.job_popup.dismiss()
 		self.jobNameLabel.text = text
 		self.app.config.set('job','jobName',str(text))
 		self.app.config.write()
-
-    def updatePoint(self, instance):
-		if self.point_popup is None:
-			self.point_popup = Popup(attach_to=self, title='Point Name',title_align = 'center',size_hint=(0.5,None),padding=10)
-			job = TextInput(multiline= False)
-			job.bind(on_text_validate = lambda t: self.updatePointName(t.text))
-			self.point_popup.content = job
+	
+	def updatePoint(self, instance):
 		if self.app.config.get('locks','lockPoint') == 'False':
+			layout = BoxLayout(orientation='vertical')
+			self.point_popup = Popup(attach_to=self, title='Point Name',title_align = 'center',size_hint=(.3,.4),padding=10)
+			point = TextInput(multiline= False)
+			code = TextInput(multiline= False)
+			point.bind(on_text_validate = lambda t: self.updatePointName(t.text))
+			layout.add_widget(Label(text="point name:"))
+			layout.add_widget(point)
+			layout.add_widget(Label(text="point code:"))
+			layout.add_widget(code)
+			self.point_popup.content = layout
 			self.point_popup.open()
-
-    def	updatePointName(self, text):
+	
+	def	updatePointName(self, text):
 		self.point_popup.dismiss()
-		self.pointNameLabel.text = text
-		self.dataCarousel.add_widget(SurveyPage(base=self))
-		#self.app.config.set('job','pointName',str(text))
-		#self.app.config.write()
-
-    def Settings_Button_pressed(self):
+		newPage = SurveyPage(base=self)
+		self.dataCarousel.add_widget(newPage)
+		newPage.create_property('name')
+		newPage.name = text
+		self.dataCarousel.load_slide(newPage)
+	
+	def Settings_Button_pressed(self):
 		if self.settings_popup is None:
 			self.settings_popup = Popup(attach_to=self, title='Trident Settings', title_align = 'center', size_hint=(0.7,0.8))
 			self.settings_popup.content = SettingsMenu(root=self)
-
+	
 			self.settings_popup.content.vertical_tolerance.text = self.app.config.get('tolerances','vertical')
 			self.settings_popup.content.horizontal_tolerance.text = self.app.config.get('tolerances','horizontal')
 			self.settings_popup.content.gps_spacing.text = self.app.config.get('tolerances','gps_spacing')
@@ -289,42 +309,57 @@ class Poseidon(Widget):
 			self.settings_popup.content.centerReceiver.text = self.app.config.get('receiver','centerReceiver')
 			self.settings_popup.content.rightReceiver.text = self.app.config.get('receiver','rightReceiver')
 		if self.app.config.get('locks','lockSettings') == 'False':
- 			self.settings_popup.open()
-    def startSurvey(self):
-        self.notify_command_output('survey started')
-        self.thread = threading.Thread(target=Connecter.connectOutput().passiveThreads,args=(3,'e'))
-        self.thread.daemon = True
-        self.thread.start()
+			self.settings_popup.open()
+			
+	def startSurvey(self):
+		self.thread_stop = threading.Event()
+		self.thread = threading.Thread(target=self.passiveThreads,args=(3,'e'))
+		self.thread.daemon = True
+		self.thread.start()
+	
+	def endSurvey(self):
+		if self.app.config.get('locks','measuring'):
+			self.app.config.set('locks','measuring','False')
+			self.app.config.write()
+		self.thread_stop.set()
+		self.thread.join()
+	
+	def passiveThreads(self, r, input):
+		Connecter.connectOutput().createQueue()
+		Connecter.multiQueueFlag = True
+		Connecter.logging.info('user search input: %s'%(input))
+		Connecter.log = open('.\output\output_'+ str(Connecter.datetime.date.today())+'.txt','a') 
 
-    def endSurvey(self):
-        self.notify_command_output('Ending survey')
-        if self.app.config.get('locks','measuring'):
-            self.app.config.set('locks','measuring','False')
-            self.app.config.write()
-        self.thread.join()
-
-    def plot_file(self, filepath, name):
-        found_flag = 0
-        full_path = ''
-        for root, dirs, files in os.walk(filepath):
-            if name in files:
-                full_path = os.path.join(root, name)
-                found_flag = 1
-                break
-        if(found_flag) is 0:
-            box = BoxLayout()
-            box.add_widget(Label(text='I did not find any real-time data'))
-            pop = Popup(title='Warning', content=box, size_hint=(.5,.5))
-            pop.open()
-            self.notify_command_output('File not found error, program stopped')
-        else:
-            read_and_plot_file(full_path)
-            self.notify_command_output('Data plotting complete')
-    def plot_realtime(self):
-        full_path = os.path.join(os.getcwd(), 'data_collection_set_4_25_15')
-        self.plot_file(full_path, 'control _point_2_trial_1.txt')
-    def notify_command_output(self, notification):
-          self.ids.command.text = notification
+		for i in range(0, int(r)):
+			thread = threading.Thread(target=Connecter.connectOutput().initSerial(i,input))
+			thread.daemon = True
+			thread.start()
+			Connecter.logging.info('Created Thread: %s'%(i))
+			Connecter.timeout.append(0)
+		while True:
+			if self.thread_stop.is_set():
+				Connecter.connectOutput().signalHandler(0,0)
+				return
+			for i in range(0, r):
+				thread = threading.Thread(target=Connecter.connectOutput().streamSerial(str(i))).run()
+			if (r == 3 and len(Connecter.multiQueue[0]) == 10 and 
+					len(Connecter.multiQueue[1]) == 10 and 
+					len(Connecter.multiQueue[2]) == 10):
+				#print multiQueue
+				multipathing = Connecter.M.multipathQueueHandler(multiQueue)
+				mult = "Multipathing: " + str(multipathing)
+				print mult
+				self.updateOutput(mult)
+				#if not multipathing and Connecter.goodNmea != None:
+				#	self.updateOutput(Connecter.goodNmea)
+				# if the units are out of order (mislabeled), then exit this loop
+				if M.mislabeledFlag != 0:
+					self.thread_stop.set()
+	@mainthread
+	def updateOutput(self,nmea):
+		self.gpsOutput.text = str(nmea)
+		
+	
 class TridentApp(App):
 	def build(self):
 		self.poseidonWidget = Poseidon(app=self)

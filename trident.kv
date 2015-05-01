@@ -7,7 +7,7 @@
 	jobNameButton:jobNameButton
 	newPointButton: newPointButton
 	dataCarousel: dataCarousel
-
+	
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'vertical'
@@ -16,15 +16,6 @@
 			id: navigation
 			size_hint_y: .1
 
-#			Button:
-#				size_hint_x:None
-#				text: 'Prev'
-#				on_release: DataCarousel.load_previous()
-
-#			Button:
-#				size_hint_x:None
-#				text: 'Next'
-#				on_release: DataCarousel.load_next()
 			Button:
 				id: settingsButton
 				text: 'Settings'
@@ -42,7 +33,7 @@
 				text:"-"
 			Label:
 				id: pointNameLabel
-
+				
 			Button:
 				id: survey
 				size_hint_x: None
@@ -51,95 +42,13 @@
 			Button:
 				id:newPointButton
 				text: 'Add Point'
+			
 		Carousel:
 			id: dataCarousel
 			loop: True
-
-            BoxLayout:
-                id: commandInterface
-                orientation: 'vertical'
-                size_hint_x: .5
-                size_hint_y: .68
-                pos_hint: {'x': .0001, 'y': .20}
-                spacing: 10
-
-                Label:
-                    text: 'Command Line Output'
-                    size_hint_y: None
-                    height: self.texture_size[1]
-                    pos_hint: {'x': .55, 'y': .09}
-                    text_size: self.width, None
-
-                TextInput:
-                    id: command
-                    pos_hint: {'x': .55, 'y': .65}
-                    size: (500,450)
-                    text: ''
-                    readonly: True
-
-                Label:
-                    id: right_status
-                    text: 'Receiver Status'
-                    size_hint_y: None
-                    height: self.texture_size[1]
-                    pos_hint: {'x': .55, 'y': .09}
-                    text_size: self.width, None
-
-                BoxLayout:
-                    id: commandInterface
-                    size_hint_x: .8
-                    size_hint_y: .26
-                    spacing: 5
-                    pos_hint: {'x': .55, 'y': .25}
-
-                    TextInput:
-                        id: left
-                        pos_hint: {'x': .05, 'y': .09}
-                        size: (10,10)
-                        text: 'Left'
-                        readonly: True
-                        background_color: [255,0,0,20]
-
-                    TextInput:
-                        id: center
-                        pos_hint: {'x': .05, 'y': .09}
-                        size: (10,10)
-                        text: 'Center'
-                        readonly: True
-                        background_color: [255,0,0,20]
-
-                    TextInput:
-                        id: right
-                        pos_hint: {'x': .05, 'y': .09}
-                        size: (10,10)
-                        text: 'Right'
-                        readonly: True
-                        background_color: [255,0,0,20]
-
-                Label:
-                    text: 'Other Functions'
-                    size_hint_y: None
-                    height: self.texture_size[1]
-                    pos_hint: {'x': .55, 'y': .09}
-                    text_size: self.width, None
-
-                Button:
-                    text: 'Open Existing File'
-                    size_hint_y: None
-                    height: 30
-                    pos_hint: {'x': .55, 'y': .09}
-                    text_size: self.width, None
-                    halign: 'center'
-
-                Button:
-                    text: 'Plot Collected Data'
-                    size_hint_y: None
-                    height: 30
-                    pos_hint: {'x': .55, 'y': .09}
-                    text_size: self.width, None
-                    halign: 'center'
-                    on_press:
-                        root.plot_realtime()
+			on_current_slide: 
+				pointNameLabel.text = str(args[1].name)
+				
 <SettingsMenu>:
 	cols: 3
 	padding: 10
@@ -280,8 +189,6 @@
 			size_hint_x: .5
 			size_hint_y: .4
 
-		##	Label:
-		##		text: 'Point Name'
 		##	TextInput:
 		##		multiline: False
 		##	Label:

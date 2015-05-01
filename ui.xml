@@ -2,7 +2,7 @@
     <zone>3601</zone>
     <tolerances>
         <gps_spacing>0.5</gps_spacing>
-        <vertical>0.1</vertical>
+        <vertical>0.12</vertical>
         <horizontal>0.05</horizontal>
         <antennaHeight>2.02</antennaHeight>
         <phaseCenter>0.05</phaseCenter>
@@ -18,25 +18,25 @@
             <port>26</port>
         </receiver>
         <receiver>
-            <use>T</use>
+            <use>F</use>
             <left>F</left>
             <right>F</right>
-            <center>T</center>
+            <center>F</center>
             <serialNumber>2811371</serialNumber>
             <port>23</port>
         </receiver>
         <receiver>
-            <use>T</use>
-            <left>T</left>
+            <use>F</use>
+            <left>F</left>
             <right>F</right>
             <center>F</center>
             <serialNumber>2811372</serialNumber>
             <port>25</port>
         </receiver>
         <receiver>
-            <use>T</use>
+            <use>F</use>
             <left>F</left>
-            <right>T</right>
+            <right>F</right>
             <center>F</center>
             <serialNumber>2811384</serialNumber>
             <port>10</port>
