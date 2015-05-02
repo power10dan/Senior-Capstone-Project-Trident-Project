@@ -74,11 +74,11 @@ class SettingsMenu(GridLayout):
 		for r in self.tree.iter('receiver'):
 			if (list(r)[4].text) == self.root.app.config.get('receiver','leftReceiver'):
 				list(r)[0].text = 'F'
-				list(r)[3].text = 'F'
+				list(r)[1].text = 'F'
 		for r in self.tree.iter('receiver'):
 			if (list(r)[4].text) == value:
 				list(r)[0].text = 'T'
-				list(r)[3].text = 'T'
+				list(r)[1].text = 'T'
 		self.root.app.config.set('receiver','leftReceiver',str(value))
 		self.root.app.config.write()
 		self.tree.write(xmlFilePath)

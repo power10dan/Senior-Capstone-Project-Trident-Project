@@ -236,7 +236,8 @@ class connectOutput(object):
 		if temp == 'q' or not temp.isdigit():
 			print "Invalid Port, exiting!!!"
 			logging.info('Bad input port, exiting program')
-			sys.exit(0)
+			if __name__ == "__main__":
+				sys.exit(0)
 		return 'COM' + temp #concatenate COM and the port number to define serial port
 	
 	# Searches for devices or ports available and returns COM number
@@ -285,11 +286,15 @@ class connectOutput(object):
 				return self.portsFound(available)
 			else:
 				print "No ports found, exiting!!!"
-				#sys.exit(0)
+				self.thread_stop.set()
+				if __name__ == "__main__":
+					sys.exit(0)
 		else:
 			logging.info('Invalid User input for port search')
 			print "Invalid input, exiting!!!"
-			sys.exit(0)
+			self.thread_stop.set()
+			if __name__ == "__main__":
+				sys.exit(0)
 	
 	
 def outputToCSV():
