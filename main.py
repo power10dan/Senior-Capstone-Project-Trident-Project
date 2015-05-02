@@ -314,7 +314,13 @@ class Poseidon(Widget):
 			
 	def startSurvey(self):
 		self.thread_stop = threading.Event()
-		self.thread = threading.Thread(target= connectOutput(self.updateOutput,self.thread_stop).passiveThreads(3,'e'))
+		self.thread = threading.Thread(target = self.startSurvey2())
+		self.thread.daemon = True
+		self.thread.start()
+		
+	def startSurvey2(self):
+		self.thread_stop = threading.Event()
+		self.thread = threading.Thread(target = connectOutput(self.updateOutput,self.thread_stop).passiveThreads(3,'e'))
 		self.thread.daemon = True
 		self.thread.start()
 	
@@ -324,7 +330,8 @@ class Poseidon(Widget):
 			self.app.config.write()
 		self.thread_stop.set()
 		self.thread.join()
-	
+		
+	@mainthread
 	def updateOutput(self,nmea):
 		#print "hi world"
 		#self.gpsOutput.text = "hi"
