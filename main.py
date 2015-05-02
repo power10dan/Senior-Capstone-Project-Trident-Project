@@ -9,10 +9,10 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
 from kivy.clock import Clock, mainthread
-import logging
+from Connecter import connectOutput
 import xml.etree.ElementTree as ET
 import re
-import Connecter
+import logging
 import threading
 import os
 
@@ -71,17 +71,18 @@ class SettingsMenu(GridLayout):
         self.centerReceiver.bind(text = self.updateCenterReceiver)
 
     def updateLeftReceiver(self, instance, value):
-        for r in self.tree.iter('receiver'):
-            if (list(r)[4].text) == self.root.app.config.get('receiver','leftReceiver'):
-                list(r)[0].text = 'F'
-                list(r)[1].text = 'F'
+		for r in self.tree.iter('receiver'):
+			if (list(r)[4].text) == self.root.app.config.get('receiver','leftReceiver'):
+				list(r)[0].text = 'F'
+				list(r)[3].text = 'F'
 		for r in self.tree.iter('receiver'):
 			if (list(r)[4].text) == value:
 				list(r)[0].text = 'T'
-				list(r)[1].text = 'T'
+				list(r)[3].text = 'T'
 		self.root.app.config.set('receiver','leftReceiver',str(value))
-		self.root.app.config.write
-        self.tree.write(xmlFilePath)
+		self.root.app.config.write()
+		self.tree.write(xmlFilePath)
+
 
     def updateCenterReceiver(self, instance, value):
 		for r in self.tree.iter('receiver'):
@@ -313,7 +314,7 @@ class Poseidon(Widget):
 			
 	def startSurvey(self):
 		self.thread_stop = threading.Event()
-		self.thread = threading.Thread(target=self.passiveThreads,args=(3,'e'))
+		self.thread = threading.Thread(target= connectOutput(self.updateOutput,self.thread_stop).passiveThreads(3,'e'))
 		self.thread.daemon = True
 		self.thread.start()
 	
@@ -324,39 +325,9 @@ class Poseidon(Widget):
 		self.thread_stop.set()
 		self.thread.join()
 	
-	def passiveThreads(self, r, input):
-		Connecter.connectOutput().createQueue()
-		Connecter.multiQueueFlag = True
-		Connecter.logging.info('user search input: %s'%(input))
-		Connecter.log = open('.\output\output_'+ str(Connecter.datetime.date.today())+'.txt','a') 
-
-		for i in range(0, int(r)):
-			thread = threading.Thread(target=Connecter.connectOutput().initSerial(i,input))
-			thread.daemon = True
-			thread.start()
-			Connecter.logging.info('Created Thread: %s'%(i))
-			Connecter.timeout.append(0)
-		while True:
-			if self.thread_stop.is_set():
-				Connecter.connectOutput().signalHandler(0,0)
-				return
-			for i in range(0, r):
-				thread = threading.Thread(target=Connecter.connectOutput().streamSerial(str(i))).run()
-			if (r == 3 and len(Connecter.multiQueue[0]) == 10 and 
-					len(Connecter.multiQueue[1]) == 10 and 
-					len(Connecter.multiQueue[2]) == 10):
-				#print multiQueue
-				multipathing = Connecter.M.multipathQueueHandler(multiQueue)
-				mult = "Multipathing: " + str(multipathing)
-				print mult
-				self.updateOutput(mult)
-				#if not multipathing and Connecter.goodNmea != None:
-				#	self.updateOutput(Connecter.goodNmea)
-				# if the units are out of order (mislabeled), then exit this loop
-				if M.mislabeledFlag != 0:
-					self.thread_stop.set()
-	@mainthread
 	def updateOutput(self,nmea):
+		#print "hi world"
+		#self.gpsOutput.text = "hi"
 		self.gpsOutput.text = str(nmea)
 		
 	

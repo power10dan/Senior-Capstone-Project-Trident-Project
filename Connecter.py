@@ -23,9 +23,14 @@ M = MultipathDetector.MultipathDetector()
 xmlFilePath = 'ui.xml'
 multiQueueFlag = False  # used to check if multipath queues are allocated and used to auto select receivers
 goodNmea = None
-surveying = True
 
-class connectOutput:
+class connectOutput(object):
+	notify = None
+	thread_stop = None
+	def __init__(self,notify,thread_stop,**kwargs):
+		self.notify = notify
+		self.thread_stop = thread_stop
+		
 	# Searches and opens serial connections
 	# Called from: thread
 	def initSerial(self, i, input):
@@ -49,7 +54,35 @@ class connectOutput:
 			print 'OPEN: '+ ser[i].name
 		except serial.SerialException:
 			print "Error opening port, exiting!!!"
-			sys.exit(0)
+			#sys.exit(0)
+			
+	def passiveThreads(self, r, input):
+		multiQueueFlag = True
+		logging.info('user search input: %s'%(input))
+		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
+		for i in range(0, int(r)):
+			thread = threading.Thread(target=self.initSerial(i,input))
+			thread.daemon = True
+			thread.start()
+			logging.info('Created Thread: %s'%(i))
+			timeout.append(0)
+		while True:
+			if self.thread_stop.is_set():
+				self.signalHandler(0,0)
+				return
+			for i in range(0, r):
+				thread = threading.Thread(target=self.streamSerial(str(i))).run()
+			if (r == 3 and len(multiQueue[0]) == 10 and 
+					len(multiQueue[1]) == 10 and 
+					len(multiQueue[2]) == 10):
+				#print multiQueue
+				multipathing = M.multipathQueueHandler(multiQueue)
+				mult = "Multipathing: " + str(multipathing)
+				print mult
+				self.notify(mult)
+				# if the units are out of order (mislabeled), then exit this loop
+				if M.mislabeledFlag != 0:
+					self.thread_stop.set()
 	
 	# Handles thread logistics, creates logs, calls multipathQueueHandler
 	# Called from: main
@@ -252,7 +285,7 @@ class connectOutput:
 				return self.portsFound(available)
 			else:
 				print "No ports found, exiting!!!"
-				sys.exit(0)
+				#sys.exit(0)
 		else:
 			logging.info('Invalid User input for port search')
 			print "Invalid input, exiting!!!"
