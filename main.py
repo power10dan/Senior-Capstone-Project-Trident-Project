@@ -225,6 +225,7 @@ class Poseidon(Widget):
 	newPage = ObjectProperty(None)
 	gpsOutput = ObjectProperty(None)
 	homePage = ObjectProperty(None)
+	C = None
 	
 	def __init__(self, **kwargs):
 		super(Poseidon, self).__init__(**kwargs)
@@ -233,9 +234,15 @@ class Poseidon(Widget):
 		self.jobNameButton.bind(on_release = self.updateJob)
 		self.newPointButton.bind(on_release = self.updatePoint)
 		
-		self.gpsOutput = Label(size_hint=(.9,.9))
+		self.gpsOutput1 = Label(size_hint=(.9,.9),text = "1")
+		self.gpsOutput2 = Label(size_hint=(.9,.9),text = "2")
+		self.gpsOutput3 = Label(size_hint=(.9,.9),text = "3")
+		self.gpsOutput4 = Label(size_hint=(.9,.9),text = "4")
 		self.homePage = GridLayout(cols = 1)
-		self.homePage.add_widget(self.gpsOutput)
+		self.homePage.add_widget(self.gpsOutput1)
+		self.homePage.add_widget(self.gpsOutput2)
+		self.homePage.add_widget(self.gpsOutput3)
+		self.homePage.add_widget(self.gpsOutput4)
 		self.dataCarousel.add_widget(self.homePage)
 		self.homePage.create_property('name')
 		self.homePage.name = "Home"
@@ -316,9 +323,11 @@ class Poseidon(Widget):
 		threading.Thread(target=self.secondThread).start()
 		
 		
-	def secondThread(self):
-		print threading.activeCount()
-		Clock.schedule_once(connectOutput(self.updateOutput,self.thread_stop).passiveThreads(3,'e'))
+	def secondThread(self):		
+		Clock.schedule_once(self.callThreads())
+		
+	def callThreads(self):
+		connectOutput(self.updateOutput,self.thread_stop).passiveThreads(3,'e')
 		
 	def endSurvey(self):
 		if self.app.config.get('locks','measuring'):
@@ -328,9 +337,15 @@ class Poseidon(Widget):
 		self.thread_stop.set()
 	
 	@mainthread
-	def updateOutput(self,nmea):
-		#self.gpsOutput.text = "hi"
-		self.gpsOutput.text = str(nmea)
+	def updateOutput(self,name,nmea):
+		if name == 0:
+			self.gpsOutput1.text = str(nmea.gps_qual)
+		if name == 1:
+			self.gpsOutput2.text = str(nmea.gps_qual)
+		if name == 2:
+			self.gpsOutput3.text = str(nmea.gps_qual)
+		if name == 3:
+			self.gpsOutput4.text = str(nmea)
 		
 	
 class TridentApp(App):

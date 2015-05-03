@@ -56,11 +56,7 @@ class connectOutput:
 			print 'OPEN: '+ ser[i].name
 		except serial.SerialException:
 			print "Error opening port, exiting!!!"
-			if __name__ == "__main__":
-					sys.exit(0)
-			else:
-				self.thread_stop.set()
-				return
+			sys.exit(0)
 	
 	def passiveThreads(self, r, input):
 		global log, multiQueue, M, multiQueueFlag
@@ -70,24 +66,22 @@ class connectOutput:
 		logging.info('user search input: %s'%(input))
 		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
 		for i in range(0, r):
-			thread = threading.Thread(target=self.initSerial, args=(i,input))
-			thread.daemon = True
-			thread.start()
+			self.initSerial(i,input)
 			logging.info('Created Thread: %s'%(i))
 			timeout.append(0)
 		while True:
-			if (self.thread_stop != None and __name__ != "__main__") or len(active) < (r-1):
+			if self.thread_stop.is_set():
 				self.signalHandler(0,0)
 				return
 			for i in range(0, r):
-				thread = threading.Thread(target=self.streamSerial,args=(str(i))).run()
+				self.streamSerial(str(i))
 			if (r == 3 and len(multiQueue[0]) == 10 and 
 					len(multiQueue[1]) == 10 and 
 					len(multiQueue[2]) == 10):
 				#print multiQueue
 				multipathing = M.multipathQueueHandler(multiQueue)
 				mult = "Multipathing: " + str(multipathing)
-				self.notify(multipathing)
+				self.notify(int(4),mult)
 				
 				# if the units are out of order (mislabeled), then exit this loop
 				if M.mislabeledFlag != 0:
@@ -95,52 +89,46 @@ class connectOutput:
 		
 	# Handles thread logistics, creates logs, calls multipathQueueHandler
 	# Called from: main
-	def thread(self):
-		global log, multiQueue, M, multiQueueFlag
-		signal.signal(signal.SIGINT, self.signalHandler)
-		print "How many receivers are you connecting?"
-		r = raw_input()
-		logging.info('user devices input: %s'%(r))
-		if not r.isdigit():
-			print "Invalid number of receivers, exiting!!!"
-			logging.warn('Bad Input')
-			if __name__ == "__main__":
-					sys.exit(0)
-			else:
-				self.thread_stop.set()
-		r = int(r)
-		
-		if r == 3:
-			self.createQueue()
-			multiQueueFlag = True
-		print "Use existing(e) devices or scan(s) for devices?"
-		input = raw_input()
-		logging.info('user search input: %s'%(input))
-		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
-		for i in range(0, r):
-			thread = threading.Thread(target=self.initSerial, args=(i,input))
-			thread.daemon = True
-			thread.start()
-			logging.info('Created Thread: %s'%(i))
-			timeout.append(0)
-		while True:
-			if (self.thread_stop != None and __name__ != "__main__") or len(active) < (r-1):
-				self.signalHandler(0,0)
-				return
-			for i in range(0, r):
-				thread = threading.Thread(target=self.streamSerial,args=(str(i))).run()
-			if (r == 3 and len(multiQueue[0]) == 10 and 
-					len(multiQueue[1]) == 10 and 
-					len(multiQueue[2]) == 10):
-				#print multiQueue
-				multipathing = M.multipathQueueHandler(multiQueue)
-				mult = "Multipathing: " + str(multipathing)
-				print mult
-	
-				# if the units are out of order (mislabeled), then exit this loop
-				if M.mislabeledFlag != 0:
-					break
-	
+#	def thread(self):
+#		global log, multiQueue, M, multiQueueFlag
+#		signal.signal(signal.SIGINT, self.signalHandler)
+#		print "How many receivers are you connecting?"
+#		r = raw_input()
+#		logging.info('user devices input: %s'%(r))
+#		if not r.isdigit():
+#			print "Invalid number of receivers, exiting!!!"
+#			logging.warn('Bad Input')
+#			sys.exit(0)
+#		r = int(r)
+#		
+#		if r == 3:
+#			self.createQueue()
+#			multiQueueFlag = True
+#		print "Use existing(e) devices or scan(s) for devices?"
+#		input = raw_input()
+#		logging.info('user search input: %s'%(input))
+#		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
+#		for i in range(0, r):
+#			thread = threading.Thread(target=self.initSerial(i,input))
+#			thread.daemon = True
+#			thread.start()
+#			logging.info('Created Thread: %s'%(i))
+#			timeout.append(0)
+#		while True:
+#			for i in range(0, r):
+#				thread = threading.Thread(target=self.streamSerial(str(i))).run()
+#			if (r == 3 and len(multiQueue[0]) == 10 and 
+#					len(multiQueue[1]) == 10 and 
+#					len(multiQueue[2]) == 10):
+#				#print multiQueue
+#				multipathing = M.multipathQueueHandler(multiQueue)
+#				mult = "Multipathing: " + str(multipathing)
+#				print mult
+#	
+#				# if the units are out of order (mislabeled), then exit this loop
+#				if M.mislabeledFlag != 0:
+#					break
+#	
 	
 	# Outputs stuff from serial to console and log file
 	# Called from: thread
@@ -152,6 +140,7 @@ class connectOutput:
 			data = nmea.GPGGA()
 			data.parse(line)
 			if len(line) > 50:
+				self.notify(int(name),data)
 				lat = self.degrees(data.latitude)
 				lon = self.degrees(data.longitude)
 				cartesian = G.geo(lat, lon)
@@ -160,7 +149,7 @@ class connectOutput:
 				if int(data.gps_qual) == 4:
 					self.queueAppend(name, (northing, easting, data.antenna_altitude))
 				line_str = name + ":" + str(line)
-				self.notify(line)
+				self.notify(int(name),data)
 			else:
 				line_str = "Bad Signal: " + line  
 			print line_str
@@ -221,6 +210,7 @@ class connectOutput:
 		for n in range(0, len(ser)):
 			ser[n].close()
 			logging.info('Closing serial port: %s'%(ser[n]))
+		#sys.exit(0)
 	
 		# Scan for available ports. Return a list of tuples (num, name)
 	# Called from: portSearch
@@ -249,11 +239,7 @@ class connectOutput:
 		if temp == 'q' or not temp.isdigit():
 			print "Invalid Port, exiting!!!"
 			logging.info('Bad input port, exiting program')
-			if __name__ == "__main__":
-					sys.exit(0)
-			else:
-				self.thread_stop.set()
-				return
+			sys.exit(0)
 		return 'COM' + temp #concatenate COM and the port number to define serial port
 	
 	# Searches for devices or ports available and returns COM number
@@ -302,23 +288,15 @@ class connectOutput:
 				return self.portsFound(available)
 			else:
 				print "No ports found, exiting!!!"
-				if __name__ == "__main__":
-					sys.exit(0)
-				else:
-					self.thread_stop.set()
-					return
+				sys.exit(0)
 		else:
 			logging.info('Invalid User input for port search')
 			print "Invalid input, exiting!!!"
-			if __name__ == "__main__":
-					sys.exit(0)
-			else:
-				self.thread_stop.set()
-				return
+			sys.exit(0)
 	
 	
 def outputToCSV():
     pass
 
 if __name__ == "__main__":
-    connectOutput(None,None).thread()
+    connectOutput().thread()
