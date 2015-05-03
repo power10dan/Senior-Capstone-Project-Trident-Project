@@ -3,6 +3,7 @@ from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
+from kivy.uix.image import Image
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
@@ -234,10 +235,10 @@ class Poseidon(Widget):
 		self.jobNameButton.bind(on_release = self.updateJob)
 		self.newPointButton.bind(on_release = self.updatePoint)
 		
-		self.gpsOutput1 = Label(size_hint=(.9,.9),text = "1")
-		self.gpsOutput2 = Label(size_hint=(.9,.9),text = "2")
-		self.gpsOutput3 = Label(size_hint=(.9,.9),text = "3")
-		self.gpsOutput4 = Label(size_hint=(.9,.9),text = "4")
+		self.gpsOutput1 = Image(source="red.png")
+		self.gpsOutput2 = Image(source="red.png")
+		self.gpsOutput3 = Image(source="red.png")
+		self.gpsOutput4 = Label(size_hint=(.9,.9),text = "Not Ready!")
 		self.homePage = GridLayout(cols = 1)
 		self.homePage.add_widget(self.gpsOutput1)
 		self.homePage.add_widget(self.gpsOutput2)
@@ -304,6 +305,7 @@ class Poseidon(Widget):
 		self.dataCarousel.load_slide(newPage)
 	
 	def Settings_Button_pressed(self):
+		
 		if self.settings_popup is None:
 			self.settings_popup = Popup(attach_to=self, title='Trident Settings', title_align = 'center', size_hint=(0.7,0.8))
 			self.settings_popup.content = SettingsMenu(root=self)
@@ -322,12 +324,8 @@ class Poseidon(Widget):
 	def startSurvey(self):
 		threading.Thread(target=self.secondThread).start()
 		
-		
 	def secondThread(self):		
-		Clock.schedule_once(self.callThreads())
-		
-	def callThreads(self):
-		connectOutput(self.updateOutput,self.thread_stop).passiveThreads(3,'e')
+		Clock.schedule_once(connectOutput(self.updateOutput,self.thread_stop).passiveThreads(3,'e'))	
 		
 	def endSurvey(self):
 		if self.app.config.get('locks','measuring'):
@@ -339,13 +337,25 @@ class Poseidon(Widget):
 	@mainthread
 	def updateOutput(self,name,nmea):
 		if name == 0:
-			self.gpsOutput1.text = str(nmea.gps_qual)
-		if name == 1:
-			self.gpsOutput2.text = str(nmea.gps_qual)
-		if name == 2:
-			self.gpsOutput3.text = str(nmea.gps_qual)
-		if name == 3:
-			self.gpsOutput4.text = str(nmea)
+			if nmea.gps_qual == 3:
+				self.gpsOutput1.source = "yellow.png"
+			if nmea.gps_qual == 4:
+				self.gpsOutput1.source = "green.png"
+		elif name == 1:
+			if nmea.gps_qual == 3:
+				self.gpsOutput2.source = "yellow.png"
+			if nmea.gps_qual == 4:
+				self.gpsOutput2.source = "green.png"
+		elif name == 2:
+			if nmea.gps_qual == 3:
+				self.gpsOutput3.source = "yellow.png"
+			if nmea.gps_qual == 4:
+				self.gpsOutput3.source = "green.png"
+		elif name == 3:
+			if nmea != True:
+				self.gpsOutput4.text = "Ready to Measure!"
+			else: 
+				self.gpsOutput4.text = "Not Ready!"
 		
 	
 class TridentApp(App):

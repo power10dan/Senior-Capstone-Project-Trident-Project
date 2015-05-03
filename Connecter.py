@@ -80,8 +80,8 @@ class connectOutput:
 					len(multiQueue[2]) == 10):
 				#print multiQueue
 				multipathing = M.multipathQueueHandler(multiQueue)
-				mult = "Multipathing: " + str(multipathing)
-				self.notify(int(4),mult)
+				#mult = "Multipathing: " + str(multipathing)
+				self.notify(int(3),multipathing)
 				
 				# if the units are out of order (mislabeled), then exit this loop
 				if M.mislabeledFlag != 0:
@@ -152,7 +152,7 @@ class connectOutput:
 				self.notify(int(name),data)
 			else:
 				line_str = "Bad Signal: " + line  
-			print line_str
+			#print line_str
 		else:
 			if len(line) == 0:
 				timeout[int(name)] += 1
