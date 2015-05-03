@@ -29,12 +29,11 @@ class connectOutput(object):
 	proc_stop = None
 	def __init__(self,notify,proc_stop,**kwargs):
 		self.notify = notify
-		self.proc_stop = thread_stop
+		self.proc_stop = proc_stop
 		
 	# Searches and opens serial connections
 	# Called from: thread
 	def initSerial(self, i, input):
-		print threading.enumerate()
 		comNum = self.portSearch(i,input)        
 		# configure and open serial connections
 		global ser, xmlFilePath, active
@@ -67,7 +66,7 @@ class connectOutput(object):
 			logging.info('Created Thread: %s'%(i))
 			timeout.append(0)
 		while True:
-			if self.proc_stop.is_set():
+			if self.proc_stop:
 				self.signalHandler(0,0)
 				return
 			for i in range(0, r):
@@ -289,14 +288,14 @@ class connectOutput(object):
 				return self.portsFound(available)
 			else:
 				print "No ports found, exiting!!!"
-				self.thread_stop.set()
+				self.proc_stop = True
 				if __name__ == "__main__":
 					sys.exit(0)
 				return
 		else:
 			logging.info('Invalid User input for port search')
 			print "Invalid input, exiting!!!"
-			self.thread_stop.set()
+			self.proc_stop = True
 			if __name__ == "__main__":
 				sys.exit(0)
 	

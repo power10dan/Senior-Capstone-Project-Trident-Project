@@ -313,7 +313,7 @@ class Poseidon(Widget):
 			self.settings_popup.open()
 		
 	def startSurvey(self):
-		self.thread_stop = Event()
+		self.thread_stop = False
 		self.subproc = Process(target = connectOutput(self.updateOutput,self.proc_stop).passiveThreads(3,'e',))
 		self.subproc.start()
 		print active_children()
@@ -323,7 +323,7 @@ class Poseidon(Widget):
 		if self.app.config.get('locks','measuring'):
 			self.app.config.set('locks','measuring','False')
 			self.app.config.write()
-		self.proc_stop.set()
+		self.proc_stop = True
 		self.subproc.join()
 		
 	@mainthread

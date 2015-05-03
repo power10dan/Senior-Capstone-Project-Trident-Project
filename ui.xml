@@ -11,9 +11,9 @@
     <receivers>
         <receiver>
             <use>T</use>
-            <left>F</left>
+            <left>T</left>
             <right>F</right>
-            <center>T</center>
+            <center>F</center>
             <serialNumber>2811390</serialNumber>
             <port>26</port>
         </receiver>
