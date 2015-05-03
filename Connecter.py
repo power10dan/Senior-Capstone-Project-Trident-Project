@@ -62,11 +62,13 @@ class connectOutput(object):
 		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
 		for i in range(0, int(r)):
 			proc = Process(target=self.initSerial(i,input))
+			proc.daemon = True
 			proc.start()
 			logging.info('Created Thread: %s'%(i))
 			timeout.append(0)
 		while True:
 			if self.proc_stop:
+				print "calling signal handler"
 				self.signalHandler(0,0)
 				return
 			for i in range(0, r):
@@ -207,6 +209,7 @@ class connectOutput(object):
 		for n in range(0, len(ser)):
 			ser[n].close()
 			logging.info('Closing serial port: %s'%(ser[n]))
+		print "in signal handler"
 		if __name__ == "__main__":
 			sys.exit(0)
 	
@@ -244,7 +247,6 @@ class connectOutput(object):
 	# Searches for devices or ports available and returns COM number
 	# Called from: initSerial
 	def portSearch(self, threadNum, input):
-		print active_children()
 		global active
 		if input == 'e':
 			available = []
