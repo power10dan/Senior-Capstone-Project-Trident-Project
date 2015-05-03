@@ -2,13 +2,13 @@ from pynmea import nmea
 import serial
 import sys
 import datetime
-import threading
 import signal
 from collections import deque
 import geodetic
 import MultipathDetector
 import xml.etree.ElementTree as ET
 import logging
+from multiprocessing import Process, active_children
 
 LOG_FILENAME = '.\logs\log_'+ datetime.datetime.now().strftime('%Y-%m-%d') +'.log'
 logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG,format='%(asctime)s %(levelname)s: %(message)s')
@@ -26,14 +26,15 @@ goodNmea = None
 
 class connectOutput(object):
 	notify = None
-	thread_stop = None
-	def __init__(self,notify,thread_stop,**kwargs):
+	proc_stop = None
+	def __init__(self,notify,proc_stop,**kwargs):
 		self.notify = notify
-		self.thread_stop = thread_stop
+		self.proc_stop = thread_stop
 		
 	# Searches and opens serial connections
 	# Called from: thread
 	def initSerial(self, i, input):
+		print threading.enumerate()
 		comNum = self.portSearch(i,input)        
 		# configure and open serial connections
 		global ser, xmlFilePath, active
@@ -61,17 +62,17 @@ class connectOutput(object):
 		logging.info('user search input: %s'%(input))
 		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
 		for i in range(0, int(r)):
-			thread = threading.Thread(target=self.initSerial(i,input))
-			thread.daemon = True
-			thread.start()
+			proc = Process(target=self.initSerial(i,input))
+			proc.start()
 			logging.info('Created Thread: %s'%(i))
 			timeout.append(0)
 		while True:
-			if self.thread_stop.is_set():
+			if self.proc_stop.is_set():
 				self.signalHandler(0,0)
 				return
 			for i in range(0, r):
-				thread = threading.Thread(target=self.streamSerial(str(i))).run()
+				proc = Process(target=self.streamSerial(str(i)))
+				proc.run()
 			if (r == 3 and len(multiQueue[0]) == 10 and 
 					len(multiQueue[1]) == 10 and 
 					len(multiQueue[2]) == 10):
@@ -82,49 +83,50 @@ class connectOutput(object):
 				self.notify(mult)
 				# if the units are out of order (mislabeled), then exit this loop
 				if M.mislabeledFlag != 0:
-					self.thread_stop.set()
+					self.proc_stop.set()
 	
 	# Handles thread logistics, creates logs, calls multipathQueueHandler
 	# Called from: main
-	def thread(self):
-		global log, multiQueue, M, multiQueueFlag
-		signal.signal(signal.SIGINT, self.signalHandler)
-		print "How many receivers are you connecting?"
-		r = raw_input()
-		logging.info('user devices input: %s'%(r))
-		if not r.isdigit():
-			print "Invalid number of receivers, exiting!!!"
-			logging.warn('Bad Input')
-			sys.exit(0)
-		r = int(r)
-		
-		if r == 3:
-			self.createQueue()
-			multiQueueFlag = True
-		print "Use existing(e) devices or scan(s) for devices?"
-		input = raw_input()
-		logging.info('user search input: %s'%(input))
-		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
-		for i in range(0, r):
-			thread = threading.Thread(target=self.initSerial(i,input))
-			thread.daemon = True
-			thread.start()
-			logging.info('Created Thread: %s'%(i))
-			timeout.append(0)
-		while True:
-			for i in range(0, r):
-				thread = threading.Thread(target=self.streamSerial(str(i))).run()
-			if (r == 3 and len(multiQueue[0]) == 10 and 
-					len(multiQueue[1]) == 10 and 
-					len(multiQueue[2]) == 10):
-				#print multiQueue
-				multipathing = M.multipathQueueHandler(multiQueue)
-				mult = "Multipathing: " + str(multipathing)
-				print mult
-				
-				# if the units are out of order (mislabeled), then exit this loop
-				if M.mislabeledFlag != 0:
-					break
+#	def thread(self):
+#		global log, multiQueue, M, multiQueueFlag
+#		signal.signal(signal.SIGINT, self.signalHandler)
+#		print "How many receivers are you connecting?"
+#		r = raw_input()
+#		logging.info('user devices input: %s'%(r))
+#		if not r.isdigit():
+#			print "Invalid number of receivers, exiting!!!"
+#			logging.warn('Bad Input')
+#			sys.exit(0)
+#		r = int(r)
+#		
+#		if r == 3:
+#			self.createQueue()
+#			multiQueueFlag = True
+#		print "Use existing(e) devices or scan(s) for devices?"
+#		input = raw_input()
+#		logging.info('user search input: %s'%(input))
+#		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
+#		for i in range(0, r):
+#			print threading.enumerate()
+#			thread = threading.Thread(target=self.initSerial(i,input))
+#			thread.daemon = True
+#			thread.start()
+#			logging.info('Created Thread: %s'%(i))
+#			timeout.append(0)
+#		while True:
+#			for i in range(0, r):
+#				thread = threading.Thread(target=self.streamSerial(str(i))).run()
+#			if (r == 3 and len(multiQueue[0]) == 10 and 
+#					len(multiQueue[1]) == 10 and 
+#					len(multiQueue[2]) == 10):
+#				#print multiQueue
+#				multipathing = M.multipathQueueHandler(multiQueue)
+#				mult = "Multipathing: " + str(multipathing)
+#				print mult
+#				
+#				# if the units are out of order (mislabeled), then exit this loop
+#				if M.mislabeledFlag != 0:
+#					break
 
 					
 	# Outputs stuff from serial to console and log file
@@ -243,6 +245,7 @@ class connectOutput(object):
 	# Searches for devices or ports available and returns COM number
 	# Called from: initSerial
 	def portSearch(self, threadNum, input):
+		print active_children()
 		global active
 		if input == 'e':
 			available = []
@@ -289,6 +292,7 @@ class connectOutput(object):
 				self.thread_stop.set()
 				if __name__ == "__main__":
 					sys.exit(0)
+				return
 		else:
 			logging.info('Invalid User input for port search')
 			print "Invalid input, exiting!!!"
@@ -301,4 +305,4 @@ def outputToCSV():
     pass
 
 if __name__ == "__main__":
-    connectOutput().thread()
+    connectOutput(None,None).thread()

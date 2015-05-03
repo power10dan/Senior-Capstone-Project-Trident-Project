@@ -13,8 +13,8 @@ from Connecter import connectOutput
 import xml.etree.ElementTree as ET
 import re
 import logging
-import threading
 import os
+from multiprocessing import Process, active_children, Event
 
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
@@ -212,10 +212,10 @@ class Poseidon(Widget):
 	settings_popup = None
 	job_popup = None
 	point_popup = None
-	thread_stop = None
+	proc_stop = None
 	app = ObjectProperty(None)
 	survey = ObjectProperty(None)
-	thread = ObjectProperty(None)
+	subproc = None
 	nonMultipathQueue = ObjectProperty(None)
 	jobNameLabel = ObjectProperty(None)
 	pointNameLabel = ObjectProperty(None)
@@ -311,25 +311,20 @@ class Poseidon(Widget):
 			self.settings_popup.content.rightReceiver.text = self.app.config.get('receiver','rightReceiver')
 		if self.app.config.get('locks','lockSettings') == 'False':
 			self.settings_popup.open()
-			
-	def startSurvey(self):
-		self.thread_stop = threading.Event()
-		self.thread = threading.Thread(target = self.startSurvey2())
-		self.thread.daemon = True
-		self.thread.start()
 		
-	def startSurvey2(self):
-		self.thread_stop = threading.Event()
-		self.thread = threading.Thread(target = connectOutput(self.updateOutput,self.thread_stop).passiveThreads(3,'e'))
-		self.thread.daemon = True
-		self.thread.start()
+	def startSurvey(self):
+		self.thread_stop = Event()
+		self.subproc = Process(target = connectOutput(self.updateOutput,self.proc_stop).passiveThreads(3,'e',))
+		self.subproc.start()
+		print active_children()
 	
 	def endSurvey(self):
+		print active_children()
 		if self.app.config.get('locks','measuring'):
 			self.app.config.set('locks','measuring','False')
 			self.app.config.write()
-		self.thread_stop.set()
-		self.thread.join()
+		self.proc_stop.set()
+		self.subproc.join()
 		
 	@mainthread
 	def updateOutput(self,nmea):
