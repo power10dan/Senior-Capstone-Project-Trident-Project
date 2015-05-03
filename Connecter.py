@@ -2,13 +2,14 @@ from pynmea import nmea
 import serial
 import sys
 import datetime
+import threading
 import signal
 from collections import deque
 import geodetic
 import MultipathDetector
 import xml.etree.ElementTree as ET
 import logging
-from multiprocessing import Process, active_children
+
 
 LOG_FILENAME = '.\logs\log_'+ datetime.datetime.now().strftime('%Y-%m-%d') +'.log'
 logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG,format='%(asctime)s %(levelname)s: %(message)s')
@@ -22,15 +23,16 @@ G = geodetic.geodetic()   # TODO : we might want to make geodetic a static metho
 M = MultipathDetector.MultipathDetector()
 xmlFilePath = 'ui.xml'
 multiQueueFlag = False  # used to check if multipath queues are allocated and used to auto select receivers
-goodNmea = None
 
-class connectOutput(object):
+
+class connectOutput:
 	notify = None
-	proc_stop = None
-	def __init__(self,notify,proc_stop,**kwargs):
+	thread_stop = None
+	goodNmea = None
+	def __init__(self,notify,thread_stop,**kwargs):
 		self.notify = notify
-		self.proc_stop = proc_stop
-		
+		self.thread_stop = thread_stop
+	
 	# Searches and opens serial connections
 	# Called from: thread
 	def initSerial(self, i, input):
@@ -54,38 +56,37 @@ class connectOutput(object):
 			print 'OPEN: '+ ser[i].name
 		except serial.SerialException:
 			print "Error opening port, exiting!!!"
-			#sys.exit(0)
-			
+			sys.exit(0)
+	
 	def passiveThreads(self, r, input):
+		global log, multiQueue, M, multiQueueFlag
+		r = int(r)
+		self.createQueue()
 		multiQueueFlag = True
 		logging.info('user search input: %s'%(input))
 		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
-		for i in range(0, int(r)):
-			proc = Process(target=self.initSerial(i,input))
-			proc.daemon = True
-			proc.start()
+		for i in range(0, r):
+			self.initSerial(i,input)
 			logging.info('Created Thread: %s'%(i))
 			timeout.append(0)
 		while True:
-			if self.proc_stop:
-				print "calling signal handler"
+			if self.thread_stop.is_set():
 				self.signalHandler(0,0)
 				return
 			for i in range(0, r):
-				proc = Process(target=self.streamSerial(str(i)))
-				proc.run()
+				self.streamSerial(str(i))
 			if (r == 3 and len(multiQueue[0]) == 10 and 
 					len(multiQueue[1]) == 10 and 
 					len(multiQueue[2]) == 10):
 				#print multiQueue
 				multipathing = M.multipathQueueHandler(multiQueue)
 				mult = "Multipathing: " + str(multipathing)
-				print mult
-				self.notify(mult)
+				self.notify(multipathing)
+				
 				# if the units are out of order (mislabeled), then exit this loop
 				if M.mislabeledFlag != 0:
-					self.proc_stop.set()
-	
+					break
+		
 	# Handles thread logistics, creates logs, calls multipathQueueHandler
 	# Called from: main
 #	def thread(self):
@@ -108,7 +109,6 @@ class connectOutput(object):
 #		logging.info('user search input: %s'%(input))
 #		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
 #		for i in range(0, r):
-#			print threading.enumerate()
 #			thread = threading.Thread(target=self.initSerial(i,input))
 #			thread.daemon = True
 #			thread.start()
@@ -124,16 +124,16 @@ class connectOutput(object):
 #				multipathing = M.multipathQueueHandler(multiQueue)
 #				mult = "Multipathing: " + str(multipathing)
 #				print mult
-#				
+#	
 #				# if the units are out of order (mislabeled), then exit this loop
 #				if M.mislabeledFlag != 0:
 #					break
-
-					
+#	
+	
 	# Outputs stuff from serial to console and log file
 	# Called from: thread
 	def streamSerial(self, name):
-		global log, goodNmea
+		global log
 		line = ser[int(name)].readline()
 		if line[3:6] == 'GGA':
 			timeout[int(name)] = 0
@@ -147,8 +147,8 @@ class connectOutput(object):
 				c = "cartesian: " + str(cartesian)
 				if int(data.gps_qual) == 4:
 					self.queueAppend(name, (northing, easting, data.antenna_altitude))
-					goodNmea = line
 				line_str = name + ":" + str(line)
+				self.goodNmea = str(line)
 			else:
 				line_str = "Bad Signal: " + line  
 			print line_str
@@ -209,9 +209,7 @@ class connectOutput(object):
 		for n in range(0, len(ser)):
 			ser[n].close()
 			logging.info('Closing serial port: %s'%(ser[n]))
-		print "in signal handler"
-		if __name__ == "__main__":
-			sys.exit(0)
+		#sys.exit(0)
 	
 		# Scan for available ports. Return a list of tuples (num, name)
 	# Called from: portSearch
@@ -240,8 +238,7 @@ class connectOutput(object):
 		if temp == 'q' or not temp.isdigit():
 			print "Invalid Port, exiting!!!"
 			logging.info('Bad input port, exiting program')
-			if __name__ == "__main__":
-				sys.exit(0)
+			sys.exit(0)
 		return 'COM' + temp #concatenate COM and the port number to define serial port
 	
 	# Searches for devices or ports available and returns COM number
@@ -290,20 +287,15 @@ class connectOutput(object):
 				return self.portsFound(available)
 			else:
 				print "No ports found, exiting!!!"
-				self.proc_stop = True
-				if __name__ == "__main__":
-					sys.exit(0)
-				return
+				sys.exit(0)
 		else:
 			logging.info('Invalid User input for port search')
 			print "Invalid input, exiting!!!"
-			self.proc_stop = True
-			if __name__ == "__main__":
-				sys.exit(0)
+			sys.exit(0)
 	
 	
 def outputToCSV():
     pass
 
 if __name__ == "__main__":
-    connectOutput(None,None).thread()
+    connectOutput().thread()

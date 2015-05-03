@@ -14,7 +14,8 @@ import xml.etree.ElementTree as ET
 import re
 import logging
 import os
-from multiprocessing import Process, active_children, Event
+import threading
+import multiprocessing 
 
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
@@ -212,10 +213,9 @@ class Poseidon(Widget):
 	settings_popup = None
 	job_popup = None
 	point_popup = None
-	proc_stop = None
+	thread_stop = threading.Event()
 	app = ObjectProperty(None)
 	survey = ObjectProperty(None)
-	subproc = None
 	nonMultipathQueue = ObjectProperty(None)
 	jobNameLabel = ObjectProperty(None)
 	pointNameLabel = ObjectProperty(None)
@@ -233,8 +233,8 @@ class Poseidon(Widget):
 		self.jobNameButton.bind(on_release = self.updateJob)
 		self.newPointButton.bind(on_release = self.updatePoint)
 		
-		self.gpsOutput = Label()
-		self.homePage = GridLayout(cols = 4)
+		self.gpsOutput = Label(size_hint=(.9,.9))
+		self.homePage = GridLayout(cols = 1)
 		self.homePage.add_widget(self.gpsOutput)
 		self.dataCarousel.add_widget(self.homePage)
 		self.homePage.create_property('name')
@@ -313,22 +313,22 @@ class Poseidon(Widget):
 			self.settings_popup.open()
 		
 	def startSurvey(self):
-		self.thread_stop = False
-		self.subproc = Process(target = connectOutput(self.updateOutput,self.proc_stop).passiveThreads(3,'e',))
-		self.subproc.start()
-		print active_children()
-	
+		threading.Thread(target=self.secondThread).start()
+		
+		
+	def secondThread(self):
+		print threading.activeCount()
+		Clock.schedule_once(connectOutput(self.updateOutput,self.thread_stop).passiveThreads(3,'e'))
+		
 	def endSurvey(self):
-		print active_children()
 		if self.app.config.get('locks','measuring'):
 			self.app.config.set('locks','measuring','False')
 			self.app.config.write()
-		self.proc_stop = True
-		self.subproc.join()
-		
+		Clock.schedule_once(connectOutput(self.updateOutput,self.thread_stop).signalHandler(0,0),0)
+		self.thread_stop.set()
+	
 	@mainthread
 	def updateOutput(self,nmea):
-		#print "hi world"
 		#self.gpsOutput.text = "hi"
 		self.gpsOutput.text = str(nmea)
 		
