@@ -18,6 +18,7 @@ timeout = [] #used for checking if signal to receiver lost
 ser = []
 active = []
 multiQueue = []
+
 log = 0
 G = geodetic.geodetic()   # TODO : we might want to make geodetic a static method?
 M = MultipathDetector.MultipathDetector()
@@ -28,7 +29,7 @@ multiQueueFlag = False  # used to check if multipath queues are allocated and us
 class connectOutput:
 	notify = None
 	thread_stop = None
-	goodNmea = None
+	rawQueue = []
 	def __init__(self,notify,thread_stop,**kwargs):
 		self.notify = notify
 		self.thread_stop = thread_stop
@@ -61,7 +62,8 @@ class connectOutput:
 	def passiveThreads(self, r, input):
 		global log, multiQueue, M, multiQueueFlag
 		r = int(r)
-		self.createQueue()
+		self.createQueue(multiQueue)
+		self.createQueue(self.rawQueue)
 		multiQueueFlag = True
 		logging.info('user search input: %s'%(input))
 		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
@@ -78,62 +80,60 @@ class connectOutput:
 			if (r == 3 and len(multiQueue[0]) == 10 and 
 					len(multiQueue[1]) == 10 and 
 					len(multiQueue[2]) == 10):
-				#print multiQueue
 				multipathing = M.multipathQueueHandler(multiQueue)
-				#mult = "Multipathing: " + str(multipathing)
-				self.notify(int(3),multipathing)
+				self.notify(int(3),multipathing,rawQueue)
 				
 				# if the units are out of order (mislabeled), then exit this loop
 				if M.mislabeledFlag != 0:
-					break
+					self.thread_stop.set()
 		
 	# Handles thread logistics, creates logs, calls multipathQueueHandler
 	# Called from: main
-#	def thread(self):
-#		global log, multiQueue, M, multiQueueFlag
-#		signal.signal(signal.SIGINT, self.signalHandler)
-#		print "How many receivers are you connecting?"
-#		r = raw_input()
-#		logging.info('user devices input: %s'%(r))
-#		if not r.isdigit():
-#			print "Invalid number of receivers, exiting!!!"
-#			logging.warn('Bad Input')
-#			sys.exit(0)
-#		r = int(r)
-#		
-#		if r == 3:
-#			self.createQueue()
-#			multiQueueFlag = True
-#		print "Use existing(e) devices or scan(s) for devices?"
-#		input = raw_input()
-#		logging.info('user search input: %s'%(input))
-#		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
-#		for i in range(0, r):
-#			thread = threading.Thread(target=self.initSerial(i,input))
-#			thread.daemon = True
-#			thread.start()
-#			logging.info('Created Thread: %s'%(i))
-#			timeout.append(0)
-#		while True:
-#			for i in range(0, r):
-#				thread = threading.Thread(target=self.streamSerial(str(i))).run()
-#			if (r == 3 and len(multiQueue[0]) == 10 and 
-#					len(multiQueue[1]) == 10 and 
-#					len(multiQueue[2]) == 10):
-#				#print multiQueue
-#				multipathing = M.multipathQueueHandler(multiQueue)
-#				mult = "Multipathing: " + str(multipathing)
-#				print mult
-#	
-#				# if the units are out of order (mislabeled), then exit this loop
-#				if M.mislabeledFlag != 0:
-#					break
-#	
+	def thread(self):
+		global log, multiQueue, M, multiQueueFlag
+		signal.signal(signal.SIGINT, self.signalHandler)
+		print "How many receivers are you connecting?"
+		r = raw_input()
+		logging.info('user devices input: %s'%(r))
+		if not r.isdigit():
+			print "Invalid number of receivers, exiting!!!"
+			logging.warn('Bad Input')
+			sys.exit(0)
+		r = int(r)
+		
+		if r == 3:
+			self.createQueue()
+			multiQueueFlag = True
+		print "Use existing(e) devices or scan(s) for devices?"
+		input = raw_input()
+		logging.info('user search input: %s'%(input))
+		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
+		for i in range(0, r):
+			thread = threading.Thread(target=self.initSerial(i,input))
+			thread.daemon = True
+			thread.start()
+			logging.info('Created Thread: %s'%(i))
+			timeout.append(0)
+		while True:
+			for i in range(0, r):
+				thread = threading.Thread(target=self.streamSerial(str(i))).run()
+			if (r == 3 and len(multiQueue[0]) == 10 and 
+					len(multiQueue[1]) == 10 and 
+					len(multiQueue[2]) == 10):
+				#print multiQueue
+				multipathing = M.multipathQueueHandler(multiQueue)
+				mult = "Multipathing: " + str(multipathing)
+				print mult
+	
+				# if the units are out of order (mislabeled), then exit this loop
+				if M.mislabeledFlag != 0:
+					break
+	
 	
 	# Outputs stuff from serial to console and log file
 	# Called from: thread
 	def streamSerial(self, name):
-		global log
+		global log,multiQueue
 		line = ser[int(name)].readline()
 		if line[3:6] == 'GGA':
 			timeout[int(name)] = 0
@@ -147,7 +147,9 @@ class connectOutput:
 				northing, easting, k , gamma = cartesian
 				c = "cartesian: " + str(cartesian)
 				if int(data.gps_qual) == 4:
-					self.queueAppend(name, (northing, easting, data.antenna_altitude))
+					self.queueAppend(multiQueue, name, (northing, easting, data.antenna_altitude))
+					data.update({'easting': easting,'northing': northing,'latd': lat,'lond': lon}) 
+					self.queueAppend(self.rawQueue, name, data)
 				line_str = name + ":" + str(line)
 				self.notify(int(name),data)
 			else:
@@ -172,21 +174,19 @@ class connectOutput:
 	# Creates a list of queues inside of global list named multiQueue
 	# Only used when connecting 3 receivers, sets max length of queues to 10
 	# Called from: thread
-	def createQueue(self):
-		global multiQueue
+	def createQueue(self,q):
 		for i in range(3):
 			temp =  deque(maxlen = 10)
-			multiQueue.append(temp)
+			q.append(temp)
 	
 	# Append cartesian coordinates to queues within multiQueue list
 	# When the length of queue being appended equals 10, it pops left values off queue
 	# Called from: stream_serial
-	def queueAppend(self, name, coor):
-		global multiQueue
+	def queueAppend(self, q, name, coor):
 		name = int(name)
-		if len(multiQueue[name]) == 10:
-			multiQueue[name].popleft()
-		multiQueue[name].append(coor)
+		if len(q[name]) == 10:
+			q[name].popleft()
+		q[name].append(coor)
 	
 	# Converts degrees, minutes and decimal minutes into degrees and decimal degrees
 	# Called from: stream_serial
@@ -299,4 +299,4 @@ def outputToCSV():
     pass
 
 if __name__ == "__main__":
-    connectOutput().thread()
+    connectOutput(None,None).thread()

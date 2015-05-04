@@ -17,6 +17,8 @@ import logging
 import os
 import threading
 import multiprocessing 
+from functools import partial
+from kivy.garden.graph import Graph
 
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
@@ -226,7 +228,7 @@ class Poseidon(Widget):
 	newPage = ObjectProperty(None)
 	gpsOutput = ObjectProperty(None)
 	homePage = ObjectProperty(None)
-	C = None
+	graph = ObjectProperty(None)
 	
 	def __init__(self, **kwargs):
 		super(Poseidon, self).__init__(**kwargs)
@@ -235,15 +237,17 @@ class Poseidon(Widget):
 		self.jobNameButton.bind(on_release = self.updateJob)
 		self.newPointButton.bind(on_release = self.updatePoint)
 		
-		self.gpsOutput1 = Image(source="red.png")
-		self.gpsOutput2 = Image(source="red.png")
-		self.gpsOutput3 = Image(source="red.png")
-		self.gpsOutput4 = Label(size_hint=(.9,.9),text = "Not Ready!")
-		self.homePage = GridLayout(cols = 1)
-		self.homePage.add_widget(self.gpsOutput1)
-		self.homePage.add_widget(self.gpsOutput2)
-		self.homePage.add_widget(self.gpsOutput3)
-		self.homePage.add_widget(self.gpsOutput4)
+		self.gps1Status = Image(source="red.png")
+		self.gps2Status = Image(source="red.png")
+		self.gps3Status = Image(source="red.png")
+		self.multiPStatus = Label(size_hint=(.9,.9),text = "Not Ready!")
+		self.graph = Graph(xlabel='X', ylabel='Y', x_ticks_minor=5, x_ticks_major=25, y_ticks_major=1,y_grid_label=True, x_grid_label=True, padding=5,
+			x_grid=True, y_grid=True, xmin=-0, xmax=100, ymin=-1, ymax=1)
+		self.homePage = GridLayout(cols = 2)
+		self.homePage.add_widget(self.gps1Status)
+		self.homePage.add_widget(self.gps2Status)
+		self.homePage.add_widget(self.gps3Status)
+		self.homePage.add_widget(self.multiPStatus)
 		self.dataCarousel.add_widget(self.homePage)
 		self.homePage.create_property('name')
 		self.homePage.name = "Home"
@@ -305,11 +309,9 @@ class Poseidon(Widget):
 		self.dataCarousel.load_slide(newPage)
 	
 	def Settings_Button_pressed(self):
-		
 		if self.settings_popup is None:
 			self.settings_popup = Popup(attach_to=self, title='Trident Settings', title_align = 'center', size_hint=(0.7,0.8))
 			self.settings_popup.content = SettingsMenu(root=self)
-	
 			self.settings_popup.content.vertical_tolerance.text = self.app.config.get('tolerances','vertical')
 			self.settings_popup.content.horizontal_tolerance.text = self.app.config.get('tolerances','horizontal')
 			self.settings_popup.content.gps_spacing.text = self.app.config.get('tolerances','gps_spacing')
@@ -331,31 +333,31 @@ class Poseidon(Widget):
 		if self.app.config.get('locks','measuring'):
 			self.app.config.set('locks','measuring','False')
 			self.app.config.write()
-		Clock.schedule_once(connectOutput(self.updateOutput,self.thread_stop).signalHandler(0,0),0)
+		Clock.schedule_once(connectOutput(self.updateOutput,self.thread_stop).signalHandler(0,0))
 		self.thread_stop.set()
 	
+	def gpsStatus(self,receiver,nmea):
+		if nmea.gps_qual == '':
+			receiver.source = "red.png"
+		if int(nmea.gps_qual) <= 3:
+			receiver.source = "yellow.png"
+		if nmea.gps_qual == 4:
+			receiver.source = "green.png"
+	
 	@mainthread
-	def updateOutput(self,name,nmea):
+	def updateOutput(self,name,nmea, q=[]):
 		if name == 0:
-			if nmea.gps_qual == 3:
-				self.gpsOutput1.source = "yellow.png"
-			if nmea.gps_qual == 4:
-				self.gpsOutput1.source = "green.png"
+			self.gpsStatus(self.gps1Status,nmea)
 		elif name == 1:
-			if nmea.gps_qual == 3:
-				self.gpsOutput2.source = "yellow.png"
-			if nmea.gps_qual == 4:
-				self.gpsOutput2.source = "green.png"
+			self.gpsStatus(self.gps2Status,nmea)
 		elif name == 2:
-			if nmea.gps_qual == 3:
-				self.gpsOutput3.source = "yellow.png"
-			if nmea.gps_qual == 4:
-				self.gpsOutput3.source = "green.png"
+			self.gpsStatus(self.gps3Status,nmea)
 		elif name == 3:
 			if nmea != True:
-				self.gpsOutput4.text = "Ready to Measure!"
+				self.multiPStatus.text = "Ready to Measure!"
 			else: 
-				self.gpsOutput4.text = "Not Ready!"
+				
+				self.multiPStatus.text = "Multipathing!"
 		
 	
 class TridentApp(App):
