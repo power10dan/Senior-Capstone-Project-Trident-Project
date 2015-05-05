@@ -123,8 +123,8 @@ time = []
 zCoor = []      
 comQC = commonQueueCleaned[1]
 for i in range(len(comQC)):
-    yCoor.append(float(str(comQC[i][1])[3:]))
-    xCoor.append(float(str(comQC[i][2])[3:]))
+    xCoor.append(float(str(comQC[i][1])[3:]))
+    yCoor.append(float(str(comQC[i][2])[3:]))
     time.append(comQC[i][0])
     zCoor.append(comQC[i][3])
  
@@ -133,8 +133,8 @@ yCoor1 = []
 time1=[]
 zCoor1 = []
 for i in range(len(cartesianQueue[2])):
-    yCoor1.append(float(str(cartesianQueue[2][i][1])[3:]))
-    xCoor1.append(float(str(cartesianQueue[2][i][2])[3:]))
+    xCoor1.append(float(str(cartesianQueue[2][i][1])[3:]))
+    yCoor1.append(float(str(cartesianQueue[2][i][2])[3:]))
     time1.append(cartesianQueue[2][i][0])
     zCoor1.append(cartesianQueue[2][i][3])
 
@@ -167,4 +167,3 @@ plt.show()
             # ('Units of Geoidal Separation (meters)', 'geo_sep_units'),
             # ('Age of Differential GPS Data (secs)', 'age_gps_data'),
             # ('Differential Reference Station ID', 'ref_station_id'))
-

@@ -7,6 +7,9 @@
 	jobNameButton:jobNameButton
 	newPointButton: newPointButton
 	dataCarousel: dataCarousel
+	gps1Status: gps1Status
+	gps2Status: gps2Status
+	gps3Status: gps3Status
 	
 	BoxLayout:
 		size: root.width,root.height
@@ -48,6 +51,42 @@
 			loop: True
 			on_current_slide: 
 				pointNameLabel.text = str(args[1].name)
+		
+			BoxLayout:
+				orientation: 'horizontal'
+				name:"Home"
+				canvas:
+					Rectangle:
+					Ellipse:
+						size: 10,10
+						pos: 100,100
+						
+				GridLayout:
+					cols:3
+					padding:10
+					spacing:10
+					size_hint_x:.15
+					Image:
+						id: gps1Status
+						size: 50,50
+						size_hint: (None,None)
+						source: 'red.png'
+						
+					Image:
+						id: gps2Status
+						size: 50,50
+						size_hint: (None,None)
+						source: 'red.png'
+						
+					Image:
+						id: gps3Status
+						size: 50,50
+						size_hint: (None,None)
+						source: 'red.png'
+						
+					Label:
+						id: multiPStatus
+						text: 'Not Ready'
 				
 <SettingsMenu>:
 	cols: 3
@@ -181,7 +220,7 @@
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'horizontal'
-		Label
+		BoxLayout:
 		GridLayout:
 			cols: 2
 			padding: 10
@@ -189,12 +228,6 @@
 			size_hint_x: .5
 			size_hint_y: .4
 
-		##	TextInput:
-		##		multiline: False
-		##	Label:
-		##		text: 'Point Code'
-		##	TextInput:
-		##		multiline: False
 			Label:
 				text: 'Counter'
 			Label:

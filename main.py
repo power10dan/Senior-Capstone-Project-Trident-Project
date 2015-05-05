@@ -16,9 +16,8 @@ import re
 import logging
 import os
 import threading
-import multiprocessing 
 from functools import partial
-from kivy.garden.graph import Graph
+
 
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
@@ -37,13 +36,18 @@ class SurveyPage(Widget):
 
 	def updateMeasureButton(self,instance):
 		if instance.text == 'Measure Point' and self.base.app.config.get('locks','lockSurvey') == 'True':
+			print 
 			instance.text = 'Stop'
 			self.base.app.config.set('locks','measuring','True')
+			self.base.app.config.set('job','currentPointName',instance.parent.parent.parent.name)
 			self.base.app.config.write()
+			
 		else:
 			instance.text = 'Measure Point'
 			self.base.app.config.set('locks','measuring','False')
+			self.base.app.config.set('job','currentPointName','')
 			self.base.app.config.write()
+			
 
 	
 class SettingsMenu(GridLayout):
@@ -216,6 +220,7 @@ class Poseidon(Widget):
 	settings_popup = None
 	job_popup = None
 	point_popup = None
+	thread = None
 	thread_stop = threading.Event()
 	app = ObjectProperty(None)
 	survey = ObjectProperty(None)
@@ -229,6 +234,10 @@ class Poseidon(Widget):
 	gpsOutput = ObjectProperty(None)
 	homePage = ObjectProperty(None)
 	graph = ObjectProperty(None)
+	gps1Status = ObjectProperty(None)
+	gps2Status = ObjectProperty(None)
+	gps3Status = ObjectProperty(None)
+	multiPStatus = ObjectProperty(None)
 	
 	def __init__(self, **kwargs):
 		super(Poseidon, self).__init__(**kwargs)
@@ -236,22 +245,6 @@ class Poseidon(Widget):
 		self.survey.bind(on_release = self.updateSurveyButton)
 		self.jobNameButton.bind(on_release = self.updateJob)
 		self.newPointButton.bind(on_release = self.updatePoint)
-		
-		self.gps1Status = Image(source="red.png")
-		self.gps2Status = Image(source="red.png")
-		self.gps3Status = Image(source="red.png")
-		self.multiPStatus = Label(size_hint=(.9,.9),text = "Not Ready!")
-		self.graph = Graph(xlabel='X', ylabel='Y', x_ticks_minor=5, x_ticks_major=25, y_ticks_major=1,y_grid_label=True, x_grid_label=True, padding=5,
-			x_grid=True, y_grid=True, xmin=-0, xmax=100, ymin=-1, ymax=1)
-		self.homePage = GridLayout(cols = 2)
-		self.homePage.add_widget(self.gps1Status)
-		self.homePage.add_widget(self.gps2Status)
-		self.homePage.add_widget(self.gps3Status)
-		self.homePage.add_widget(self.multiPStatus)
-		self.dataCarousel.add_widget(self.homePage)
-		self.homePage.create_property('name')
-		self.homePage.name = "Home"
-		self.dataCarousel.load_slide(self.homePage)
 	
 	def updateSurveyButton(self,instance):
 		if instance.text == 'Start Survey':
@@ -324,17 +317,21 @@ class Poseidon(Widget):
 			self.settings_popup.open()
 		
 	def startSurvey(self):
-		threading.Thread(target=self.secondThread).start()
+		self.thread = threading.Thread(target=self.secondThread)
+		self.thread.start()
+		#if os.path.exists(
 		
 	def secondThread(self):		
+		self.thread_stop.clear()
 		Clock.schedule_once(connectOutput(self.updateOutput,self.thread_stop).passiveThreads(3,'e'))	
 		
 	def endSurvey(self):
 		if self.app.config.get('locks','measuring'):
 			self.app.config.set('locks','measuring','False')
 			self.app.config.write()
-		Clock.schedule_once(connectOutput(self.updateOutput,self.thread_stop).signalHandler(0,0))
 		self.thread_stop.set()
+		
+		
 	
 	def gpsStatus(self,receiver,nmea):
 		if nmea.gps_qual == '':
@@ -356,7 +353,6 @@ class Poseidon(Widget):
 			if nmea != True:
 				self.multiPStatus.text = "Ready to Measure!"
 			else: 
-				
 				self.multiPStatus.text = "Multipathing!"
 		
 	
@@ -383,6 +379,8 @@ class TridentApp(App):
 
 		config.adddefaultsection('job')
 		config.setdefault('job','jobName','')
+		config.setdefault('job','currentPointName','')
+		
 
 		config.adddefaultsection('locks')
 		config.setdefault('locks','lockSettings','False')
