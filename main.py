@@ -36,10 +36,9 @@ class SurveyPage(Widget):
 
 	def updateMeasureButton(self,instance):
 		if instance.text == 'Measure Point' and self.base.app.config.get('locks','lockSurvey') == 'True':
-			print 
 			instance.text = 'Stop'
 			self.base.app.config.set('locks','measuring','True')
-			self.base.app.config.set('job','currentPointName',instance.parent.parent.parent.name)
+			self.base.app.config.set('job','currentPointName',self.base.dataCarousel.current_slide.name)
 			self.base.app.config.write()
 			
 		else:
@@ -218,6 +217,7 @@ class SettingsMenu(GridLayout):
 			
 class Poseidon(Widget):
 	settings_popup = None
+	jobName = None
 	job_popup = None
 	point_popup = None
 	thread = None
@@ -231,13 +231,13 @@ class Poseidon(Widget):
 	newPointButton = ObjectProperty(None)
 	dataCarousel = ObjectProperty(None)
 	newPage = ObjectProperty(None)
-	gpsOutput = ObjectProperty(None)
-	homePage = ObjectProperty(None)
 	graph = ObjectProperty(None)
 	gps1Status = ObjectProperty(None)
 	gps2Status = ObjectProperty(None)
 	gps3Status = ObjectProperty(None)
 	multiPStatus = ObjectProperty(None)
+	pointCollection = None
+	pointRaw = None
 	
 	def __init__(self, **kwargs):
 		super(Poseidon, self).__init__(**kwargs)
@@ -317,9 +317,12 @@ class Poseidon(Widget):
 			self.settings_popup.open()
 		
 	def startSurvey(self):
+		self.jobPath = "output/"+str(self.app.config.get('job','jobName'))
+		if not os.path.exists(self.jobPath):
+			os.makedirs(self.jobPath)
 		self.thread = threading.Thread(target=self.secondThread)
 		self.thread.start()
-		#if os.path.exists(
+		
 		
 	def secondThread(self):		
 		self.thread_stop.clear()
@@ -331,8 +334,6 @@ class Poseidon(Widget):
 			self.app.config.write()
 		self.thread_stop.set()
 		
-		
-	
 	def gpsStatus(self,receiver,nmea):
 		if nmea.gps_qual == '':
 			receiver.source = "red.png"
@@ -343,6 +344,11 @@ class Poseidon(Widget):
 	
 	@mainthread
 	def updateOutput(self,name,nmea, q=[]):
+		if self.app.config.get('locks','measuring') == 'True':
+			if not os.path.isfile(self.jobPath+self.app.config.get('job','currentPointName')):
+				self.pointCollection = open(self.jobPath+self.app.config.get('job','currentPointName'),'a')
+			else:
+				self.pointCollection.writelines(nmea)
 		if name == 0:
 			self.gpsStatus(self.gps1Status,nmea)
 		elif name == 1:
@@ -357,6 +363,10 @@ class Poseidon(Widget):
 		
 	
 class TridentApp(App):
+	def on_stop(self):
+		self.root.thread_stop.set()
+		
+		
 	def build(self):
 		self.poseidonWidget = Poseidon(app=self)
 		self.root = self.poseidonWidget

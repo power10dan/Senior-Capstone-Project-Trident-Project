@@ -36,6 +36,7 @@
 				text:"-"
 			Label:
 				id: pointNameLabel
+				text: 'Home'
 				
 			Button:
 				id: survey
@@ -51,43 +52,49 @@
 			loop: True
 			on_current_slide: 
 				pointNameLabel.text = str(args[1].name)
-		
+			
 			BoxLayout:
+				size: root.width,root.height
 				orientation: 'horizontal'
 				name:"Home"
 				canvas:
-					Rectangle:
 					Ellipse:
 						size: 10,10
 						pos: 100,100
-						
-				GridLayout:
-					cols:3
-					padding:10
-					spacing:10
-					size_hint_x:.15
-					Image:
-						id: gps1Status
-						size: 50,50
-						size_hint: (None,None)
-						source: 'red.png'
-						
-					Image:
-						id: gps2Status
-						size: 50,50
-						size_hint: (None,None)
-						source: 'red.png'
-						
-					Image:
-						id: gps3Status
-						size: 50,50
-						size_hint: (None,None)
-						source: 'red.png'
-						
-					Label:
-						id: multiPStatus
-						text: 'Not Ready'
-				
+				AnchorLayout:
+					anchor_x: 'right'
+					anchor_y: 'top'
+					BoxLayout:
+						orientation:'vertical'
+						size_hint:None,None
+						size: 225,105
+						BoxLayout:
+							orientation:'horizontal'
+							size_hint:None,None
+							size: 225,75
+							Image:
+								id: gps1Status
+								size_hint: (None,None)
+								size: 75,75
+								source: 'red.png'
+								
+							Image:
+								id: gps2Status
+								size_hint: (None,None)
+								size: 75,75
+								source: 'red.png'
+
+							Image:
+								id: gps3Status
+								size_hint: (None,None)
+								size: 75,75
+								source: 'red.png'
+						Label:
+							id: multiPStatus
+							text: 'Not Ready'
+							size_hint: (None,None)
+							size:225,30
+
 <SettingsMenu>:
 	cols: 3
 	padding: 10
@@ -216,7 +223,7 @@
 	measureButton: measureButton
 	counterLabel: counterLabel
 	epochInput: epochInput
-
+	canvas.after:
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'horizontal'
@@ -225,8 +232,8 @@
 			cols: 2
 			padding: 10
 			spacing: 10
-			size_hint_x: .5
-			size_hint_y: .4
+			size_hint: None,None
+			size: 300,150
 
 			Label:
 				text: 'Counter'
