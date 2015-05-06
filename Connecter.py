@@ -184,7 +184,7 @@ class connectOutput:
 			'gps_qual':data.gps_qual,
 			'num_sats':data.num_sats,
 			'horizontal_dil': data.horizontal_dil,
-			'antenna_altitude':data.antenna_altitude,
+			'altitude':data.antenna_altitude,
 			'altitude_units':data.altitude_units,
 			'geo_sep':data.geo_sep,
 			'geo_sep_units':data.geo_sep_units,

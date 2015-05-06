@@ -51,7 +51,7 @@
 			id: dataCarousel
 			loop: True
 			on_current_slide: 
-				pointNameLabel.text = str(args[1].name)
+				pointNameLabel.text = str(args[1].pointName)
 			
 			BoxLayout:
 				size: root.width,root.height
@@ -222,6 +222,7 @@
 <SurveyPage>:
 	measureButton: measureButton
 	counterLabel: counterLabel
+	multiCounterLabel: multiCounterLabel
 	epochInput: epochInput
 	canvas.after:
 	BoxLayout:
@@ -239,6 +240,10 @@
 				text: 'Counter'
 			Label:
 				id:counterLabel
+			Label:
+				text: 'Multipath Counter'
+			Label:
+				id:multiCounterLabel
 			Label:
 				text: 'Epochs to Measure:'
 			TextInput:

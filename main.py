@@ -27,28 +27,68 @@ xmlFilePath = 'ui.xml'
 class SurveyPage(Widget):
 	base = ObjectProperty(None)
 	counterLabel = ObjectProperty(None)
+	multiCounterLabel = ObjectProperty(None)
 	epochInput = ObjectProperty(None)
 	measureButton = ObjectProperty(None)
 	
 	def __init__(self, **kwargs):
 		super(SurveyPage, self).__init__(**kwargs)
-		self.measureButton.bind(on_release = self.updateMeasureButton)
+		self.measureButton.bind(on_release=self.updateMeasureButton)
+		self.base.dataCarousel.current_slide.counter.bind(on_change=self.updateCounter)
+		self.base.dataCarousel.current_slide.multiCounter.bind(on_change=self.updateMultiCounter)
+
+	def updateCounter(self,instance):
+		self.counterLabel.text = self.base.dataCarousel.current_slide.counter.text
+
+	def updateMultiCounter(self,instance):
+		self.multiCounterLabel.text = self.base.dataCarousel.current_slide.multiCounter.text
 
 	def updateMeasureButton(self,instance):
 		if instance.text == 'Measure Point' and self.base.app.config.get('locks','lockSurvey') == 'True':
 			instance.text = 'Stop'
-			self.base.app.config.set('locks','measuring','True')
-			self.base.app.config.set('job','currentPointName',self.base.dataCarousel.current_slide.name)
+			self.base.app.config.set('locks', 'measuring', 'True')
+			self.base.app.config.set('job', 'currentPointName', self.base.dataCarousel.current_slide.pointName)
 			self.base.app.config.write()
 			
 		else:
 			instance.text = 'Measure Point'
-			self.base.app.config.set('locks','measuring','False')
-			self.base.app.config.set('job','currentPointName','')
+			self.base.app.config.set('locks', 'measuring', 'False')
+			self.base.app.config.set('job', 'currentPointName', '')
 			self.base.app.config.write()
-			
+			self.outputResultsToCSV(self.base.app.config.get('job', 'jobName'),
+									self.base.dataCarousel.current_slide.pointName,
+									self.base.dataCarousel.current_slide.pointCode,
+									self.base.dataCarousel.current_slide.latitude,
+									self.base.dataCarousel.current_slide.longitude,
+									self.base.dataCarousel.current_slide.northing,
+									self.base.dataCarousel.current_slide.easting,
+									self.base.dataCarousel.current_slide.altitude)
 
-	
+	def outputResultsToCSV(self, surveyName, pointName, pointCode, latitude, longitude, northing, easting, altitude):
+		pointName = self.base.dataCarousel.current_slide.pointName
+		pointCode = self.base.dataCarousel.current_slide.pointCode
+		latitude = float(self.base.dataCarousel.current_slide.latitude)
+		longitude = float(self.base.dataCarousel.current_slide.longitude)
+		northing = float(self.base.dataCarousel.current_slide.northing)
+		easting = float(self.base.dataCarousel.current_slide.easting)
+		altitude = float(self.base.dataCarousel.current_slide.altitude)
+
+		counter = float(self.base.dataCarousel.current_slide.counter)
+
+		latitude = latitude / counter
+		longitude = longitude / counter
+		northing = northing / counter
+		easting = easting / counter
+		altitude = altitude / counter
+
+		csvFile = open(self.base.jobPath+'/'+str(pointName), 'a')
+		finalOutputString = str(pointName)+','+str(latitude)+','+str(longitude)+','+str(northing)+','+str(easting)+','+str(altitude)+','+str(pointCode)
+		csvFile.writelines(finalOutputString)
+
+
+################################################################################################################
+################################################################################################################
+
 class SettingsMenu(GridLayout):
     tree = ET.parse(xmlFilePath)
     root = ObjectProperty(None)
@@ -214,7 +254,10 @@ class SettingsMenu(GridLayout):
             return False
         else:
             return True
-			
+
+################################################################################################################
+################################################################################################################
+
 class Poseidon(Widget):
 	settings_popup = None
 	jobName = None
@@ -238,14 +281,14 @@ class Poseidon(Widget):
 	multiPStatus = ObjectProperty(None)
 	pointCollection = None
 	pointRaw = None
-	
+
 	def __init__(self, **kwargs):
 		super(Poseidon, self).__init__(**kwargs)
 	
 		self.survey.bind(on_release = self.updateSurveyButton)
 		self.jobNameButton.bind(on_release = self.updateJob)
 		self.newPointButton.bind(on_release = self.updatePoint)
-	
+
 	def updateSurveyButton(self,instance):
 		if instance.text == 'Start Survey':
 			self.survey.text = 'End Survey'
@@ -297,9 +340,22 @@ class Poseidon(Widget):
 		self.point_popup.dismiss()
 		newPage = SurveyPage(base=self)
 		self.dataCarousel.add_widget(newPage)
-		newPage.create_property('name')
+		newPage.create_property('pointName')
 		newPage.name = text
+		newPage.create_property('pointCode')
+		# newPage.pointCode =
+		newPage.create_property('latitude')
+		newPage.create_property('longitude')
+		newPage.create_property('northing')
+		newPage.create_property('easting')
+		newPage.create_property('altitude')
+		newPage.create_property('counter')
+		newPage.create_property('multiCounter')
+		newPage.counter = 0
+		newPage.multiCounter = 0
 		self.dataCarousel.load_slide(newPage)
+
+
 	
 	def Settings_Button_pressed(self):
 		if self.settings_popup is None:
@@ -349,6 +405,7 @@ class Poseidon(Widget):
 				self.pointCollection = open(self.jobPath+self.app.config.get('job','currentPointName'),'a')
 			else:
 				self.pointCollection.writelines(nmea)
+				self.dataCarousel.current_slide.multiCounter = str(float(self.dataCarousel.current_slide.multiCounter) + 1)
 		if name == 0:
 			self.gpsStatus(self.gps1Status,nmea)
 		elif name == 1:
@@ -358,10 +415,25 @@ class Poseidon(Widget):
 		elif name == 3:
 			if nmea != True:
 				self.multiPStatus.text = "Ready to Measure!"
+				self.amoratizeData(q[1][9])
+				self.dataCarousel.current_slide.counter = str(float(self.dataCarousel.current_slide.counter) + 1)
 			else: 
 				self.multiPStatus.text = "Multipathing!"
-		
-	
+
+
+	def amoratizeData(self, dataEpochDict):
+		self.dataCarousel.current_slide.latitude = str(float(self.dataCarousel.current_slide.latitude) + float(dataEpochDict.latd))
+		self.dataCarousel.current_slide.longitude = str(float(self.dataCarousel.current_slide.longitude) + float(dataEpochDict.lond))
+		self.dataCarousel.current_slide.northing = str(float(self.dataCarousel.current_slide.northing) + float(dataEpochDict.northing))
+		self.dataCarousel.current_slide.easting = str(float(self.dataCarousel.current_slide.easting) + float(dataEpochDict.easting))
+		self.dataCarousel.current_slide.altitude = str(float(self.dataCarousel.current_slide.altitude) + float(dataEpochDict.altitude))
+
+
+
+
+################################################################################################################
+################################################################################################################
+
 class TridentApp(App):
 	def on_stop(self):
 		self.root.thread_stop.set()
