@@ -7,7 +7,7 @@
 	jobNameButton:jobNameButton
 	newPointButton: newPointButton
 	dataCarousel: dataCarousel
-	
+
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'vertical'
@@ -33,7 +33,7 @@
 				text:"-"
 			Label:
 				id: pointNameLabel
-				
+
 			Button:
 				id: survey
 				size_hint_x: None
@@ -42,13 +42,18 @@
 			Button:
 				id:newPointButton
 				text: 'Add Point'
-			
+
+			Button:
+				id:plot
+				text: 'Plot'
+				on_press:
+					root.plot_realtime()
 		Carousel:
 			id: dataCarousel
 			loop: True
-			on_current_slide: 
+			on_current_slide:
 				pointNameLabel.text = str(args[1].pointName)
-							
+
 
 <SettingsMenu>:
 	cols: 3
@@ -190,17 +195,17 @@
 	geo_sep:geo_sep
 	horizontal_dil:horizontal_dil
 	age_gps_data:age_gps_data
-	
+
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'horizontal'
 		BoxLayout:
 			id:graph
 			canvas.after:
-				Rectangle:			
+				Rectangle:
 					size: 2,self.height
 					pos: self.center_x - 1,0
-					
+
 				Rectangle:
 					size: self.width, 2
 					pos: 0,self.center_y - 1
@@ -255,7 +260,7 @@
 					padding: 10
 					spacing: 10
 					id:optional
-					
+
 					Label:
 						text:'GPS Quality'
 					Label:
@@ -280,7 +285,7 @@
 						text:'Age of Differential'
 					Label:
 						id:age_gps_data
-					
+
 			GridLayout:
 				cols: 2
 				padding: 10

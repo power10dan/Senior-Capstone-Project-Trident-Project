@@ -42,7 +42,7 @@ class SurveyPage(Widget):
 	geo_sep = ObjectProperty(None)
 	horizontal_dil = ObjectProperty(None)
 	age_gps_data = ObjectProperty(None)
-	
+
 	def __init__(self, **kwargs):
 		super(SurveyPage, self).__init__(**kwargs)
 		self.measureButton.bind(on_release=self.updateMeasureButton)
@@ -101,7 +101,7 @@ class SettingsMenu(GridLayout):
 	gpsSpacingLabel = ObjectProperty(None)
 	antennaLabel = ObjectProperty(None)
 	phaseLabel = ObjectProperty(None)
-	
+
 	def __init__(self, **kwargs):
 		super(SettingsMenu, self).__init__(**kwargs)
 		self.vertical_tolerance.bind(text = self.updateVerticalTolerance)
@@ -112,7 +112,7 @@ class SettingsMenu(GridLayout):
 		self.leftReceiver.bind(text = self.updateLeftReceiver)
 		self.rightReceiver.bind(text = self.updateRightReceiver)
 		self.centerReceiver.bind(text = self.updateCenterReceiver)
-	
+
 	def updateLeftReceiver(self, instance, value):
 		for r in self.tree.iter('receiver'):
 			if (list(r)[4].text) == self.root.app.config.get('receiver','leftReceiver'):
@@ -125,8 +125,8 @@ class SettingsMenu(GridLayout):
 		self.root.app.config.set('receiver','leftReceiver',str(value))
 		self.root.app.config.write()
 		self.tree.write(xmlFilePath)
-	
-	
+
+
 	def updateCenterReceiver(self, instance, value):
 		for r in self.tree.iter('receiver'):
 			if (list(r)[4].text) == self.root.app.config.get('receiver','centerReceiver'):
@@ -139,7 +139,7 @@ class SettingsMenu(GridLayout):
 		self.root.app.config.set('receiver','centerReceiver',str(value))
 		self.root.app.config.write()
 		self.tree.write(xmlFilePath)
-	
+
 	def updateRightReceiver(self, instance, value):
 		for r in self.tree.iter('receiver'):
 			if (list(r)[4].text) == self.root.app.config.get('receiver','rightReceiver'):
@@ -152,7 +152,7 @@ class SettingsMenu(GridLayout):
 		self.root.app.config.set('receiver','rightReceiver',str(value))
 		self.root.app.config.write()
 		self.tree.write(xmlFilePath)
-	
+
 	def clearReceiver(self, receiver):
 		blank = ''
 		for r in self.tree.iter('receiver'):
@@ -163,7 +163,7 @@ class SettingsMenu(GridLayout):
 				list(r)[3].text = 'F'
 		self.root.app.config.set('receiver',receiver,str(blank))
 		self.root.app.config.write
-	
+
 	def updateVerticalTolerance(self, instance, value):
 		if float(value) >= 0.0 and float(value) < 0.16:
 			self.verticalLabel.text = ''
@@ -171,7 +171,7 @@ class SettingsMenu(GridLayout):
 			self.root.app.config.write()
 		else:
 			self.verticalLabel.text = '!'
-	
+
 	def updateHorizontalTolerance(self, instance, value):
 		if float(value) >= 0.0 and float(value) < 0.11:
 			self.horizontalLabel.text = ''
@@ -179,7 +179,7 @@ class SettingsMenu(GridLayout):
 			self.root.app.config.write()
 		else:
 			self.horizontalLabel.text = '!'
-	
+
 	def updateGPSSpacing(self, instance, value):
 		if float(value) > 0.44 and float(value) < 0.56:
 			self.gpsSpacingLabel.text = ''
@@ -187,15 +187,15 @@ class SettingsMenu(GridLayout):
 			self.root.app.config.write()
 		else:
 			self.gpsSpacingLabel.text = '!'
-	
+
 	def updateAntennaHeight(self, instance, value):
 		self.root.app.config.set('tolerances','antennaHeight',str(value))
 		self.root.app.config.write()
-	
+
 	def updatePhaseCenter(self, instance, value):
 		self.root.app.config.set('tolerances','phaseCenter',str(value))
 		self.root.app.config.write()
-	
+
 	def receiverPopup(self,button,title):
 		layout = BoxLayout(orientation='vertical')
 		pop = Popup(attach_to=self,title=str(title),title_align = 'center',size_hint = (.5,.5))
@@ -207,7 +207,7 @@ class SettingsMenu(GridLayout):
 				layout.add_widget(btn)
 		pop.content = layout
 		pop.open()
-	
+
 	def submit(self,horizontal,vertical,gps_spacing,antennaHeight,phaseCenter):
 		updateTolerance = False
 		if self.verifyToleranceValues(float(horizontal),float(vertical),float(gps_spacing)):
@@ -234,7 +234,7 @@ class SettingsMenu(GridLayout):
 				content.bind(on_touch_up = popup_notif.dismiss)
 				popup_notif.content = content
 				popup_notif.open()
-		
+
 	# Checks tolerance inputs to ensure they are within the allowed range
 	# Returns 'False' if values are unacceptable, 'True' otherwise, and creates a warning in GUI_log.log
 	def verifyToleranceValues(self, horizontalToleranceInput, altitudeToleranceInput, gps_distance):
@@ -250,7 +250,7 @@ class SettingsMenu(GridLayout):
 			return False
 		else:
 			return True
-	
+
 ################################################################################################################
 ################################################################################################################
 
@@ -277,12 +277,12 @@ class Poseidon(Widget):
 	root = ObjectProperty(None)
 	base = ObjectProperty(None)
 	multiQ = deque(maxlen = 10)
-	
-	
+
+
 
 	def __init__(self, **kwargs):
 		super(Poseidon, self).__init__(**kwargs)
-	
+
 		self.survey.bind(on_release = self.updateSurveyButton)
 		self.jobNameButton.bind(on_release = self.updateJob)
 		self.newPointButton.bind(on_release = self.updatePoint)
@@ -304,7 +304,7 @@ class Poseidon(Widget):
 				self.app.config.set('locks','lockPoint','True')
 				self.app.config.write()
 			self.endSurvey()
-	
+
 	def updateJob(self,instance):
 		if self.job_popup is None:
 			self.job_popup = Popup(attach_to=self, title='Survey Name',title_align = 'center',size_hint=(0.5,None),padding=10)
@@ -313,13 +313,13 @@ class Poseidon(Widget):
 			self.job_popup.content = job
 		if self.app.config.get('locks','lockSurvey') == 'False':
 			self.job_popup.open()
-	
+
 	def	updateJobName(self, text):
 		self.job_popup.dismiss()
 		self.jobNameLabel.text = text
 		self.app.config.set('job','jobName',str(text))
 		self.app.config.write()
-	
+
 	def updatePoint(self, instance):
 		if self.app.config.get('locks','lockPoint') == 'False':
 			layout = BoxLayout(orientation='vertical')
@@ -333,7 +333,7 @@ class Poseidon(Widget):
 			layout.add_widget(code)
 			self.point_popup.content = layout
 			self.point_popup.open()
-	
+
 	def	updatePointName(self, text):
 		self.point_popup.dismiss()
 		newPage = SurveyPage(base=self)
@@ -345,7 +345,7 @@ class Poseidon(Widget):
 		newPage.create_property('longitude')
 		newPage.create_property('northing')
 		newPage.create_property('easting')
-		
+
 		newPage.create_property('altitude')
 		newPage.create_property('counter')
 		newPage.create_property('multiCounter')
@@ -377,25 +377,25 @@ class Poseidon(Widget):
 			self.settings_popup.content.rightReceiver.text = self.app.config.get('receiver','rightReceiver')
 		if self.app.config.get('locks','lockSettings') == 'False':
 			self.settings_popup.open()
-		
+
 	def startSurvey(self):
 		self.jobPath = "./output/"+str(self.app.config.get('job','jobName'))
 		if not os.path.exists(self.jobPath):
 			os.makedirs(self.jobPath)
 		self.thread = threading.Thread(target=self.secondThread)
 		self.thread.start()
-		
-		
-	def secondThread(self):		
+
+
+	def secondThread(self):
 		self.thread_stop.clear()
-		Clock.schedule_once(connectOutput(self.updateOutput,self.thread_stop).passiveThreads(3,'e'))	
-		
+		Clock.schedule_once(connectOutput(self.updateOutput,self.thread_stop).passiveThreads(3,'e'))
+
 	def endSurvey(self):
 		if self.app.config.get('locks','measuring'):
 			self.app.config.set('locks','measuring','False')
 			self.app.config.write()
 		self.thread_stop.set()
-		
+
 	def gpsStatus(self,receiver,qual):
 		if int(qual) <= 3:
 			receiver.source = "yellow.png"
@@ -403,7 +403,7 @@ class Poseidon(Widget):
 			receiver.source = "green.png"
 		else:
 			receiver.source = "red.png"
-			
+
 	@mainthread
 	def updateOutput(self,name,nmea, q=[]):
 		if self.app.config.get('locks','measuring') == 'True':
@@ -437,14 +437,14 @@ class Poseidon(Widget):
 						self.pointCollected = open(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'.txt','a')
 					else:
 						self.pointCollected.writelines(str(nmea))
-			else: 
+			else:
 				self.multiPStatus.text = "Multipathing!"
 				self.dataCarousel.current_slide.multiCounter = self.dataCarousel.current_slide.multiCounter + 1
 				self.dataCarousel.current_slide.multiCounterLabel.text = str(self.dataCarousel.current_slide.multiCounter)
 				self.multiQ.append(True)
 			if float(self.dataCarousel.current_slide.counter) > 10 :
 				self.plotPoints(q[1])
-	
+
 	@mainthread
 	def plotPoints(self, centerQ):
 		centerQueueCopy = {}
@@ -456,22 +456,22 @@ class Poseidon(Widget):
 		tolerance = float(self.app.config.get('tolerances','horizontal'))
 		width = self.dataCarousel.current_slide.graph.width
 		height = self.dataCarousel.current_slide.graph.height
-		
+
 		for i in range(10):
 			dupE.append((-1.0*(centerQueueCopy[i]['easting'] % centerX))/(4.0*tolerance))
 			dupN.append((-1.0*(centerQueueCopy[i]['northing'] % centerY))/(4.0*tolerance))
 			print dupE[i]
 			print dupN[i]
 		self.dataCarousel.current_slide.graph.canvas.clear()
-		
+
 		for i in range(10):
 			#if self.multiQ[i]:
 			#	self.dataCarousel.current_slide.graph.canvas.add(Color(1,0,0))
 			#else:
 			#	self.dataCarousel.current_slide.graph.canvas.add(Color(0,0,1))
-		
+
 			self.dataCarousel.current_slide.graph.canvas.add(Ellipse(pos=((width-dupE[i]-5),(height-dupN[i]-5)),size=(10,10)))
-				
+
 	@mainthread
 	def amoratizeData(self, dataEpochDict):
 		self.dataCarousel.current_slide.latitude += float(dataEpochDict['latd'])
@@ -486,7 +486,7 @@ class Poseidon(Widget):
 		if instance.collide_point(pos.x,pos.y):
 			self.optionalData = int(instance.name)
 			self.dataCarousel.current_slide.antenna_altitude.text = instance.name
-			
+
 	def optionalDisplay(self,nmea):
 		self.dataCarousel.current_slide.geo_sep.text = str(nmea['geo_sep'])
 		self.dataCarousel.current_slide.num_sats.text = str(nmea['num_sats'])
@@ -494,16 +494,34 @@ class Poseidon(Widget):
 		self.dataCarousel.current_slide.horizontal_dil.text = str(nmea['horizontal_dil'])
 		self.dataCarousel.current_slide.age_gps_data.text = str(nmea['age_gps_data'])
 		self.dataCarousel.current_slide.antenna_altitude.text = str(nmea['antenna_altitude'])
-		
 
+
+	def plot_file(self, filepath, name):
+		found_flag = 0
+		for root, dirs, files in os.walk(filepath):
+			if name in files:
+				full_path = os.path.join(root, name)
+				nmeastream.read_and_plot_file(full_path)
+				found_flag = 1
+				break
+		if(found_flag) is 0:
+			box = BoxLayout()
+			box.add_widget(Label(text='I did not find any real-time data'))
+			pop = Popup(title='Warning', content=box, size_hint=(.5,.5))
+			pop.open()
+
+	def plot_realtime(self):
+
+		full_path = os.path.join(os.getcwd(), 'data_collection_set_4_25_15')
+		self.plot_file(full_path, 'control_point_2_trial_1.txt')
 ################################################################################################################
 ################################################################################################################
 
 class TridentApp(App):
 	def on_stop(self):
 		self.root.thread_stop.set()
-		
-		
+
+
 	def build(self):
 		self.poseidonWidget = Poseidon(app=self)
 		self.root = self.poseidonWidget
@@ -535,7 +553,7 @@ class TridentApp(App):
 		config.adddefaultsection('job')
 		config.setdefault('job','jobName','')
 		config.setdefault('job','currentPointName','')
-		
+
 
 		config.adddefaultsection('locks')
 		config.setdefault('locks','lockSettings','False')
