@@ -13,13 +13,13 @@ import logging
 
 LOG_FILENAME = '.\logs\log_'+ datetime.datetime.now().strftime('%Y-%m-%d') +'.log'
 logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG,format='%(asctime)s %(levelname)s: %(message)s')
-log = 0
+log = None
 
 class connectOutput:
 	notify = None
 	thread_stop = None
 	rawQueue = []
-	xdata = None
+	xdata = {}
 	timeout = [] #used for checking if signal to receiver lost
 	ser = []
 	active = []
@@ -63,6 +63,7 @@ class connectOutput:
 			sys.exit(0)
 	
 	def passiveThreads(self, r, input):
+		global log
 		r = int(r)
 		self.createQueue(self.multiQueue)
 		self.createQueue(self.rawQueue)
@@ -87,7 +88,7 @@ class connectOutput:
 					len(self.multiQueue[2]) == 10):
 				multipathing = self.M.multipathQueueHandler(self.multiQueue)
 				self.notify(int(3),multipathing,self.rawQueue)
-				
+				print multipathing
 				# if the units are out of order (mislabeled), then exit this loop
 				if self.M.mislabeledFlag != 0:
 					self.thread_stop.set()
@@ -96,7 +97,7 @@ class connectOutput:
 	# Called from: main
 	def thread(self):
 		global log
-		signal.signal()
+		#signal.signal()
 		print "How many receivers are you connecting?"
 		r = raw_input()
 		logging.info('user devices input: %s'%(r))
@@ -114,14 +115,12 @@ class connectOutput:
 		logging.info('user search input: %s'%(input))
 		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
 		for i in range(0, r):
-			thread = threading.Thread(target=self.initSerial,args=(i,input))
-			thread.daemon = True
-			thread.start()
+			self.initSerial(i,input)
 			logging.info('Created Thread: %s'%(i))
 			self.timeout.append(0)
 		while True:
 			for i in range(0, r):
-				thread = threading.Thread(target=self.streamSerial,args=(str(i))).run()
+				self.streamSerial(str(i))
 			if (r == 3 and len(self.multiQueue[0]) == 10 and 
 					len(self.multiQueue[1]) == 10 and 
 					len(self.multiQueue[2]) == 10):
@@ -143,19 +142,18 @@ class connectOutput:
 			data = nmea.GPGGA()
 			data.parse(line)
 			if len(line) > 50:
-				self.notify(int(name),data)
 				lat = self.degrees(data.latitude)
 				lon = self.degrees(data.longitude)
 				cartesian = self.G.geo(lat, lon)
 				northing, easting, k , gamma = cartesian
 				c = "cartesian: " + str(cartesian)
 				self.xdata.update({'easting': easting,'northing': northing,'latd': lat,'lond': lon}) 
-				self.extendData(data,self.xdata)
+				self.xdata = self.extendData(data,self.xdata)
 				if int(data.gps_qual) == 4:
 					self.queueAppend(self.multiQueue, name, (northing, easting, data.antenna_altitude))
 					self.queueAppend(self.rawQueue, name, self.xdata)
 				line_str = name + ":" + str(line)
-				self.notify(int(name),xdata)
+				self.notify(int(name),self.xdata)
 			else:
 				line_str = "Bad Signal: " + line  
 			print line_str
@@ -175,21 +173,24 @@ class connectOutput:
 				print "Received something other than GGA message from receiver: " + line
 		log.writelines(str(line))
 	
-	def extendData(self,data,xdata):
-		xdata.update({'timestamp':data.timestamp,
-			'latitude':data.latitude,
-			'lat_direction':data.lat_direction,
-			'longitude':data.longitude, 
-			'lon_direction':lon_direction,
-			'gps_qual':data.gps_qual,
-			'num_sats':data.num_sats,
-			'horizontal_dil': data.horizontal_dil,
-			'altitude':data.antenna_altitude,
-			'altitude_units':data.altitude_units,
-			'geo_sep':data.geo_sep,
-			'geo_sep_units':data.geo_sep_units,
-			'age_gps_data':data.age_gps_data,
-			'ref_station_id':data.ref_station_id})
+	def extendData(self,data,xd):
+		xd['timestamp'] = data.timestamp
+		xd['latitude'] = data.latitude
+		xd['lat_direction'] = data.lat_direction
+		xd['longitude'] = data.longitude 
+		xd['lon_direction'] = data.lon_direction
+		xd['gps_qual'] = data.gps_qual
+		xd['num_sats'] = data.num_sats
+		xd['horizontal_dil'] = data.horizontal_dil
+		xd['altitude'] = data.antenna_altitude
+		xd['altitude_units'] = data.altitude_units
+		xd['geo_sep'] = data.geo_sep
+		xd['geo_sep_units'] = data.geo_sep_units
+		xd['age_gps_data'] = data.age_gps_data
+		xd['ref_station_id'] = data.ref_station_id
+		return xd
+		
+			# xdata['latitude'] = data.latitude
 	
 	# Creates a list of queues inside of global list named multiQueue
 	# Only used when connecting 3 receivers, sets max length of queues to 10

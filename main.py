@@ -49,25 +49,18 @@ class SurveyPage(Widget):
 			self.base.app.config.set('locks', 'measuring', 'False')
 			self.base.app.config.set('job', 'currentPointName', '')
 			self.base.app.config.write()
-			self.outputResultsToCSV(self.base.app.config.get('job', 'jobName'),
-									self.base.dataCarousel.current_slide.pointName,
-									self.base.dataCarousel.current_slide.pointCode,
-									self.base.dataCarousel.current_slide.latitude,
-									self.base.dataCarousel.current_slide.longitude,
-									self.base.dataCarousel.current_slide.northing,
-									self.base.dataCarousel.current_slide.easting,
-									self.base.dataCarousel.current_slide.altitude)
+			self.outputResultsToCSV()
 
-	def outputResultsToCSV(self, surveyName, pointName, pointCode, latitude, longitude, northing, easting, altitude):
+	def outputResultsToCSV(self):
 		pointName = self.base.dataCarousel.current_slide.pointName
 		pointCode = self.base.dataCarousel.current_slide.pointCode
-		latitude = float(self.base.dataCarousel.current_slide.latitude)
-		longitude = float(self.base.dataCarousel.current_slide.longitude)
-		northing = float(self.base.dataCarousel.current_slide.northing)
-		easting = float(self.base.dataCarousel.current_slide.easting)
-		altitude = float(self.base.dataCarousel.current_slide.altitude)
+		latitude = self.base.dataCarousel.current_slide.latitude
+		longitude = self.base.dataCarousel.current_slide.longitude
+		northing = self.base.dataCarousel.current_slide.northing
+		easting = self.base.dataCarousel.current_slide.easting
+		altitude = self.base.dataCarousel.current_slide.altitude
 
-		counter = float(self.base.dataCarousel.current_slide.counter)
+		counter = self.base.dataCarousel.current_slide.counter
 
 		latitude = latitude / counter
 		longitude = longitude / counter
@@ -345,11 +338,17 @@ class Poseidon(Widget):
 		newPage.create_property('longitude')
 		newPage.create_property('northing')
 		newPage.create_property('easting')
+		
 		newPage.create_property('altitude')
 		newPage.create_property('counter')
 		newPage.create_property('multiCounter')
-		newPage.counter = 0
-		newPage.multiCounter = 0
+		newPage.counter = 0.0
+		newPage.multiCounter = 0.0
+		newPage.easting = 0.0
+		newPage.northing = 0.0
+		newPage.altitude = 0.0
+		newPage.latitude = 0.0
+		newPage.longitude = 0.0
 		self.dataCarousel.load_slide(newPage)
 
 	def Settings_Button_pressed(self):
@@ -385,77 +384,79 @@ class Poseidon(Widget):
 			self.app.config.write()
 		self.thread_stop.set()
 		
-	def gpsStatus(self,receiver,nmea):
-		if nmea.gps_qual == '':
-			receiver.source = "red.png"
-		if int(nmea.gps_qual) <= 3:
+	def gpsStatus(self,receiver,qual):
+		if int(qual) <= 3:
 			receiver.source = "yellow.png"
-		if nmea.gps_qual == 4:
+		elif int(qual) == 4:
 			receiver.source = "green.png"
-	
+		else:
+			receiver.source = "red.png"
 	@mainthread
 	def updateOutput(self,name,nmea, q=[]):
 		if self.app.config.get('locks','measuring') == 'True':
 			if not os.path.isfile(self.jobPath+self.app.config.get('job','currentPointName')):
 				self.pointRaw = open(self.jobPath+self.app.config.get('job','currentPointName'),'a')
 			else:
-				self.pointRaw.writelines(nmea)
+				self.pointRaw.writelines(str(nmea))
 		if name == 0:
-			self.gpsStatus(self.gps1Status,nmea)
+			self.gpsStatus(self.gps1Status,nmea['gps_qual'])
 		elif name == 1:
-			self.gpsStatus(self.gps2Status,nmea)
+			self.gpsStatus(self.gps2Status,nmea['gps_qual'])
 		elif name == 2:
-			self.gpsStatus(self.gps3Status,nmea)
+			self.gpsStatus(self.gps3Status,nmea['gps_qual'])
 		elif name == 3:
-			self.multiQ.popleft()
+			if len(self.multiQ) == 10:
+				self.multiQ.popleft()
 			if nmea != True:
 				self.multiPStatus.text = "Ready to Measure!"
 				self.amoratizeData(q[1][9])
-				self.dataCarousel.current_slide.counter = str(float(self.dataCarousel.current_slide.counter) + 1)
-				self.dataCarousel.current_slide.counterLabel.text = self.dataCarousel.current_slide.counter
+				self.dataCarousel.current_slide.counter = self.dataCarousel.current_slide.counter + 1
+				self.dataCarousel.current_slide.counterLabel.text = str(self.dataCarousel.current_slide.counter)
 				self.multiQ.append(False)
 			else: 
 				self.multiPStatus.text = "Multipathing!"
-				self.dataCarousel.current_slide.multiCounter = str(float(self.dataCarousel.current_slide.multiCounter) + 1)
-				self.dataCarousel.current_slide.multiCounterLabel.text = self.dataCarousel.current_slide.multiCounter
+				self.dataCarousel.current_slide.multiCounter = self.dataCarousel.current_slide.multiCounter + 1
+				self.dataCarousel.current_slide.multiCounterLabel.text = str(self.dataCarousel.current_slide.multiCounter)
 				self.multiQ.append(True)
-			self.plotPoints(q[1])
+			if float(self.dataCarousel.current_slide.counter) > 10 :
+				self.plotPoints(q[1])
 	
 	@mainthread
 	def plotPoints(self, centerQ):
-		currentSlide = self.dataCarousel.current_slide
+		centerQueueCopy = {}
+		centerQueueCopy = centerQ
+		dupN = []
+		dupE = []
+		centerX = self.dataCarousel.current_slide.easting/self.dataCarousel.current_slide.counter
+		centerY = self.dataCarousel.current_slide.northing/self.dataCarousel.current_slide.counter
+		tolerance = float(self.app.config.get('tolerances','horizontal'))
+		width = self.dataCarousel.current_slide.graph.width
+		height = self.dataCarousel.current_slide.graph.height
 		
-		centerX = float(currentSlide.easting)/float(currentSlide.counter)
-		centerY = float(currentSlide.northing)/float(currentSlide.counter)
-		tolerance = self.app.config.get('tolerances','horizontal')
+		for i in range(10):
+			dupE.append((-1.0*(centerQueueCopy[i]['easting'] % centerX))/(4.0*tolerance))
+			dupN.append((-1.0*(centerQueueCopy[i]['northing'] % centerY))/(4.0*tolerance))
+			print dupE[i]
+			print dupN[i]
+		self.dataCarousel.current_slide.graph.canvas.clear()
 		
-		for i in range(centerQ):
-			centerQ[i].easting = -1*(centerQ[i].easting - centerX)/tolerance
-			centerQ[i].northing = -1*(centerQ[i].northing - centerY)/tolerance
-			
-		currentSlide.graph.canvas.clear()
+		for i in range(10):
+			#if self.multiQ[i]:
+			#	self.dataCarousel.current_slide.graph.canvas.add(Color(1,0,0))
+			#else:
+			#	self.dataCarousel.current_slide.graph.canvas.add(Color(0,0,1))
 		
-		width = (currentSlide.graph.width)/2
-		height = (currentSlide.graph.height)/2
-		
-		for i in range(centerQ):
-			if self.multiQ[i]:
-				currentSlide.graph.canvas.add(Color(1,0,0))
-			else:
-				currentSlide.graph.canvas.add(Color(0,0,1))
-
-			currentSlide.graph.canvas.add(pos=(width-centerQ[i].easting-5,height-centerQ[i].northing-5),size=(10,10))
-		
+			self.dataCarousel.current_slide.graph.canvas.add(Ellipse(pos=((width-dupE[i]-5),(height-dupN[i]-5)),size=(10,10)))
 				
 	@mainthread
 	def amoratizeData(self, dataEpochDict):
-		self.dataCarousel.current_slide.latitude = str(float(self.dataCarousel.current_slide.latitude) + float(dataEpochDict.latd))
-		self.dataCarousel.current_slide.longitude = str(float(self.dataCarousel.current_slide.longitude) + float(dataEpochDict.lond))
-		self.dataCarousel.current_slide.northing = str(float(self.dataCarousel.current_slide.northing) + float(dataEpochDict.northing))
-		self.dataCarousel.current_slide.easting = str(float(self.dataCarousel.current_slide.easting) + float(dataEpochDict.easting))
-		self.dataCarousel.current_slide.altitude = str(float(self.dataCarousel.current_slide.altitude) + float(dataEpochDict.altitude))
-
-
+		self.dataCarousel.current_slide.latitude += float(dataEpochDict['latd'])
+		self.dataCarousel.current_slide.longitude += float(dataEpochDict['lond'])
+		self.dataCarousel.current_slide.northing += float(dataEpochDict['northing'])
+		self.dataCarousel.current_slide.easting += float(dataEpochDict['easting'])
+		self.dataCarousel.current_slide.altitude += float(dataEpochDict['altitude'])
+		#print "northing:" + str(self.dataCarousel.current_slide.northing/self.dataCarousel.current_slide.counter)
+		#print "easting:" + str(self.dataCarousel.current_slide.easting/self.dataCarousel.current_slide.counter)
 
 
 ################################################################################################################
@@ -478,6 +479,10 @@ class TridentApp(App):
 
 		if self.config.get('locks','lockPoint') == 'False':
 			self.config.set('locks','lockPoint','True')
+			self.config.write()
+
+		if self.config.get('locks','measuring') == 'True':
+			self.config.set('locks','measuring','False')
 			self.config.write()
 
 		if self.config.get('locks','lockSurvey') == 'True':

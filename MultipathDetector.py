@@ -416,4 +416,3 @@ class MultipathDetector():
                 return avgMultipath
         # except:
         #     log.error("Error in MultipathDetector.multipathQueueHandler")
-
