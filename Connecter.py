@@ -308,9 +308,11 @@ class connectOutput:
 					if self.thread_stop.is_set():
 						return
 					else:
-						print "No active devices found. Switching to scan mode"
-						logging.info('No active devices selected, switching to scan mode')
-						self.portSearch(threadNum,'s')
+						if __name__ == "__main__":
+							print "No active devices found. Switching to scan mode"
+							logging.info('No active devices selected, switching to scan mode')
+							self.portSearch(threadNum,'s')
+						
 		elif input == 's':
 			avail = self.scan(range(256))
 			if len(avail) != 0:   

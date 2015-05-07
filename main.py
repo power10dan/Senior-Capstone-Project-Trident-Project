@@ -32,18 +32,27 @@ class SurveyPage(Widget):
 	graph = ObjectProperty(None)
 	multiCounterLabel = ObjectProperty(None)
 	counterLabel = ObjectProperty(None)
+	gps1Status = ObjectProperty(None)
+	gps2Status = ObjectProperty(None)
+	gps3Status = ObjectProperty(None)
+	multiPStatus = ObjectProperty(None)
+	gps_qual = ObjectProperty(None)
+	num_sats = ObjectProperty(None)
+	antenna_altitude = ObjectProperty(None)
+	geo_sep = ObjectProperty(None)
+	horizontal_dil = ObjectProperty(None)
+	age_gps_data = ObjectProperty(None)
 	
 	def __init__(self, **kwargs):
 		super(SurveyPage, self).__init__(**kwargs)
 		self.measureButton.bind(on_release=self.updateMeasureButton)
-		
+
 	def updateMeasureButton(self,instance):
 		if instance.text == 'Measure Point' and self.base.app.config.get('locks','lockSurvey') == 'True':
 			instance.text = 'Stop'
 			self.base.app.config.set('locks', 'measuring', 'True')
 			self.base.app.config.set('job', 'currentPointName', self.base.dataCarousel.current_slide.pointName)
 			self.base.app.config.write()
-			
 		else:
 			instance.text = 'Measure Point'
 			self.base.app.config.set('locks', 'measuring', 'False')
@@ -251,6 +260,10 @@ class Poseidon(Widget):
 	job_popup = None
 	point_popup = None
 	thread = None
+	pointRaw = None
+	pointCollected = None
+	currentPoint = None
+	optionalData = None
 	thread_stop = threading.Event()
 	app = ObjectProperty(None)
 	survey = ObjectProperty(None)
@@ -261,16 +274,11 @@ class Poseidon(Widget):
 	newPointButton = ObjectProperty(None)
 	dataCarousel = ObjectProperty(None)
 	newPage = ObjectProperty(None)
-	graph = ObjectProperty(None)
-	gps1Status = ObjectProperty(None)
-	gps2Status = ObjectProperty(None)
-	gps3Status = ObjectProperty(None)
-	multiPStatus = ObjectProperty(None)
-	pointCollection = None
-	pointRaw = None
 	root = ObjectProperty(None)
 	base = ObjectProperty(None)
 	multiQ = deque(maxlen = 10)
+	
+	
 
 	def __init__(self, **kwargs):
 		super(Poseidon, self).__init__(**kwargs)
@@ -329,7 +337,6 @@ class Poseidon(Widget):
 	def	updatePointName(self, text):
 		self.point_popup.dismiss()
 		newPage = SurveyPage(base=self)
-		self.dataCarousel.add_widget(newPage)
 		newPage.create_property('pointName')
 		newPage.pointName = text
 		newPage.create_property('pointCode')
@@ -349,9 +356,14 @@ class Poseidon(Widget):
 		newPage.altitude = 0.0
 		newPage.latitude = 0.0
 		newPage.longitude = 0.0
+		newPage.gps1Status.bind(on_touch_up=self.openOptional)
+		newPage.gps2Status.bind(on_touch_up=self.openOptional)
+		newPage.gps3Status.bind(on_touch_up=self.openOptional)
+		self.dataCarousel.add_widget(newPage)
 		self.dataCarousel.load_slide(newPage)
 
 	def Settings_Button_pressed(self):
+		print self.dataCarousel[1].multiPStatus
 		if self.settings_popup is None:
 			self.settings_popup = Popup(attach_to=self, title='Trident Settings', title_align = 'center', size_hint=(0.7,0.8))
 			self.settings_popup.content = SettingsMenu(root=self)
@@ -367,7 +379,7 @@ class Poseidon(Widget):
 			self.settings_popup.open()
 		
 	def startSurvey(self):
-		self.jobPath = "output/"+str(self.app.config.get('job','jobName'))
+		self.jobPath = "./output/"+str(self.app.config.get('job','jobName'))
 		if not os.path.exists(self.jobPath):
 			os.makedirs(self.jobPath)
 		self.thread = threading.Thread(target=self.secondThread)
@@ -391,19 +403,26 @@ class Poseidon(Widget):
 			receiver.source = "green.png"
 		else:
 			receiver.source = "red.png"
+			
 	@mainthread
 	def updateOutput(self,name,nmea, q=[]):
 		if self.app.config.get('locks','measuring') == 'True':
-			if not os.path.isfile(self.jobPath+self.app.config.get('job','currentPointName')):
-				self.pointRaw = open(self.jobPath+self.app.config.get('job','currentPointName'),'a')
+			if not os.path.isfile(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'_raw.txt'):
+				self.pointRaw = open(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'_raw.txt','a')
 			else:
 				self.pointRaw.writelines(str(nmea))
 		if name == 0:
 			self.gpsStatus(self.gps1Status,nmea['gps_qual'])
+			if name == self.optionalData:
+				self.optionalDisplay(nmea)
 		elif name == 1:
 			self.gpsStatus(self.gps2Status,nmea['gps_qual'])
+			if name == self.optionalData:
+				self.optionalDisplay(nmea)
 		elif name == 2:
 			self.gpsStatus(self.gps3Status,nmea['gps_qual'])
+			if name == self.optionalData:
+				self.optionalDisplay(nmea)
 		elif name == 3:
 			if len(self.multiQ) == 10:
 				self.multiQ.popleft()
@@ -413,6 +432,11 @@ class Poseidon(Widget):
 				self.dataCarousel.current_slide.counter = self.dataCarousel.current_slide.counter + 1
 				self.dataCarousel.current_slide.counterLabel.text = str(self.dataCarousel.current_slide.counter)
 				self.multiQ.append(False)
+				if self.app.config.get('locks','measuring') == 'True':
+					if not os.path.isfile(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'.txt'):
+						self.pointCollected = open(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'.txt','a')
+					else:
+						self.pointCollected.writelines(str(nmea))
 			else: 
 				self.multiPStatus.text = "Multipathing!"
 				self.dataCarousel.current_slide.multiCounter = self.dataCarousel.current_slide.multiCounter + 1
@@ -458,6 +482,19 @@ class Poseidon(Widget):
 		#print "northing:" + str(self.dataCarousel.current_slide.northing/self.dataCarousel.current_slide.counter)
 		#print "easting:" + str(self.dataCarousel.current_slide.easting/self.dataCarousel.current_slide.counter)
 
+	def openOptional(self,instance,pos):
+		if instance.collide_point(pos.x,pos.y):
+			self.optionalData = int(instance.name)
+			self.dataCarousel.current_slide.antenna_altitude.text = instance.name
+			
+	def optionalDisplay(self,nmea):
+		self.dataCarousel.current_slide.geo_sep.text = str(nmea['geo_sep'])
+		self.dataCarousel.current_slide.num_sats.text = str(nmea['num_sats'])
+		self.dataCarousel.current_slide.gps_qual.text = str(nmea['gps_qual'])
+		self.dataCarousel.current_slide.horizontal_dil.text = str(nmea['horizontal_dil'])
+		self.dataCarousel.current_slide.age_gps_data.text = str(nmea['age_gps_data'])
+		self.dataCarousel.current_slide.antenna_altitude.text = str(nmea['antenna_altitude'])
+		
 
 ################################################################################################################
 ################################################################################################################

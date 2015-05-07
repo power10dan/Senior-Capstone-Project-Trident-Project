@@ -7,10 +7,7 @@
 	jobNameButton:jobNameButton
 	newPointButton: newPointButton
 	dataCarousel: dataCarousel
-	gps1Status: gps1Status
-	gps2Status: gps2Status
-	gps3Status: gps3Status
-	multiPStatus:multiPStatus
+	
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'vertical'
@@ -36,7 +33,6 @@
 				text:"-"
 			Label:
 				id: pointNameLabel
-				text: 'Home'
 				
 			Button:
 				id: survey
@@ -52,48 +48,7 @@
 			loop: True
 			on_current_slide: 
 				pointNameLabel.text = str(args[1].pointName)
-			
-			BoxLayout:
-				size: root.width,root.height
-				orientation: 'horizontal'
-				pointName:"Home"
-				canvas:
-					Ellipse:
-						size: 10,10
-						pos: 100,100
-				AnchorLayout:
-					anchor_x: 'right'
-					anchor_y: 'top'
-					BoxLayout:
-						orientation:'vertical'
-						size_hint:None,None
-						size: 225,105
-						BoxLayout:
-							orientation:'horizontal'
-							size_hint:None,None
-							size: 225,75
-							Image:
-								id: gps1Status
-								size_hint: (None,None)
-								size: 75,75
-								source: 'red.png'
-								
-							Image:
-								id: gps2Status
-								size_hint: (None,None)
-								size: 75,75
-								source: 'red.png'
-
-							Image:
-								id: gps3Status
-								size_hint: (None,None)
-								size: 75,75
-								source: 'red.png'
-						Label:
-							id: multiPStatus
-							text: 'Not Ready'
-							size_hint: (None,None)
-							size:225,30
+							
 
 <SettingsMenu>:
 	cols: 3
@@ -221,10 +176,21 @@
 
 <SurveyPage>:
 	measureButton: measureButton
-	epochInput: epochInput
+	#epochInput: epochInput
 	graph:graph
 	multiCounterLabel:multiCounterLabel
 	counterLabel:counterLabel
+	gps1Status: gps1Status
+	gps2Status: gps2Status
+	gps3Status: gps3Status
+	multiPStatus:multiPStatus
+	gps_qual:gps_qual
+	num_sats:num_sats
+	antenna_altitude:antenna_altitude
+	geo_sep:geo_sep
+	horizontal_dil:horizontal_dil
+	age_gps_data:age_gps_data
+	
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'horizontal'
@@ -238,27 +204,104 @@
 				Rectangle:
 					size: self.width, 2
 					pos: 0,self.center_y - 1
-		GridLayout:
-			cols: 2
-			padding: 10
-			spacing: 10
-			size_hint: None,None
-			size: 300,150
-			id:pointInfo
-			Label:
-				text: 'Counter'
-			Label:
-				id:counterLabel
-			Label:
-				text: 'Multipath Counter'
-			Label:
-				id:multiCounterLabel
-			Label:
-				text: 'Epochs to Measure:'
-			TextInput:
-				id: epochInput
-				multiline: False
-				input_filter: 'int'
-			Button:
-				id: measureButton
-				text: 'Measure Point'
+		BoxLayout:
+			orientation: "vertical"
+			size_hint:None,None
+			size:300,root.height
+			AnchorLayout:
+				anchor_x: 'right'
+				anchor_y: 'top'
+				size_hint:None,None
+				size:300,105
+				BoxLayout:
+					orientation:'vertical'
+					size_hint:None,None
+					size: 225,105
+					BoxLayout:
+						orientation:'horizontal'
+						size_hint:None,None
+						size: 225,75
+						Image:
+							id: gps1Status
+							name:'0'
+							size_hint: (None,None)
+							size: 75,75
+							source: 'red.png'
+						Image:
+							id: gps2Status
+							name:'1'
+							size_hint: (None,None)
+							size: 75,75
+							source: 'red.png'
+
+						Image:
+							id: gps3Status
+							name:'2'
+							size_hint: (None,None)
+							size: 75,75
+							source: 'red.png'
+					Label:
+						id: multiPStatus
+						text: 'Not Ready'
+						size_hint: (None,None)
+						size:225,30
+			AnchorLayout:
+				anchor_x:'right'
+				anchor_y:'top'
+				GridLayout:
+					cols:2
+					size_hint_y:None
+					height:250
+					padding: 10
+					spacing: 10
+					id:optional
+					
+					Label:
+						text:'GPS Quality'
+					Label:
+						id:gps_qual
+					Label:
+						text:'# Sats'
+					Label:
+						id:num_sats
+					Label:
+						text:'Horizontal Dilution'
+					Label:
+						id:horizontal_dil
+					Label:
+						text:'Antenna Altitude'
+					Label:
+						id:antenna_altitude
+					Label:
+						text:'Geoidal Separation'
+					Label:
+						id:geo_sep
+					Label:
+						text:'Age of Differential'
+					Label:
+						id:age_gps_data
+					
+			GridLayout:
+				cols: 2
+				padding: 10
+				spacing: 10
+				size_hint: None,None
+				size: 300,150
+				id:pointInfo
+				Label:
+					text: 'Counter'
+				Label:
+					id:counterLabel
+				Label:
+					text: 'Multipath Counter'
+				Label:
+					id:multiCounterLabel
+				#Label:
+				#	text: 'Epochs to Measure:'
+				#TextInput:
+				#	id: epochInput
+				#	multiline: False
+				#	input_filter: 'int'
+				Button:
+					id: measureButton
+					text: 'Measure Point'
