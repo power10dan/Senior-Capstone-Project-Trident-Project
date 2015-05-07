@@ -17,7 +17,8 @@ import logging
 import os
 import threading
 from functools import partial
-
+from kivy.graphics import Color, Ellipse, Line
+from collections import deque
 
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
@@ -26,23 +27,16 @@ xmlFilePath = 'ui.xml'
 
 class SurveyPage(Widget):
 	base = ObjectProperty(None)
-	counterLabel = ObjectProperty(None)
-	multiCounterLabel = ObjectProperty(None)
 	epochInput = ObjectProperty(None)
 	measureButton = ObjectProperty(None)
+	graph = ObjectProperty(None)
+	multiCounterLabel = ObjectProperty(None)
+	counterLabel = ObjectProperty(None)
 	
 	def __init__(self, **kwargs):
 		super(SurveyPage, self).__init__(**kwargs)
 		self.measureButton.bind(on_release=self.updateMeasureButton)
-		self.base.dataCarousel.current_slide.counter.bind(on_change=self.updateCounter)
-		self.base.dataCarousel.current_slide.multiCounter.bind(on_change=self.updateMultiCounter)
-
-	def updateCounter(self,instance):
-		self.counterLabel.text = self.base.dataCarousel.current_slide.counter.text
-
-	def updateMultiCounter(self,instance):
-		self.multiCounterLabel.text = self.base.dataCarousel.current_slide.multiCounter.text
-
+		
 	def updateMeasureButton(self,instance):
 		if instance.text == 'Measure Point' and self.base.app.config.get('locks','lockSurvey') == 'True':
 			instance.text = 'Stop'
@@ -90,34 +84,34 @@ class SurveyPage(Widget):
 ################################################################################################################
 
 class SettingsMenu(GridLayout):
-    tree = ET.parse(xmlFilePath)
-    root = ObjectProperty(None)
-    vertical_tolerance = ObjectProperty(None)
-    horizontal_tolerance = ObjectProperty(None)
-    gps_spacing = ObjectProperty(None)
-    antennaHeight = ObjectProperty(None)
-    phaseCenter = ObjectProperty(None)
-    leftReceiver = ObjectProperty(None)
-    centerReceiver = ObjectProperty(None)
-    rightReceiver = ObjectProperty(None)
-    verticalLabel = ObjectProperty(None)
-    horizontalLabel = ObjectProperty(None)
-    gpsSpacingLabel = ObjectProperty(None)
-    antennaLabel = ObjectProperty(None)
-    phaseLabel = ObjectProperty(None)
-
-    def __init__(self, **kwargs):
-        super(SettingsMenu, self).__init__(**kwargs)
-        self.vertical_tolerance.bind(text = self.updateVerticalTolerance)
-        self.horizontal_tolerance.bind(text = self.updateHorizontalTolerance)
-        self.gps_spacing.bind(text = self.updateGPSSpacing)
-        self.antennaHeight.bind(text = self.updateAntennaHeight)
-        self.phaseCenter.bind(text = self.updatePhaseCenter)
-        self.leftReceiver.bind(text = self.updateLeftReceiver)
-        self.rightReceiver.bind(text = self.updateRightReceiver)
-        self.centerReceiver.bind(text = self.updateCenterReceiver)
-
-    def updateLeftReceiver(self, instance, value):
+	tree = ET.parse(xmlFilePath)
+	root = ObjectProperty(None)
+	vertical_tolerance = ObjectProperty(None)
+	horizontal_tolerance = ObjectProperty(None)
+	gps_spacing = ObjectProperty(None)
+	antennaHeight = ObjectProperty(None)
+	phaseCenter = ObjectProperty(None)
+	leftReceiver = ObjectProperty(None)
+	centerReceiver = ObjectProperty(None)
+	rightReceiver = ObjectProperty(None)
+	verticalLabel = ObjectProperty(None)
+	horizontalLabel = ObjectProperty(None)
+	gpsSpacingLabel = ObjectProperty(None)
+	antennaLabel = ObjectProperty(None)
+	phaseLabel = ObjectProperty(None)
+	
+	def __init__(self, **kwargs):
+		super(SettingsMenu, self).__init__(**kwargs)
+		self.vertical_tolerance.bind(text = self.updateVerticalTolerance)
+		self.horizontal_tolerance.bind(text = self.updateHorizontalTolerance)
+		self.gps_spacing.bind(text = self.updateGPSSpacing)
+		self.antennaHeight.bind(text = self.updateAntennaHeight)
+		self.phaseCenter.bind(text = self.updatePhaseCenter)
+		self.leftReceiver.bind(text = self.updateLeftReceiver)
+		self.rightReceiver.bind(text = self.updateRightReceiver)
+		self.centerReceiver.bind(text = self.updateCenterReceiver)
+	
+	def updateLeftReceiver(self, instance, value):
 		for r in self.tree.iter('receiver'):
 			if (list(r)[4].text) == self.root.app.config.get('receiver','leftReceiver'):
 				list(r)[0].text = 'F'
@@ -129,9 +123,9 @@ class SettingsMenu(GridLayout):
 		self.root.app.config.set('receiver','leftReceiver',str(value))
 		self.root.app.config.write()
 		self.tree.write(xmlFilePath)
-
-
-    def updateCenterReceiver(self, instance, value):
+	
+	
+	def updateCenterReceiver(self, instance, value):
 		for r in self.tree.iter('receiver'):
 			if (list(r)[4].text) == self.root.app.config.get('receiver','centerReceiver'):
 				list(r)[0].text = 'F'
@@ -143,8 +137,8 @@ class SettingsMenu(GridLayout):
 		self.root.app.config.set('receiver','centerReceiver',str(value))
 		self.root.app.config.write()
 		self.tree.write(xmlFilePath)
-
-    def updateRightReceiver(self, instance, value):
+	
+	def updateRightReceiver(self, instance, value):
 		for r in self.tree.iter('receiver'):
 			if (list(r)[4].text) == self.root.app.config.get('receiver','rightReceiver'):
 				list(r)[0].text = 'F'
@@ -156,8 +150,8 @@ class SettingsMenu(GridLayout):
 		self.root.app.config.set('receiver','rightReceiver',str(value))
 		self.root.app.config.write()
 		self.tree.write(xmlFilePath)
-
-    def clearReceiver(self, receiver):
+	
+	def clearReceiver(self, receiver):
 		blank = ''
 		for r in self.tree.iter('receiver'):
 			if (list(r)[4].text) == self.root.app.config.get('receiver',receiver):
@@ -167,40 +161,40 @@ class SettingsMenu(GridLayout):
 				list(r)[3].text = 'F'
 		self.root.app.config.set('receiver',receiver,str(blank))
 		self.root.app.config.write
-
-    def updateVerticalTolerance(self, instance, value):
+	
+	def updateVerticalTolerance(self, instance, value):
 		if float(value) >= 0.0 and float(value) < 0.16:
 			self.verticalLabel.text = ''
 			self.root.app.config.set('tolerances','vertical',str(float(re.sub('[^\.0-9]','',value))))
 			self.root.app.config.write()
 		else:
 			self.verticalLabel.text = '!'
-
-    def updateHorizontalTolerance(self, instance, value):
+	
+	def updateHorizontalTolerance(self, instance, value):
 		if float(value) >= 0.0 and float(value) < 0.11:
 			self.horizontalLabel.text = ''
 			self.root.app.config.set('tolerances','horizontal',str(value))
 			self.root.app.config.write()
 		else:
 			self.horizontalLabel.text = '!'
-
-    def updateGPSSpacing(self, instance, value):
+	
+	def updateGPSSpacing(self, instance, value):
 		if float(value) > 0.44 and float(value) < 0.56:
 			self.gpsSpacingLabel.text = ''
 			self.root.app.config.set('tolerances','gps_spacing',str(value))
 			self.root.app.config.write()
 		else:
 			self.gpsSpacingLabel.text = '!'
-
-    def updateAntennaHeight(self, instance, value):
+	
+	def updateAntennaHeight(self, instance, value):
 		self.root.app.config.set('tolerances','antennaHeight',str(value))
 		self.root.app.config.write()
-
-    def updatePhaseCenter(self, instance, value):
+	
+	def updatePhaseCenter(self, instance, value):
 		self.root.app.config.set('tolerances','phaseCenter',str(value))
 		self.root.app.config.write()
-
-    def receiverPopup(self,button,title):
+	
+	def receiverPopup(self,button,title):
 		layout = BoxLayout(orientation='vertical')
 		pop = Popup(attach_to=self,title=str(title),title_align = 'center',size_hint = (.5,.5))
 		for r in self.tree.iter('receiver'):
@@ -211,26 +205,26 @@ class SettingsMenu(GridLayout):
 				layout.add_widget(btn)
 		pop.content = layout
 		pop.open()
-
-    def submit(self,horizontal,vertical,gps_spacing,antennaHeight,phaseCenter):
-        updateTolerance = False
-        if self.verifyToleranceValues(float(horizontal),float(vertical),float(gps_spacing)):
-            if vertical != list(self.tree.iter('vertical'))[0].text:
-                updateTolerance = True
-                list(self.tree.iter('vertical'))[0].text = vertical
-            if horizontal != list(self.tree.iter('horizontal'))[0].text:
-                updateTolerance = True
-                list(self.tree.iter('horizontal'))[0].text = horizontal
-            if gps_spacing != list(self.tree.iter('gps_spacing'))[0].text:
-                updateTolerance = True
-                list(self.tree.iter('gps_spacing'))[0].text = gps_spacing
-            if antennaHeight != list(self.tree.iter('antennaHeight'))[0].text:
-                updateTolerance = True
-                list(self.tree.iter('antennaHeight'))[0].text = antennaHeight
-            if phaseCenter != list(self.tree.iter('phaseCenter'))[0].text:
-                updateTolerance = True
-                list(self.tree.iter('phaseCenter'))[0].text = phaseCenter
-            if updateTolerance:
+	
+	def submit(self,horizontal,vertical,gps_spacing,antennaHeight,phaseCenter):
+		updateTolerance = False
+		if self.verifyToleranceValues(float(horizontal),float(vertical),float(gps_spacing)):
+			if vertical != list(self.tree.iter('vertical'))[0].text:
+				updateTolerance = True
+				list(self.tree.iter('vertical'))[0].text = vertical
+			if horizontal != list(self.tree.iter('horizontal'))[0].text:
+				updateTolerance = True
+				list(self.tree.iter('horizontal'))[0].text = horizontal
+			if gps_spacing != list(self.tree.iter('gps_spacing'))[0].text:
+				updateTolerance = True
+				list(self.tree.iter('gps_spacing'))[0].text = gps_spacing
+			if antennaHeight != list(self.tree.iter('antennaHeight'))[0].text:
+				updateTolerance = True
+				list(self.tree.iter('antennaHeight'))[0].text = antennaHeight
+			if phaseCenter != list(self.tree.iter('phaseCenter'))[0].text:
+				updateTolerance = True
+				list(self.tree.iter('phaseCenter'))[0].text = phaseCenter
+			if updateTolerance:
 				self.root.settings_popup.dismiss()
 				self.tree.write(xmlFilePath)
 				popup_notif = Popup(attach_to=self,title='Settings', size_hint=(.3,.2))
@@ -241,20 +235,20 @@ class SettingsMenu(GridLayout):
 		
 	# Checks tolerance inputs to ensure they are within the allowed range
 	# Returns 'False' if values are unacceptable, 'True' otherwise, and creates a warning in GUI_log.log
-    def verifyToleranceValues(self, horizontalToleranceInput, altitudeToleranceInput, gps_distance):
-        # NOTE: units are in meters
-        if horizontalToleranceInput < 0 or horizontalToleranceInput > 0.10:
-            logging.warn('horizontal tolerance outside of allowed range - input value between 0.0m and 0.10m')
-            return False
-        elif altitudeToleranceInput < 0 or altitudeToleranceInput > 0.15:
-            logging.warn('altitude tolerance outside of allowed range - input value between 0.0m and 0.15m')
-            return False
-        elif gps_distance != 0.50:
-            logging.warn('gps_distance outside of allowed range - only currently accepted value is 0.50m')
-            return False
-        else:
-            return True
-
+	def verifyToleranceValues(self, horizontalToleranceInput, altitudeToleranceInput, gps_distance):
+		# NOTE: units are in meters
+		if horizontalToleranceInput < 0 or horizontalToleranceInput > 0.10:
+			logging.warn('horizontal tolerance outside of allowed range - input value between 0.0m and 0.10m')
+			return False
+		elif altitudeToleranceInput < 0 or altitudeToleranceInput > 0.15:
+			logging.warn('altitude tolerance outside of allowed range - input value between 0.0m and 0.15m')
+			return False
+		elif gps_distance != 0.50:
+			logging.warn('gps_distance outside of allowed range - only currently accepted value is 0.50m')
+			return False
+		else:
+			return True
+	
 ################################################################################################################
 ################################################################################################################
 
@@ -281,6 +275,9 @@ class Poseidon(Widget):
 	multiPStatus = ObjectProperty(None)
 	pointCollection = None
 	pointRaw = None
+	root = ObjectProperty(None)
+	base = ObjectProperty(None)
+	multiQ = deque(maxlen = 10)
 
 	def __init__(self, **kwargs):
 		super(Poseidon, self).__init__(**kwargs)
@@ -341,7 +338,7 @@ class Poseidon(Widget):
 		newPage = SurveyPage(base=self)
 		self.dataCarousel.add_widget(newPage)
 		newPage.create_property('pointName')
-		newPage.name = text
+		newPage.pointName = text
 		newPage.create_property('pointCode')
 		# newPage.pointCode =
 		newPage.create_property('latitude')
@@ -355,8 +352,6 @@ class Poseidon(Widget):
 		newPage.multiCounter = 0
 		self.dataCarousel.load_slide(newPage)
 
-
-	
 	def Settings_Button_pressed(self):
 		if self.settings_popup is None:
 			self.settings_popup = Popup(attach_to=self, title='Trident Settings', title_align = 'center', size_hint=(0.7,0.8))
@@ -402,10 +397,9 @@ class Poseidon(Widget):
 	def updateOutput(self,name,nmea, q=[]):
 		if self.app.config.get('locks','measuring') == 'True':
 			if not os.path.isfile(self.jobPath+self.app.config.get('job','currentPointName')):
-				self.pointCollection = open(self.jobPath+self.app.config.get('job','currentPointName'),'a')
+				self.pointRaw = open(self.jobPath+self.app.config.get('job','currentPointName'),'a')
 			else:
-				self.pointCollection.writelines(nmea)
-				self.dataCarousel.current_slide.multiCounter = str(float(self.dataCarousel.current_slide.multiCounter) + 1)
+				self.pointRaw.writelines(nmea)
 		if name == 0:
 			self.gpsStatus(self.gps1Status,nmea)
 		elif name == 1:
@@ -413,14 +407,47 @@ class Poseidon(Widget):
 		elif name == 2:
 			self.gpsStatus(self.gps3Status,nmea)
 		elif name == 3:
+			self.multiQ.popleft()
 			if nmea != True:
 				self.multiPStatus.text = "Ready to Measure!"
 				self.amoratizeData(q[1][9])
 				self.dataCarousel.current_slide.counter = str(float(self.dataCarousel.current_slide.counter) + 1)
+				self.dataCarousel.current_slide.counterLabel.text = self.dataCarousel.current_slide.counter
+				self.multiQ.append(False)
 			else: 
 				self.multiPStatus.text = "Multipathing!"
+				self.dataCarousel.current_slide.multiCounter = str(float(self.dataCarousel.current_slide.multiCounter) + 1)
+				self.dataCarousel.current_slide.multiCounterLabel.text = self.dataCarousel.current_slide.multiCounter
+				self.multiQ.append(True)
+			self.plotPoints(q[1])
+	
+	@mainthread
+	def plotPoints(self, centerQ):
+		currentSlide = self.dataCarousel.current_slide
+		
+		centerX = float(currentSlide.easting)/float(currentSlide.counter)
+		centerY = float(currentSlide.northing)/float(currentSlide.counter)
+		tolerance = self.app.config.get('tolerances','horizontal')
+		
+		for i in range(centerQ):
+			centerQ[i].easting = -1*(centerQ[i].easting - centerX)/tolerance
+			centerQ[i].northing = -1*(centerQ[i].northing - centerY)/tolerance
+			
+		currentSlide.graph.canvas.clear()
+		
+		width = (currentSlide.graph.width)/2
+		height = (currentSlide.graph.height)/2
+		
+		for i in range(centerQ):
+			if self.multiQ[i]:
+				currentSlide.graph.canvas.add(Color(1,0,0))
+			else:
+				currentSlide.graph.canvas.add(Color(0,0,1))
 
-
+			currentSlide.graph.canvas.add(pos=(width-centerQ[i].easting-5,height-centerQ[i].northing-5),size=(10,10))
+		
+				
+	@mainthread
 	def amoratizeData(self, dataEpochDict):
 		self.dataCarousel.current_slide.latitude = str(float(self.dataCarousel.current_slide.latitude) + float(dataEpochDict.latd))
 		self.dataCarousel.current_slide.longitude = str(float(self.dataCarousel.current_slide.longitude) + float(dataEpochDict.lond))
@@ -455,6 +482,10 @@ class TridentApp(App):
 
 		if self.config.get('locks','lockSurvey') == 'True':
 			self.config.set('locks','lockSurvey','False')
+			self.config.write()
+
+		if self.config.get('job','currentPointName') != '':
+			self.config.set('job','currentPointName','')
 			self.config.write()
 
 	def build_config(self, config):

@@ -56,7 +56,7 @@
 			BoxLayout:
 				size: root.width,root.height
 				orientation: 'horizontal'
-				name:"Home"
+				pointName:"Home"
 				canvas:
 					Ellipse:
 						size: 10,10
@@ -221,21 +221,30 @@
 
 <SurveyPage>:
 	measureButton: measureButton
-	counterLabel: counterLabel
-	multiCounterLabel: multiCounterLabel
 	epochInput: epochInput
-	canvas.after:
+	graph:graph
+	multiCounterLabel:multiCounterLabel
+	counterLabel:counterLabel
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'horizontal'
 		BoxLayout:
+			id:graph
+			canvas.after:
+				Rectangle:			
+					size: 2,self.height
+					pos: self.center_x - 1,0
+					
+				Rectangle:
+					size: self.width, 2
+					pos: 0,self.center_y - 1
 		GridLayout:
 			cols: 2
 			padding: 10
 			spacing: 10
 			size_hint: None,None
 			size: 300,150
-
+			id:pointInfo
 			Label:
 				text: 'Counter'
 			Label:
