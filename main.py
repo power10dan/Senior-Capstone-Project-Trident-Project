@@ -156,18 +156,18 @@ class SettingsMenu(GridLayout):
 	def clearReceiver(self, receiver):
 		blank = ''
 		for r in self.tree.iter('receiver'):
-			if (list(r)[4].text) == self.root.app.config.get('receiver',receiver):
+			if (list(r)[4].text) == self.root.app.config.get('receiver', receiver):
 				list(r)[0].text = 'F'
 				list(r)[1].text = 'F'
 				list(r)[2].text = 'F'
 				list(r)[3].text = 'F'
-		self.root.app.config.set('receiver',receiver,str(blank))
-		self.root.app.config.write
+		self.root.app.config.set('receiver', receiver, str(blank))
+		self.root.app.config.write  # TODO: this statement has no effect - fix it
 
 	def updateVerticalTolerance(self, instance, value):
 		if float(value) >= 0.0 and float(value) < 0.16:
 			self.verticalLabel.text = ''
-			self.root.app.config.set('tolerances','vertical',str(float(re.sub('[^\.0-9]','',value))))
+			self.root.app.config.set('tolerances', 'vertical', str(float(re.sub('[^\.0-9]', '', value))))
 			self.root.app.config.write()
 		else:
 			self.verticalLabel.text = '!'
@@ -175,7 +175,7 @@ class SettingsMenu(GridLayout):
 	def updateHorizontalTolerance(self, instance, value):
 		if float(value) >= 0.0 and float(value) < 0.11:
 			self.horizontalLabel.text = ''
-			self.root.app.config.set('tolerances','horizontal',str(value))
+			self.root.app.config.set('tolerances','horizontal', str(value))
 			self.root.app.config.write()
 		else:
 			self.horizontalLabel.text = '!'
@@ -183,7 +183,7 @@ class SettingsMenu(GridLayout):
 	def updateGPSSpacing(self, instance, value):
 		if float(value) > 0.44 and float(value) < 0.56:
 			self.gpsSpacingLabel.text = ''
-			self.root.app.config.set('tolerances','gps_spacing',str(value))
+			self.root.app.config.set('tolerances','gps_spacing', str(value))
 			self.root.app.config.write()
 		else:
 			self.gpsSpacingLabel.text = '!'
@@ -363,7 +363,6 @@ class Poseidon(Widget):
 		self.dataCarousel.load_slide(newPage)
 
 	def Settings_Button_pressed(self):
-		print self.dataCarousel[1].multiPStatus
 		if self.settings_popup is None:
 			self.settings_popup = Popup(attach_to=self, title='Trident Settings', title_align = 'center', size_hint=(0.7,0.8))
 			self.settings_popup.content = SettingsMenu(root=self)
@@ -405,29 +404,29 @@ class Poseidon(Widget):
 			receiver.source = "red.png"
 
 	@mainthread
-	def updateOutput(self,name,nmea, q=[]):
+	def updateOutput(self,name,nmea, q=None):
 		if self.app.config.get('locks','measuring') == 'True':
 			if not os.path.isfile(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'_raw.txt'):
 				self.pointRaw = open(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'_raw.txt','a')
 			else:
 				self.pointRaw.writelines(str(nmea))
 		if name == 0:
-			self.gpsStatus(self.gps1Status,nmea['gps_qual'])
+			self.gpsStatus(self.dataCarousel.current_slide.gps1Status,nmea['gps_qual'])
 			if name == self.optionalData:
 				self.optionalDisplay(nmea)
 		elif name == 1:
-			self.gpsStatus(self.gps2Status,nmea['gps_qual'])
+			self.gpsStatus(self.dataCarousel.current_slide.gps2Status,nmea['gps_qual'])
 			if name == self.optionalData:
 				self.optionalDisplay(nmea)
 		elif name == 2:
-			self.gpsStatus(self.gps3Status,nmea['gps_qual'])
+			self.gpsStatus(self.dataCarousel.current_slide.gps3Status,nmea['gps_qual'])
 			if name == self.optionalData:
 				self.optionalDisplay(nmea)
 		elif name == 3:
 			if len(self.multiQ) == 10:
 				self.multiQ.popleft()
 			if nmea != True:
-				self.multiPStatus.text = "Ready to Measure!"
+				self.dataCarousel.current_slide.multiPStatus.text = "Ready to Measure!"
 				self.amoratizeData(q[1][9])
 				self.dataCarousel.current_slide.counter = self.dataCarousel.current_slide.counter + 1
 				self.dataCarousel.current_slide.counterLabel.text = str(self.dataCarousel.current_slide.counter)
@@ -438,7 +437,7 @@ class Poseidon(Widget):
 					else:
 						self.pointCollected.writelines(str(nmea))
 			else:
-				self.multiPStatus.text = "Multipathing!"
+				self.dataCarousel.current_slide.multiPStatus.text = "Multipathing!"
 				self.dataCarousel.current_slide.multiCounter = self.dataCarousel.current_slide.multiCounter + 1
 				self.dataCarousel.current_slide.multiCounterLabel.text = str(self.dataCarousel.current_slide.multiCounter)
 				self.multiQ.append(True)
@@ -453,13 +452,22 @@ class Poseidon(Widget):
 		dupE = []
 		centerX = self.dataCarousel.current_slide.easting/self.dataCarousel.current_slide.counter
 		centerY = self.dataCarousel.current_slide.northing/self.dataCarousel.current_slide.counter
-		tolerance = float(self.app.config.get('tolerances','horizontal'))
+		tolerance = float(self.app.config.get('tolerances', 'horizontal'))
 		width = self.dataCarousel.current_slide.graph.width
 		height = self.dataCarousel.current_slide.graph.height
 
 		for i in range(10):
-			dupE.append((-1.0*(centerQueueCopy[i]['easting'] % centerX))/(4.0*tolerance))
-			dupN.append((-1.0*(centerQueueCopy[i]['northing'] % centerY))/(4.0*tolerance))
+			diffYDec = (centerQueueCopy[i]['northing'] % int(centerQueueCopy[i]['northing'])) - (centerY % int(centerY))
+			diffXDec = (centerQueueCopy[i]['easting'] % int(centerQueueCopy[i]['easting'])) - (centerX % int(centerX))
+
+			diffYInt = int(centerQueueCopy[i]['northing'])-int(centerY)
+			diffXInt = int(centerQueueCopy[i]['easting'])-int(centerX)
+
+			diffY = diffYInt + diffYDec
+			diffX = diffXInt + diffXDec
+
+			dupE.append((-1.0 * diffX) / (4.0 * tolerance))
+			dupN.append((-1.0 * diffY) / (4.0 * tolerance))
 			print dupE[i]
 			print dupN[i]
 		self.dataCarousel.current_slide.graph.canvas.clear()
@@ -470,7 +478,7 @@ class Poseidon(Widget):
 			#else:
 			#	self.dataCarousel.current_slide.graph.canvas.add(Color(0,0,1))
 
-			self.dataCarousel.current_slide.graph.canvas.add(Ellipse(pos=((width-dupE[i]-5),(height-dupN[i]-5)),size=(10,10)))
+			self.dataCarousel.current_slide.graph.canvas.add(Ellipse(pos=((width-dupE[i]-5), (height-dupN[i]-5)), size=(10,10)))
 
 	@mainthread
 	def amoratizeData(self, dataEpochDict):
