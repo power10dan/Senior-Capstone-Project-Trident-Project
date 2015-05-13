@@ -154,15 +154,14 @@ class SettingsMenu(GridLayout):
 		self.tree.write(xmlFilePath)
 
 	def clearReceiver(self, receiver):
-		blank = ''
 		for r in self.tree.iter('receiver'):
 			if (list(r)[4].text) == self.root.app.config.get('receiver', receiver):
 				list(r)[0].text = 'F'
 				list(r)[1].text = 'F'
 				list(r)[2].text = 'F'
 				list(r)[3].text = 'F'
-		self.root.app.config.set('receiver', receiver, str(blank))
-		self.root.app.config.write  # TODO: this statement has no effect - fix it
+		self.root.app.config.set('receiver', receiver, '')
+		self.root.app.config.write()
 
 	def updateVerticalTolerance(self, instance, value):
 		if float(value) >= 0.0 and float(value) < 0.16:
@@ -405,7 +404,7 @@ class Poseidon(Widget):
 
 	@mainthread
 	def updateOutput(self,name,nmea, q=None):
-		if self.app.config.get('locks','measuring') == 'True':
+		if self.app.config.get('locks','lockSurvey') == 'True':
 			if not os.path.isfile(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'_raw.txt'):
 				self.pointRaw = open(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'_raw.txt','a')
 			else:
@@ -453,8 +452,8 @@ class Poseidon(Widget):
 		centerX = self.dataCarousel.current_slide.easting/self.dataCarousel.current_slide.counter
 		centerY = self.dataCarousel.current_slide.northing/self.dataCarousel.current_slide.counter
 		tolerance = float(self.app.config.get('tolerances', 'horizontal'))
-		width = self.dataCarousel.current_slide.graph.width
-		height = self.dataCarousel.current_slide.graph.height
+		w = self.dataCarousel.current_slide.graph.width/2
+		h = self.dataCarousel.current_slide.graph.height/2
 
 		for i in range(10):
 			diffYDec = (centerQueueCopy[i]['northing'] % int(centerQueueCopy[i]['northing'])) - (centerY % int(centerY))
@@ -466,18 +465,19 @@ class Poseidon(Widget):
 			diffY = diffYInt + diffYDec
 			diffX = diffXInt + diffXDec
 
-			dupE.append((-1.0 * diffX) / (4.0 * tolerance))
-			dupN.append((-1.0 * diffY) / (4.0 * tolerance))
+			dupE.append((-1.0 *w* diffX) / (4.0*tolerance))
+			dupN.append((-1.0 *h* diffY) / (4.0*tolerance))
 			print dupE[i]
 			print dupN[i]
 		self.dataCarousel.current_slide.graph.canvas.clear()
-
+		self.dataCarousel.current_slide.graph.canvas.add(Line(circle=(w,h,w/2),width=1.3))
 		for i in range(10):
-			#if self.multiQ[i]:
-			#	self.dataCarousel.current_slide.graph.canvas.add(Color(1,0,0))
-			#else:
-			#	self.dataCarousel.current_slide.graph.canvas.add(Color(0,0,1))
-			self.dataCarousel.current_slide.graph.canvas.add(Ellipse(pos=((width-dupE[i]-5), (height-dupN[i]-5)), size=(10,10)))
+			if self.multiQ[i]:
+				self.dataCarousel.current_slide.graph.canvas.add(Color(1,0,0))
+			else:
+				self.dataCarousel.current_slide.graph.canvas.add(Color(0,0,1))
+			
+			self.dataCarousel.current_slide.graph.canvas.add(Ellipse(pos=(((w)-dupE[i]-5), ((h)-dupN[i]-5)), size=(10,10)))
 
 	@mainthread
 	def amoratizeData(self, dataEpochDict):
@@ -492,7 +492,7 @@ class Poseidon(Widget):
 	def openOptional(self,instance,pos):
 		if instance.collide_point(pos.x,pos.y):
 			self.optionalData = int(instance.name)
-			self.dataCarousel.current_slide.antenna_altitude.text = instance.name
+			#self.dataCarousel.current_slide.antenna_altitude.text = instance.name
 
 	def optionalDisplay(self,nmea):
 		self.dataCarousel.current_slide.geo_sep.text = str(nmea['geo_sep'])
