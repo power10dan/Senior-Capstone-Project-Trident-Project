@@ -42,7 +42,7 @@ class SurveyPage(Widget):
 	geo_sep = ObjectProperty(None)
 	horizontal_dil = ObjectProperty(None)
 	age_gps_data = ObjectProperty(None)
-
+	counter = None
 	def __init__(self, **kwargs):
 		super(SurveyPage, self).__init__(**kwargs)
 		self.measureButton.bind(on_release=self.updateMeasureButton)
@@ -68,18 +68,18 @@ class SurveyPage(Widget):
 		northing = self.base.dataCarousel.current_slide.northing
 		easting = self.base.dataCarousel.current_slide.easting
 		altitude = self.base.dataCarousel.current_slide.altitude
-
-		counter = self.base.dataCarousel.current_slide.counter
-
-		latitude = latitude / counter
-		longitude = longitude / counter
-		northing = northing / counter
-		easting = easting / counter
-		altitude = altitude / counter
-
-		csvFile = open(self.base.jobPath+'/'+str(pointName), 'a')
-		finalOutputString = str(pointName)+','+str(latitude)+','+str(longitude)+','+str(northing)+','+str(easting)+','+str(altitude)+','+str(pointCode)
-		csvFile.writelines(finalOutputString)
+	
+		self.counter = self.base.dataCarousel.current_slide.counter
+		if self.counter != 0:
+			latitude = latitude / self.counter
+			longitude = longitude / self.counter
+			northing = northing / self.counter
+			easting = easting / self.counter
+			altitude = altitude / self.counter
+	
+			csvFile = open(self.base.jobPath+'/'+str(pointName), 'a')
+			finalOutputString = str(pointName)+','+str(latitude)+','+str(longitude)+','+str(northing)+','+str(easting)+','+str(altitude)+','+str(pointCode)
+			csvFile.writelines(finalOutputString)
 
 
 ################################################################################################################
@@ -477,7 +477,6 @@ class Poseidon(Widget):
 			#	self.dataCarousel.current_slide.graph.canvas.add(Color(1,0,0))
 			#else:
 			#	self.dataCarousel.current_slide.graph.canvas.add(Color(0,0,1))
-
 			self.dataCarousel.current_slide.graph.canvas.add(Ellipse(pos=((width-dupE[i]-5), (height-dupN[i]-5)), size=(10,10)))
 
 	@mainthread
@@ -503,25 +502,6 @@ class Poseidon(Widget):
 		self.dataCarousel.current_slide.age_gps_data.text = str(nmea['age_gps_data'])
 		self.dataCarousel.current_slide.antenna_altitude.text = str(nmea['antenna_altitude'])
 
-
-	def plot_file(self, filepath, name):
-		found_flag = 0
-		for root, dirs, files in os.walk(filepath):
-			if name in files:
-				full_path = os.path.join(root, name)
-				nmeastream.read_and_plot_file(full_path)
-				found_flag = 1
-				break
-		if(found_flag) is 0:
-			box = BoxLayout()
-			box.add_widget(Label(text='I did not find any real-time data'))
-			pop = Popup(title='Warning', content=box, size_hint=(.5,.5))
-			pop.open()
-
-	def plot_realtime(self):
-
-		full_path = os.path.join(os.getcwd(), 'data_collection_set_4_25_15')
-		self.plot_file(full_path, 'control_point_2_trial_1.txt')
 ################################################################################################################
 ################################################################################################################
 
