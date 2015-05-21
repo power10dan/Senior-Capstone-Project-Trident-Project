@@ -19,6 +19,7 @@ import threading
 from functools import partial
 from kivy.graphics import Color, Ellipse, Line
 from collections import deque
+from kivy.graphics.instructions import Instruction
 
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
@@ -43,9 +44,14 @@ class SurveyPage(Widget):
 	horizontal_dil = ObjectProperty(None)
 	age_gps_data = ObjectProperty(None)
 	counter = None
+	amoritizedNorthing = ObjectProperty(None)
+	amoritizedEasting = ObjectProperty(None)
+	graphZoom = ObjectProperty(None)
+	
 	def __init__(self, **kwargs):
 		super(SurveyPage, self).__init__(**kwargs)
 		self.measureButton.bind(on_release=self.updateMeasureButton)
+
 
 	def updateMeasureButton(self,instance):
 		if instance.text == 'Measure Point' and self.base.app.config.get('locks','lockSurvey') == 'True':
@@ -85,6 +91,14 @@ class SurveyPage(Widget):
 ################################################################################################################
 ################################################################################################################
 
+class PointPopUp(BoxLayout):
+	root = ObjectProperty(None)
+	def updatePointPass(self,Name,Code):
+		self.root.updatePointName(Name,Code)
+
+################################################################################################################
+################################################################################################################
+
 class SettingsMenu(GridLayout):
     tree = ET.parse(xmlFilePath)
     root = ObjectProperty(None)
@@ -101,6 +115,7 @@ class SettingsMenu(GridLayout):
     gpsSpacingLabel = ObjectProperty(None)
     antennaLabel = ObjectProperty(None)
     phaseLabel = ObjectProperty(None)
+	
     def __init__(self, **kwargs):
 		super(SettingsMenu, self).__init__(**kwargs)
 		self.vertical_tolerance.bind(text = self.updateVerticalTolerance)
@@ -287,7 +302,7 @@ class Poseidon(Widget):
 	root = ObjectProperty(None)
 	base = ObjectProperty(None)
 	multiQ = deque(maxlen = 10)
-
+	workingSlide =  -1
 
 
 	def __init__(self, **kwargs):
@@ -316,6 +331,7 @@ class Poseidon(Widget):
 			self.endSurvey()
 
 	def updateJob(self,instance):
+		#print self.dataCarousel.children[0].children
 		if self.job_popup is None:
 			self.job_popup = Popup(attach_to=self, title='Survey Name',title_align = 'center',size_hint=(0.5,None),padding=10)
 			job = TextInput(multiline= False)
@@ -332,30 +348,21 @@ class Poseidon(Widget):
 
 	def updatePoint(self, instance):
 		if self.app.config.get('locks','lockPoint') == 'False':
-			layout = BoxLayout(orientation='vertical')
 			self.point_popup = Popup(attach_to=self, title='Point Name',title_align = 'center',size_hint=(.3,.4),padding=10)
-			point = TextInput(multiline= False)
-			code = TextInput(multiline= False)
-			point.bind(on_text_validate = lambda t: self.updatePointName(t.text))
-			layout.add_widget(Label(text="point name:"))
-			layout.add_widget(point)
-			layout.add_widget(Label(text="point code:"))
-			layout.add_widget(code)
-			self.point_popup.content = layout
+			self.point_popup.content = PointPopUp(root=self)
 			self.point_popup.open()
 
-	def	updatePointName(self, text):
+	def	updatePointName(self, text, code):
 		self.point_popup.dismiss()
 		newPage = SurveyPage(base=self)
 		newPage.create_property('pointName')
 		newPage.pointName = text
 		newPage.create_property('pointCode')
-		# newPage.pointCode =
+		newPage.pointCode = code
 		newPage.create_property('latitude')
 		newPage.create_property('longitude')
 		newPage.create_property('northing')
 		newPage.create_property('easting')
-
 		newPage.create_property('altitude')
 		newPage.create_property('counter')
 		newPage.create_property('multiCounter')
@@ -372,7 +379,12 @@ class Poseidon(Widget):
 		self.dataCarousel.add_widget(newPage)
 		self.dataCarousel.load_slide(newPage)
 
+		self.workingSlide = self.workingSlide + 1
+		
+		
 	def Settings_Button_pressed(self):
+
+		self.dataCarousel.children[self.workingSlide].children[0].gps_qual.text = 'hi'
 		if self.settings_popup is None:
 			self.settings_popup = Popup(attach_to=self, title='Trident Settings', title_align = 'center', size_hint=(0.7,0.8))
 			self.settings_popup.content = SettingsMenu(root=self)
@@ -415,44 +427,48 @@ class Poseidon(Widget):
 
 	@mainthread
 	def updateOutput(self,name,nmea, q=None):
-		if self.app.config.get('locks','lockSurvey') == 'True':
-			if not os.path.isfile(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'_raw.txt'):
-				self.pointRaw = open(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'_raw.txt','a')
-			else:
-				self.pointRaw.writelines(str(nmea))
-		if name == 0:
-			self.gpsStatus(self.dataCarousel.current_slide.gps1Status,nmea['gps_qual'])
-			if name == self.optionalData:
-				self.optionalDisplay(nmea)
-		elif name == 1:
-			self.gpsStatus(self.dataCarousel.current_slide.gps2Status,nmea['gps_qual'])
-			if name == self.optionalData:
-				self.optionalDisplay(nmea)
-		elif name == 2:
-			self.gpsStatus(self.dataCarousel.current_slide.gps3Status,nmea['gps_qual'])
-			if name == self.optionalData:
-				self.optionalDisplay(nmea)
-		elif name == 3:
-			if len(self.multiQ) == 10:
-				self.multiQ.popleft()
-			if nmea != True:
-				self.dataCarousel.current_slide.multiPStatus.text = "Ready to Measure!"
-				self.amoratizeData(q[1][9])
-				self.dataCarousel.current_slide.counter = self.dataCarousel.current_slide.counter + 1
-				self.dataCarousel.current_slide.counterLabel.text = str(self.dataCarousel.current_slide.counter)
-				self.multiQ.append(False)
-				if self.app.config.get('locks','measuring') == 'True':
-					if not os.path.isfile(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'.txt'):
-						self.pointCollected = open(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'.txt','a')
-					else:
-						self.pointCollected.writelines(str(nmea))
-			else:
-				self.dataCarousel.current_slide.multiPStatus.text = "Multipathing!"
-				self.dataCarousel.current_slide.multiCounter = self.dataCarousel.current_slide.multiCounter + 1
-				self.dataCarousel.current_slide.multiCounterLabel.text = str(self.dataCarousel.current_slide.multiCounter)
-				self.multiQ.append(True)
-			if float(self.dataCarousel.current_slide.counter) > 10 :
-				self.plotPoints(q[1])
+		try: 
+			if self.app.config.get('locks','lockSurvey') == 'True':
+				if not os.path.isfile(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'_raw.txt'):
+					self.pointRaw = open(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'_raw.txt','a')			
+			if name == 0:
+				self.gpsStatus(self.dataCarousel.current_slide.gps1Status,nmea['gps_qual'])
+				if name == self.optionalData:
+					self.optionalDisplay(nmea)
+				self.pointRaw.writelines(str(1+nmea))
+			elif name == 1:
+				self.gpsStatus(self.dataCarousel.current_slide.gps2Status,nmea['gps_qual'])
+				if name == self.optionalData:
+					self.optionalDisplay(nmea)
+				self.pointRaw.writelines(str(2+nmea))
+			elif name == 2:
+				self.gpsStatus(self.dataCarousel.current_slide.gps3Status,nmea['gps_qual'])
+				if name == self.optionalData:
+					self.optionalDisplay(nmea
+				self.pointRaw.writelines(str(3+nmea))
+			elif name == 3:
+				if len(self.multiQ) == 10:
+					self.multiQ.popleft()
+				if nmea != True:
+					self.dataCarousel.current_slide.multiPStatus.text = "Ready to Measure!"
+					self.amoratizeData(q[1][9])
+					self.dataCarousel.current_slide.counter = self.dataCarousel.current_slide.counter + 1
+					self.dataCarousel.current_slide.counterLabel.text = str(self.dataCarousel.current_slide.counter)
+					self.multiQ.append(False)
+					if self.app.config.get('locks','measuring') == 'True':
+						if not os.path.isfile(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'.txt'):
+							self.pointCollected = open(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'.txt','a')
+						else:
+							self.pointCollected.writelines(str(nmea))
+				else:
+					self.dataCarousel.current_slide.multiPStatus.text = "Multipathing!"
+					self.dataCarousel.current_slide.multiCounter = self.dataCarousel.current_slide.multiCounter + 1
+					self.dataCarousel.current_slide.multiCounterLabel.text = str(self.dataCarousel.current_slide.multiCounter)
+					self.multiQ.append(True)
+				if float(self.dataCarousel.current_slide.counter) > 10 :
+					self.plotPoints(q[1])
+		except:
+			pass
 
 	@mainthread
 	def plotPoints(self, centerQ):
@@ -465,7 +481,9 @@ class Poseidon(Widget):
 		tolerance = float(self.app.config.get('tolerances', 'horizontal'))
 		w = self.dataCarousel.current_slide.graph.width/2
 		h = self.dataCarousel.current_slide.graph.height/2
-
+		self.dataCarousel.current_slide.graph.canvas.clear()
+		self.dataCarousel.current_slide.graph.canvas.add(Line(circle=(w,h,w/2),width=1.3))
+		
 		for i in range(10):
 			diffYDec = (centerQueueCopy[i]['northing'] % int(centerQueueCopy[i]['northing'])) - (centerY % int(centerY))
 			diffXDec = (centerQueueCopy[i]['easting'] % int(centerQueueCopy[i]['easting'])) - (centerX % int(centerX))
@@ -476,14 +494,14 @@ class Poseidon(Widget):
 			diffY = diffYInt + diffYDec
 			diffX = diffXInt + diffXDec
 
-			dupE.append((-1.0 *w* diffX) / (4.0*tolerance))
-			dupN.append((-1.0 *h* diffY) / (4.0*tolerance))
+			dupE.append((-1.0 * diffX) / (4.0*tolerance))
+			dupN.append((-1.0 * diffY) / (4.0*tolerance))
 			print dupE[i]
 			print dupN[i]
-		self.dataCarousel.current_slide.graph.canvas.clear()
-		self.dataCarousel.current_slide.graph.canvas.add(Line(circle=(w,h,w/2),width=1.3))
+		
 		for i in range(10):
 			if self.multiQ[i]:
+				blue = InstructionGroup()
 				self.dataCarousel.current_slide.graph.canvas.add(Color(1,0,0))
 			else:
 				self.dataCarousel.current_slide.graph.canvas.add(Color(0,0,1))
@@ -491,20 +509,20 @@ class Poseidon(Widget):
 			self.dataCarousel.current_slide.graph.canvas.add(Ellipse(pos=(((w)-dupE[i]-5), ((h)-dupN[i]-5)), size=(10,10)))
 
 	@mainthread
-	def amoratizeData(self, dataEpochDict):
+	def amoratizeData(self, dataEpochDict):	
 		self.dataCarousel.current_slide.latitude += float(dataEpochDict['latd'])
 		self.dataCarousel.current_slide.longitude += float(dataEpochDict['lond'])
 		self.dataCarousel.current_slide.northing += float(dataEpochDict['northing'])
 		self.dataCarousel.current_slide.easting += float(dataEpochDict['easting'])
 		self.dataCarousel.current_slide.altitude += float(dataEpochDict['altitude'])
-		#print "northing:" + str(self.dataCarousel.current_slide.northing/self.dataCarousel.current_slide.counter)
-		#print "easting:" + str(self.dataCarousel.current_slide.easting/self.dataCarousel.current_slide.counter)
-
+		self.dataCarousel.current_slide.amoritizedNorthing.text = str(self.dataCarousel.current_slide.northing)
+		self.dataCarousel.current_slide.amoritizedEasting.text = str(self.dataCarousel.current_slide.easting)
+		
+		
 	def openOptional(self,instance,pos):
 		if instance.collide_point(pos.x,pos.y):
 			self.optionalData = int(instance.name)
-			#self.dataCarousel.current_slide.antenna_altitude.text = instance.name
-
+			
 	def optionalDisplay(self,nmea):
 		self.dataCarousel.current_slide.geo_sep.text = str(nmea['geo_sep'])
 		self.dataCarousel.current_slide.num_sats.text = str(nmea['num_sats'])

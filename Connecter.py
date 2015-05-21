@@ -182,7 +182,7 @@ class connectOutput:
 		xd['gps_qual'] = data.gps_qual
 		xd['num_sats'] = data.num_sats
 		xd['horizontal_dil'] = data.horizontal_dil
-		xd['altitude'] = data.antenna_altitude
+		xd['antenna_altitude'] = data.antenna_altitude
 		xd['altitude_units'] = data.altitude_units
 		xd['geo_sep'] = data.geo_sep
 		xd['geo_sep_units'] = data.geo_sep_units
