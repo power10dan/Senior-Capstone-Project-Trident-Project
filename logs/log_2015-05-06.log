@@ -1,0 +1,44 @@
+2015-05-06 21:58:24,719 INFO: user devices input: 3
+2015-05-06 21:58:28,233 INFO: user search input: e
+2015-05-06 21:58:28,233 INFO: Created Thread: 0
+2015-05-06 21:58:28,233 INFO: Created Thread: 1
+2015-05-06 21:58:28,249 INFO: Created Thread: 2
+2015-05-06 21:58:48,279 INFO: user devices input: 3
+2015-05-06 21:58:50,276 INFO: user search input: e
+2015-05-06 21:58:50,276 INFO: Created Thread: 0
+2015-05-06 21:58:50,292 INFO: Created Thread: 1
+2015-05-06 21:58:50,292 INFO: Created Thread: 2
+2015-05-06 21:58:57,342 INFO: user devices input: 3
+2015-05-06 21:58:59,313 INFO: user search input: s
+2015-05-06 21:58:59,328 INFO: Created Thread: 0
+2015-05-06 21:58:59,328 INFO: Created Thread: 1
+2015-05-06 21:58:59,328 INFO: Created Thread: 2
+2015-05-06 22:00:35,642 INFO: user devices input: 3
+2015-05-06 22:00:38,717 INFO: user search input: s
+2015-05-06 22:00:54,769 INFO: Found ports: COM4
+2015-05-06 22:00:54,769 INFO: Found ports: COM8
+2015-05-06 22:00:54,769 INFO: Found ports: COM9
+2015-05-06 22:00:54,769 INFO: Found ports: COM13
+2015-05-06 22:00:54,769 INFO: Found ports: COM23
+2015-05-06 22:00:54,769 INFO: Found ports: COM24
+2015-05-06 22:00:54,769 INFO: Found ports: COM26
+2015-05-06 22:00:54,769 INFO: Found ports: COM27
+2015-05-06 22:00:54,769 INFO: Found ports: COM28
+2015-05-06 22:00:59,595 INFO: Created Thread: 0
+2015-05-06 22:01:12,510 INFO: Found ports: COM4
+2015-05-06 22:01:12,510 INFO: Found ports: COM8
+2015-05-06 22:01:12,526 INFO: Found ports: COM9
+2015-05-06 22:01:12,526 INFO: Found ports: COM13
+2015-05-06 22:01:12,526 INFO: Found ports: COM23
+2015-05-06 22:01:12,526 INFO: Found ports: COM24
+2015-05-06 22:01:12,526 INFO: Found ports: COM27
+2015-05-06 22:01:12,526 INFO: Found ports: COM28
+2015-05-06 22:01:41,734 INFO: Created Thread: 1
+2015-05-06 22:01:53,621 INFO: Found ports: COM4
+2015-05-06 22:01:53,638 INFO: Found ports: COM8
+2015-05-06 22:01:53,638 INFO: Found ports: COM9
+2015-05-06 22:01:53,638 INFO: Found ports: COM13
+2015-05-06 22:01:53,638 INFO: Found ports: COM24
+2015-05-06 22:01:53,638 INFO: Found ports: COM27
+2015-05-06 22:01:53,638 INFO: Found ports: COM28
+2015-05-06 22:01:59,940 INFO: Created Thread: 2

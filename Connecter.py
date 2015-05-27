@@ -18,7 +18,7 @@ log = None
 class connectOutput:
 	notify = None
 	thread_stop = None
-	rawQueue = []
+	#rawQueue = []
 	xdata = {}
 	timeout = [] #used for checking if signal to receiver lost
 	ser = []
@@ -35,6 +35,7 @@ class connectOutput:
 		self.timeout = []
 		self.ser = []
 		self.active = []
+		#self.rawQueue = []
 		self.multiQueue = []
 		self.multiQueueFlag = False
 	
@@ -66,7 +67,7 @@ class connectOutput:
 		global log
 		r = int(r)
 		self.createQueue(self.multiQueue)
-		self.createQueue(self.rawQueue)
+		#self.createQueue(self.rawQueue)
 		self.multiQueueFlag = True
 		logging.info('user search input: %s'%(input))
 		log = open('.\output\output_'+ str(datetime.date.today())+'.txt','a') 
@@ -87,12 +88,12 @@ class connectOutput:
 					len(self.multiQueue[1]) == 10 and 
 					len(self.multiQueue[2]) == 10):
 				multipathing = self.M.multipathQueueHandler(self.multiQueue)
-				self.notify(int(3),multipathing,self.rawQueue)
 				print multipathing
 				# if the units are out of order (mislabeled), then exit this loop
 				if self.M.mislabeledFlag != 0:
 					self.thread_stop.set()
-		
+				self.notify(int(3),multipathing,self.multiQueue)
+				
 	# Handles thread logistics, creates logs, calls multipathQueueHandler
 	# Called from: main
 	def thread(self):
@@ -147,16 +148,15 @@ class connectOutput:
 				cartesian = self.G.geo(lat, lon)
 				northing, easting, k , gamma = cartesian
 				c = "cartesian: " + str(cartesian)
-				self.xdata.update({'easting': easting,'northing': northing,'latd': lat,'lond': lon}) 
-				self.xdata = self.extendData(data,self.xdata)
+				self.xdata = self.extendData(data,self.xdata,easting,northing,lat,lon)
 				if int(data.gps_qual) == 4:
-					self.queueAppend(self.multiQueue, name, (northing, easting, data.antenna_altitude))
-					self.queueAppend(self.rawQueue, name, self.xdata)
+					#self.queueAppend(self.multiQueue, name, (northing, easting, data.antenna_altitude))
+					self.queueAppend(self.multiQueue, name, self.xdata)
 				line_str = name + ":" + str(line)
 				self.notify(int(name),self.xdata)
 			else:
 				line_str = "Bad Signal: " + line  
-			print line_str
+			#print line_str
 		else:
 			if len(line) == 0:
 				self.timeout[int(name)] += 1
@@ -173,7 +173,7 @@ class connectOutput:
 				print "Received something other than GGA message from receiver: " + line
 		log.writelines(str(line))
 	
-	def extendData(self,data,xd):
+	def extendData(self,data,xd,easting,northing,lat,lon):
 		xd['timestamp'] = data.timestamp
 		xd['latitude'] = data.latitude
 		xd['lat_direction'] = data.lat_direction
@@ -188,9 +188,12 @@ class connectOutput:
 		xd['geo_sep_units'] = data.geo_sep_units
 		xd['age_gps_data'] = data.age_gps_data
 		xd['ref_station_id'] = data.ref_station_id
+		xd['easting'] = easting
+		xd['northing'] = northing
+		xd['latd'] = lat
+		xd['lond'] = lon
 		return xd
 		
-			# xdata['latitude'] = data.latitude
 	
 	# Creates a list of queues inside of global list named multiQueue
 	# Only used when connecting 3 receivers, sets max length of queues to 10

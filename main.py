@@ -353,10 +353,13 @@ class Poseidon(Widget):
 			self.point_popup.open()
 
 	def	updatePointName(self, text, code):
+		print text
 		self.point_popup.dismiss()
 		newPage = SurveyPage(base=self)
 		newPage.create_property('pointName')
 		newPage.pointName = text
+		self.app.config.set('job','currentPointName',str(text))
+		self.app.config.write()
 		newPage.create_property('pointCode')
 		newPage.pointCode = code
 		newPage.create_property('latitude')
@@ -384,7 +387,7 @@ class Poseidon(Widget):
 		
 	def Settings_Button_pressed(self):
 
-		self.dataCarousel.children[self.workingSlide].children[0].gps_qual.text = 'hi'
+		#self.dataCarousel.children[self.workingSlide].children[0].gps_qual.text = 'hi'
 		if self.settings_popup is None:
 			self.settings_popup = Popup(attach_to=self, title='Trident Settings', title_align = 'center', size_hint=(0.7,0.8))
 			self.settings_popup.content = SettingsMenu(root=self)
@@ -435,17 +438,18 @@ class Poseidon(Widget):
 				self.gpsStatus(self.dataCarousel.current_slide.gps1Status,nmea['gps_qual'])
 				if name == self.optionalData:
 					self.optionalDisplay(nmea)
-				self.pointRaw.writelines(str(1+nmea))
+				#print nmea
+				self.pointRaw.writelines(str(1)+str(nmea)+str('\n'))
 			elif name == 1:
 				self.gpsStatus(self.dataCarousel.current_slide.gps2Status,nmea['gps_qual'])
 				if name == self.optionalData:
 					self.optionalDisplay(nmea)
-				self.pointRaw.writelines(str(2+nmea))
+				self.pointRaw.writelines(str(2)+str(nmea)+str('\n'))
 			elif name == 2:
 				self.gpsStatus(self.dataCarousel.current_slide.gps3Status,nmea['gps_qual'])
 				if name == self.optionalData:
-					self.optionalDisplay(nmea
-				self.pointRaw.writelines(str(3+nmea))
+					self.optionalDisplay(nmea)
+				self.pointRaw.writelines(str(3)+str(nmea)+str('\n'))
 			elif name == 3:
 				if len(self.multiQ) == 10:
 					self.multiQ.popleft()
@@ -459,7 +463,7 @@ class Poseidon(Widget):
 						if not os.path.isfile(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'.txt'):
 							self.pointCollected = open(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'.txt','a')
 						else:
-							self.pointCollected.writelines(str(nmea))
+							self.pointCollected.writelines(str(q[1][9])+str('\n'))
 				else:
 					self.dataCarousel.current_slide.multiPStatus.text = "Multipathing!"
 					self.dataCarousel.current_slide.multiCounter = self.dataCarousel.current_slide.multiCounter + 1
@@ -496,12 +500,10 @@ class Poseidon(Widget):
 
 			dupE.append((-1.0 * diffX) / (4.0*tolerance))
 			dupN.append((-1.0 * diffY) / (4.0*tolerance))
-			print dupE[i]
-			print dupN[i]
-		
-		for i in range(10):
+			#print dupE[i]
+			#print dupN[i]
+
 			if self.multiQ[i]:
-				blue = InstructionGroup()
 				self.dataCarousel.current_slide.graph.canvas.add(Color(1,0,0))
 			else:
 				self.dataCarousel.current_slide.graph.canvas.add(Color(0,0,1))
@@ -514,7 +516,7 @@ class Poseidon(Widget):
 		self.dataCarousel.current_slide.longitude += float(dataEpochDict['lond'])
 		self.dataCarousel.current_slide.northing += float(dataEpochDict['northing'])
 		self.dataCarousel.current_slide.easting += float(dataEpochDict['easting'])
-		self.dataCarousel.current_slide.altitude += float(dataEpochDict['altitude'])
+		self.dataCarousel.current_slide.altitude += float(dataEpochDict['antenna_altitude'])
 		self.dataCarousel.current_slide.amoritizedNorthing.text = str(self.dataCarousel.current_slide.northing)
 		self.dataCarousel.current_slide.amoritizedEasting.text = str(self.dataCarousel.current_slide.easting)
 		
