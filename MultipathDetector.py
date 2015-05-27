@@ -308,30 +308,11 @@ class MultipathDetector():
                 log.info('ERROR: List of queues contains an incorrect number of queues (exactly 3 needed)')
 
 
-            # # This else-if block reorders the input queues if they were detected as being incorrectly labeled
-            # global goodGPSOrdering_Flag
-            # if goodGPSOrdering_Flag == 0:
             queue1 = listOfQueues[0]
             queue2 = listOfQueues[1]
             queue3 = listOfQueues[2]
-            # elif goodGPSOrdering_Flag == 1:
-            #     log.info("Left and Center units detected as swapped - switching them to correct order!")
-            #     queue1 = listOfQueues[2]
-            #     queue2 = listOfQueues[1]
-            #     queue3 = listOfQueues[3]
-            # elif goodGPSOrdering_Flag == 2:
-            #     log.info("Right and Center units detected as swapped - switching them to correct order!")
-            #     queue1 = listOfQueues[1]
-            #     queue2 = listOfQueues[3]
-            #     queue3 = listOfQueues[2]
-            # else:
-            #     log.error("goodGPSOrdering_Flag is not an expected value (1, 2, or 3)")
-            #     print "goodGPSOrdering_Flag is not an expected value (1, 2, or 3)"
-            #     queue1 = None
-            #     queue2 = None
-            #     queue3 = None
-            #     assert(goodGPSOrdering_Flag >= 0)
-            #     assert(goodGPSOrdering_Flag <= 3)
+
+
 
             if len(queue1) != len(queue2) or len(queue1) != len(queue3) or len(queue2) != len(queue3):
                 print "ERROR: Queues are not of equal length"
@@ -367,9 +348,22 @@ class MultipathDetector():
                 else:
                     finalOutlierFlag = False
 
-                xCoord1, yCoord1, zCoord1 = queue1[i]
-                xCoord2, yCoord2, zCoord2 = queue2[i]
-                xCoord3, yCoord3, zCoord3 = queue3[i]
+
+                xCoord1 = queue1['easting']
+                yCoord1 = queue1['northing']
+                zCoord1 = queue1['antenna_altitude']
+
+                xCoord2 = queue2['easting']
+                yCoord2 = queue2['northing']
+                zCoord2 = queue2['antenna_altitude']
+
+                xCoord3 = queue3['easting']
+                yCoord3 = queue3['northing']
+                zCoord3 = queue3['antenna_altitude']
+
+                # xCoord1, yCoord1, zCoord1 = queue1[i]
+                # xCoord2, yCoord2, zCoord2 = queue2[i]
+                # xCoord3, yCoord3, zCoord3 = queue3[i]
 
                 xCoordAvg_1 = xCoordAvg_1 + float(xCoord1)
                 xCoordAvg_2 = xCoordAvg_2 + float(xCoord2)
