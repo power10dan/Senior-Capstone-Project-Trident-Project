@@ -19,7 +19,7 @@ class connectOutput:
 	notify = None
 	thread_stop = None
 	#rawQueue = []
-	xdata = {}
+	xdata = [{},{},{}]
 	timeout = [] #used for checking if signal to receiver lost
 	ser = []
 	active = []
@@ -87,6 +87,7 @@ class connectOutput:
 			if (r == 3 and len(self.multiQueue[0]) == 10 and 
 					len(self.multiQueue[1]) == 10 and 
 					len(self.multiQueue[2]) == 10):
+				#print self.multiQueue
 				multipathing = self.M.multipathQueueHandler(self.multiQueue)
 				print multipathing
 				# if the units are out of order (mislabeled), then exit this loop
@@ -125,6 +126,7 @@ class connectOutput:
 			if (r == 3 and len(self.multiQueue[0]) == 10 and 
 					len(self.multiQueue[1]) == 10 and 
 					len(self.multiQueue[2]) == 10):
+				
 				multipathing = self.M.multipathQueueHandler(self.multiQueue)
 				mult = "Multipathing: " + str(multipathing)
 				print mult
@@ -148,12 +150,14 @@ class connectOutput:
 				cartesian = self.G.geo(lat, lon)
 				northing, easting, k , gamma = cartesian
 				c = "cartesian: " + str(cartesian)
-				self.xdata = self.extendData(data,self.xdata,easting,northing,lat,lon)
+				self.extendData(data,self.xdata[int(name)],easting,northing,lat,lon)
 				if int(data.gps_qual) == 4:
 					#self.queueAppend(self.multiQueue, name, (northing, easting, data.antenna_altitude))
-					self.queueAppend(self.multiQueue, name, self.xdata)
+					self.queueAppend(self.multiQueue, name, self.xdata[int(name)].copy())
+					#print self.multiQueue, '\n'
 				line_str = name + ":" + str(line)
-				self.notify(int(name),self.xdata)
+				#print self.xdata[int(name)] , '\n'
+				self.notify(int(name),self.xdata[int(name)])
 			else:
 				line_str = "Bad Signal: " + line  
 			#print line_str
@@ -192,7 +196,6 @@ class connectOutput:
 		xd['northing'] = northing
 		xd['latd'] = lat
 		xd['lond'] = lon
-		return xd
 		
 	
 	# Creates a list of queues inside of global list named multiQueue

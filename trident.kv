@@ -216,7 +216,6 @@
 		size: root.width,root.height
 		orientation: 'horizontal'
 		BoxLayout:
-			id:graph
 			orientation:'vertical'
 			BoxLayout:
 				orientation: 'horizontal'
@@ -234,6 +233,7 @@
 					orientation: 'horizontal'
 					step:0.01
 			BoxLayout:
+				id:graph
 				canvas.before:
 					Rectangle:
 						size: 2,self.height

@@ -83,7 +83,7 @@ class SurveyPage(Widget):
 			easting = easting / self.counter
 			altitude = altitude / self.counter
 
-			csvFile = open(self.base.jobPath+'/'+str(pointName), 'a')
+			csvFile = open(self.base.jobPath+'/'+str(self.base.app.config.get('job','jobName'))+'.csv', 'a')
 			finalOutputString = str(pointName)+','+str(latitude)+','+str(longitude)+','+str(northing)+','+str(easting)+','+str(altitude)+','+str(pointCode)
 			csvFile.writelines(finalOutputString)
 
@@ -451,11 +451,13 @@ class Poseidon(Widget):
 					self.optionalDisplay(nmea)
 				self.pointRaw.writelines(str(3)+str(nmea)+str('\n'))
 			elif name == 3:
+				
 				if len(self.multiQ) == 10:
 					self.multiQ.popleft()
-				if nmea != True:
+				if nmea == False or nmea == (False, False):
 					self.dataCarousel.current_slide.multiPStatus.text = "Ready to Measure!"
 					self.amoratizeData(q[1][9])
+					print q[1][9]
 					self.dataCarousel.current_slide.counter = self.dataCarousel.current_slide.counter + 1
 					self.dataCarousel.current_slide.counterLabel.text = str(self.dataCarousel.current_slide.counter)
 					self.multiQ.append(False)
@@ -485,7 +487,7 @@ class Poseidon(Widget):
 		tolerance = float(self.app.config.get('tolerances', 'horizontal'))
 		w = self.dataCarousel.current_slide.graph.width/2
 		h = self.dataCarousel.current_slide.graph.height/2
-		self.dataCarousel.current_slide.graph.canvas.clear()
+		#self.dataCarousel.current_slide.graph.canvas.clear()
 		self.dataCarousel.current_slide.graph.canvas.add(Line(circle=(w,h,w/2),width=1.3))
 		
 		for i in range(10):
@@ -517,8 +519,8 @@ class Poseidon(Widget):
 		self.dataCarousel.current_slide.northing += float(dataEpochDict['northing'])
 		self.dataCarousel.current_slide.easting += float(dataEpochDict['easting'])
 		self.dataCarousel.current_slide.altitude += float(dataEpochDict['antenna_altitude'])
-		self.dataCarousel.current_slide.amoritizedNorthing.text = str(self.dataCarousel.current_slide.northing)
-		self.dataCarousel.current_slide.amoritizedEasting.text = str(self.dataCarousel.current_slide.easting)
+		self.dataCarousel.current_slide.amoritizedNorthing.text = str(self.dataCarousel.current_slide.northing/self.dataCarousel.current_slide.counter)
+		self.dataCarousel.current_slide.amoritizedEasting.text = str(self.dataCarousel.current_slide.easting/self.dataCarousel.current_slide.counter)
 		
 		
 	def openOptional(self,instance,pos):

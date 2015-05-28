@@ -303,6 +303,7 @@ class MultipathDetector():
 	# The call to multipathQueueHandler must guarantee that the queues are fully populated
 	# queue2 will be the center receiver - this is very important!
 	def multipathQueueHandler(self, listOfQueues):
+		#print listOfQueues, '\n'
 		# try:
 		if self.mislabeledFlag != 0:
 			return self.mislabeledFlag
@@ -325,7 +326,7 @@ class MultipathDetector():
 			log.info('ERROR: Queues are not of equal length')
 			assert (len(queue1) == len(queue2))
 			assert (len(queue2) == len(queue3))
-	
+	    
 		if len(queue1) != 10:
 			print "ERROR: Queues are not of length 10"
 			log.info('ERROR: Queues are not of length 10')
@@ -343,17 +344,16 @@ class MultipathDetector():
 	
 		multipathCounter = 0
 		finalOutlierFlag = False
-	
 		# determines multipathing for each element of the queues
-		for i in range(len(queue1)):
+		for i in range(10):
 			xCoord1 = queue1[i]['easting']
 			yCoord1 = queue1[i]['northing']
 			zCoord1 = queue1[i]['antenna_altitude']
-	
+	                  
 			xCoord2 = queue2[i]['easting']
 			yCoord2 = queue2[i]['northing']
 			zCoord2 = queue2[i]['antenna_altitude']
-	
+	                  
 			xCoord3 = queue3[i]['easting']
 			yCoord3 = queue3[i]['northing']
 			zCoord3 = queue3[i]['antenna_altitude']
@@ -361,29 +361,32 @@ class MultipathDetector():
 			(multipathFlag, outlierFlag) = self.multipathDetect((xCoord1, yCoord1, zCoord1),
 																(xCoord2, yCoord2, zCoord2),
 																(xCoord3, yCoord3, zCoord3))
-		if multipathFlag is True:
-			multipathCounter += 1
-		if outlierFlag is True:
-			finalOutlierFlag = True
-		else:
-			finalOutlierFlag = False
-	
-		# xCoord1, yCoord1, zCoord1 = queue1[i]
-		# xCoord2, yCoord2, zCoord2 = queue2[i]
-		# xCoord3, yCoord3, zCoord3 = queue3[i]
-	
-		xCoordAvg_1 = xCoordAvg_1 + float(xCoord1)
-		xCoordAvg_2 = xCoordAvg_2 + float(xCoord2)
-		xCoordAvg_3 = xCoordAvg_3 + float(xCoord3)
-	
-		yCoordAvg_1 = yCoordAvg_1 + float(yCoord1)
-		yCoordAvg_2 = yCoordAvg_2 + float(yCoord2)
-		yCoordAvg_3 = yCoordAvg_3 + float(yCoord3)
-	
-		zCoordAvg_1 = zCoordAvg_1 + float(zCoord1)
-		zCoordAvg_2 = zCoordAvg_2 + float(zCoord2)
-		zCoordAvg_3 = zCoordAvg_3 + float(zCoord3)
-	
+			if multipathFlag is True:
+				multipathCounter += 1
+				print "mF"
+			if outlierFlag is True:
+				finalOutlierFlag = True
+				print "oF"
+			else:
+				finalOutlierFlag = False
+		
+			# xCoord1, yCoord1, zCoord1 = queue1[i]
+			# xCoord2, yCoord2, zCoord2 = queue2[i]
+			# xCoord3, yCoord3, zCoord3 = queue3[i]
+		
+			xCoordAvg_1 = xCoordAvg_1 + float(xCoord1)
+			xCoordAvg_2 = xCoordAvg_2 + float(xCoord2)
+			xCoordAvg_3 = xCoordAvg_3 + float(xCoord3)
+		
+			yCoordAvg_1 = yCoordAvg_1 + float(yCoord1)
+			yCoordAvg_2 = yCoordAvg_2 + float(yCoord2)
+			yCoordAvg_3 = yCoordAvg_3 + float(yCoord3)
+		
+			zCoordAvg_1 = zCoordAvg_1 + float(zCoord1)
+			zCoordAvg_2 = zCoordAvg_2 + float(zCoord2)
+			zCoordAvg_3 = zCoordAvg_3 + float(zCoord3)
+		
+			
 		xCoordAvg_1 = xCoordAvg_1 / len(queue1)
 		xCoordAvg_2 = xCoordAvg_2 / len(queue2)
 		xCoordAvg_3 = xCoordAvg_3 / len(queue3)
@@ -401,14 +404,16 @@ class MultipathDetector():
 		dotProductTolerance = MultipathDetector.computeDotProductTolerance(gpsDistance, linearTolerance)
 		dotProductAvg = MultipathDetector.computeDotProduct((xCoordAvg_1, yCoordAvg_1), (xCoordAvg_2, yCoordAvg_2),
 															(xCoordAvg_3, yCoordAvg_3))
-		dotProductSingle = MultipathDetector.computeDotProduct(queue1[9][:-1], queue2[9][:-1], queue3[9][:-1])
+		dotProductSingle = MultipathDetector.computeDotProduct((xCoord1, yCoord1, zCoord1),
+															(xCoord2, yCoord2, zCoord2),
+															(xCoord3, yCoord3, zCoord3))
 		log.info('Tolerance =%s\t Avg=%s\t Recent=%s' % (dotProductTolerance, dotProductAvg, dotProductSingle))
-	
+		
 		# computes multipathing for the averaged values in the queues
 		avgMultipath = self.multipathDetect((xCoordAvg_1, yCoordAvg_1, zCoordAvg_1),
 											(xCoordAvg_2, yCoordAvg_2, zCoordAvg_2),
 											(xCoordAvg_3, yCoordAvg_3, zCoordAvg_3))
-	
+		
 		if multipathCounter >= 3:
 			# more than 3 elements of the queue contain multipathing
 			log.info('multipathCounter')
