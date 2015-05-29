@@ -195,7 +195,7 @@
 	
 <SurveyPage>:
 	measureButton: measureButton
-	#epochInput: epochInput
+	epochInput: epochInput
 	graph:graph
 	multiCounterLabel:multiCounterLabel
 	counterLabel:counterLabel
@@ -212,6 +212,8 @@
 	amoritizedNorthing:amoritizedNorthing
 	amoritizedEasting:amoritizedEasting
 	graphZoom:graphZoom
+	zoomLabel:zoomLabel
+	
 	BoxLayout:
 		size: root.width,root.height
 		orientation: 'horizontal'
@@ -231,7 +233,11 @@
 				Slider:
 					id: graphZoom
 					orientation: 'horizontal'
-					step:0.01
+					step:.1
+					min: 1
+				Label:
+					id: zoomLabel
+					text:'x0.25'
 			BoxLayout:
 				id:graph
 				canvas.before:
@@ -324,7 +330,7 @@
 				padding: 10
 				spacing: 10
 				size_hint: None,None
-				size: 300,150
+				size: 300,170
 				id:pointInfo
 				Label:
 					text: 'Counter'
@@ -334,12 +340,13 @@
 					text: 'Multipath Counter'
 				Label:
 					id:multiCounterLabel
-				#Label:
-				#	text: 'Epochs to Measure:'
-				#TextInput:
-				#	id: epochInput
-				#	multiline: False
-				#	input_filter: 'int'
+				Label:
+					text: 'Epochs to Measure:'
+				TextInput:
+					id: epochInput
+					multiline: False
+					input_filter: 'int'
+					text: '0'
 				Button:
 					id: measureButton
 					text: 'Measure Point'

@@ -19,7 +19,7 @@ import threading
 from functools import partial
 from kivy.graphics import Color, Ellipse, Line
 from collections import deque
-from kivy.graphics.instructions import Instruction
+from kivy.config import Config
 
 LOG_FILENAME = 'GUI_log.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
@@ -47,11 +47,15 @@ class SurveyPage(Widget):
 	amoritizedNorthing = ObjectProperty(None)
 	amoritizedEasting = ObjectProperty(None)
 	graphZoom = ObjectProperty(None)
+	zoomLabel = ObjectProperty(None)
 	
 	def __init__(self, **kwargs):
 		super(SurveyPage, self).__init__(**kwargs)
 		self.measureButton.bind(on_release=self.updateMeasureButton)
-
+		self.graphZoom.bind(value=self.outputZoom)
+		
+	def outputZoom(self,instance,value):
+		self.zoomLabel.text = 'x'+str(float(value)/4)
 
 	def updateMeasureButton(self,instance):
 		if instance.text == 'Measure Point' and self.base.app.config.get('locks','lockSurvey') == 'True':
@@ -59,6 +63,8 @@ class SurveyPage(Widget):
 			self.base.app.config.set('locks', 'measuring', 'True')
 			self.base.app.config.set('job', 'currentPointName', self.base.dataCarousel.current_slide.pointName)
 			self.base.app.config.write()
+			if epochInput != '0':
+				self.base.dataCarousel.epochCount = int(epochInput)
 		else:
 			instance.text = 'Measure Point'
 			self.base.app.config.set('locks', 'measuring', 'False')
@@ -301,7 +307,7 @@ class Poseidon(Widget):
 	newPage = ObjectProperty(None)
 	root = ObjectProperty(None)
 	base = ObjectProperty(None)
-	multiQ = deque(maxlen = 10)
+	multiQ = None
 	workingSlide =  -1
 
 
@@ -353,7 +359,6 @@ class Poseidon(Widget):
 			self.point_popup.open()
 
 	def	updatePointName(self, text, code):
-		print text
 		self.point_popup.dismiss()
 		newPage = SurveyPage(base=self)
 		newPage.create_property('pointName')
@@ -370,6 +375,8 @@ class Poseidon(Widget):
 		newPage.create_property('counter')
 		newPage.create_property('multiCounter')
 		newPage.counter = 0.0
+		newPage.epochCount = 0
+		newPage.epochCounter = 0
 		newPage.multiCounter = 0.0
 		newPage.easting = 0.0
 		newPage.northing = 0.0
@@ -386,7 +393,6 @@ class Poseidon(Widget):
 		
 		
 	def Settings_Button_pressed(self):
-
 		#self.dataCarousel.children[self.workingSlide].children[0].gps_qual.text = 'hi'
 		if self.settings_popup is None:
 			self.settings_popup = Popup(attach_to=self, title='Trident Settings', title_align = 'center', size_hint=(0.7,0.8))
@@ -457,60 +463,61 @@ class Poseidon(Widget):
 				if nmea == False or nmea == (False, False):
 					self.dataCarousel.current_slide.multiPStatus.text = "Ready to Measure!"
 					self.amoratizeData(q[1][9])
-					print q[1][9]
+					#print q[1][9]
 					self.dataCarousel.current_slide.counter = self.dataCarousel.current_slide.counter + 1
 					self.dataCarousel.current_slide.counterLabel.text = str(self.dataCarousel.current_slide.counter)
-					self.multiQ.append(False)
+					self.multiQ = False
 					if self.app.config.get('locks','measuring') == 'True':
 						if not os.path.isfile(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'.txt'):
 							self.pointCollected = open(self.jobPath+'/'+self.app.config.get('job','currentPointName')+'.txt','a')
 						else:
 							self.pointCollected.writelines(str(q[1][9])+str('\n'))
+							if self.dataCarousel.current_slide.epochCount == 0:
+								pass
+							elif self.dataCarousel.current_slide.epochCounter < self.dataCarousel.current_slide.epochCount and self.dataCarousel.current_slide.epochCount != 0:
+								self.dataCarousel.current_slide.epochCounter = self.dataCarousel.current_slide.epochCounter + 1
+							else:
+								SurveyPage.updateMeasureButton(self.dataCarousel.current_slide.measureButton)
 				else:
 					self.dataCarousel.current_slide.multiPStatus.text = "Multipathing!"
 					self.dataCarousel.current_slide.multiCounter = self.dataCarousel.current_slide.multiCounter + 1
 					self.dataCarousel.current_slide.multiCounterLabel.text = str(self.dataCarousel.current_slide.multiCounter)
-					self.multiQ.append(True)
+					self.multiQ = True
 				if float(self.dataCarousel.current_slide.counter) > 10 :
-					self.plotPoints(q[1])
+					self.plotPoints(q[1][9])
 		except:
 			pass
 
 	@mainthread
-	def plotPoints(self, centerQ):
-		centerQueueCopy = {}
-		centerQueueCopy = centerQ
-		dupN = []
-		dupE = []
+	def plotPoints(self, newCoor):
 		centerX = self.dataCarousel.current_slide.easting/self.dataCarousel.current_slide.counter
 		centerY = self.dataCarousel.current_slide.northing/self.dataCarousel.current_slide.counter
 		tolerance = float(self.app.config.get('tolerances', 'horizontal'))
 		w = self.dataCarousel.current_slide.graph.width/2
 		h = self.dataCarousel.current_slide.graph.height/2
-		#self.dataCarousel.current_slide.graph.canvas.clear()
-		self.dataCarousel.current_slide.graph.canvas.add(Line(circle=(w,h,w/2),width=1.3))
+		zoom = float(self.dataCarousel.current_slide.graphZoom.value)
+
+		self.dataCarousel.current_slide.graph.canvas.before.add(Line(circle=(w,h,((w)/2)),width=1.3)) #circle=(centerX,centerY,size),thickness)
 		
-		for i in range(10):
-			diffYDec = (centerQueueCopy[i]['northing'] % int(centerQueueCopy[i]['northing'])) - (centerY % int(centerY))
-			diffXDec = (centerQueueCopy[i]['easting'] % int(centerQueueCopy[i]['easting'])) - (centerX % int(centerX))
+		
+		diffYDec = (newCoor['northing'] % int(newCoor['northing'])) - (centerY % int(centerY))
+		diffXDec = (newCoor['easting'] % int(newCoor['easting'])) - (centerX % int(centerX))
 
-			diffYInt = int(centerQueueCopy[i]['northing'])-int(centerY)
-			diffXInt = int(centerQueueCopy[i]['easting'])-int(centerX)
+		diffYInt = int(newCoor['northing'])-int(centerY)
+		diffXInt = int(newCoor['easting'])-int(centerX)
 
-			diffY = diffYInt + diffYDec
-			diffX = diffXInt + diffXDec
+		diffY = diffYInt + diffYDec
+		diffX = diffXInt + diffXDec
+		
+		offsetX = ((-1.0 * diffX) / (4.0*tolerance))*zoom
+		offsetY = ((-1.0 * diffY) / (4.0*tolerance))*zoom
 
-			dupE.append((-1.0 * diffX) / (4.0*tolerance))
-			dupN.append((-1.0 * diffY) / (4.0*tolerance))
-			#print dupE[i]
-			#print dupN[i]
-
-			if self.multiQ[i]:
-				self.dataCarousel.current_slide.graph.canvas.add(Color(1,0,0))
-			else:
-				self.dataCarousel.current_slide.graph.canvas.add(Color(0,0,1))
-			
-			self.dataCarousel.current_slide.graph.canvas.add(Ellipse(pos=(((w)-dupE[i]-5), ((h)-dupN[i]-5)), size=(10,10)))
+		if self.multiQ[i]:
+			self.dataCarousel.current_slide.graph.canvas.add(Color(1,0,0))
+		else:
+			self.dataCarousel.current_slide.graph.canvas.add(Color(0,0,1))
+		
+		self.dataCarousel.current_slide.graph.canvas.add(Ellipse(pos=(((w)- offsetX - 5), ((h) - offsetY - 5)), size=(10,10)))
 
 	@mainthread
 	def amoratizeData(self, dataEpochDict):	
@@ -544,9 +551,13 @@ class TridentApp(App):
 
 
 	def build(self):
+		Config.set('graphics', 'width', '1100')
+		Config.set('graphics', 'height', '800')
+
 		self.poseidonWidget = Poseidon(app=self)
 		self.root = self.poseidonWidget
-
+		
+		
 		self.root.jobNameLabel.text = self.config.get('job','jobName')
 
 		if self.config.get('locks','lockSettings') == 'True':

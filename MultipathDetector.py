@@ -363,10 +363,8 @@ class MultipathDetector():
 																(xCoord3, yCoord3, zCoord3))
 			if multipathFlag is True:
 				multipathCounter += 1
-				print "mF"
 			if outlierFlag is True:
 				finalOutlierFlag = True
-				print "oF"
 			else:
 				finalOutlierFlag = False
 		
