@@ -497,7 +497,7 @@ class Poseidon(Widget):
 		h = self.dataCarousel.current_slide.graph.height/2
 		zoom = float(self.dataCarousel.current_slide.graphZoom.value)
 
-		self.dataCarousel.current_slide.graph.canvas.before.add(Line(circle=(w,h,((w)/2)),width=1.3)) #circle=(centerX,centerY,size),thickness)
+		self.dataCarousel.current_slide.graph.canvas.before.add(Line(circle=(w,h,(2*w*zoom)),width=1.3)) #circle=(centerX,centerY,size),thickness)
 		
 		
 		diffYDec = (newCoor['northing'] % int(newCoor['northing'])) - (centerY % int(centerY))

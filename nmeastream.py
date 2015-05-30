@@ -23,7 +23,8 @@ def degrees(coor):
     return degrees + minutes
     
 #opens RAW NMEA output and reads everything into array data
-with open('.\output\output_2015-05-21.txt', 'r') as data_file:
+#with open('.\output\output_2015-05-29.txt', 'r') as data_file:
+with open('.\output\lost data.txt', 'r') as data_file:
     streamer = pynmea.streamer.NMEAStream(data_file)
     next_data = streamer.get_strings()
     data = []
@@ -55,7 +56,7 @@ for i in range(len(talker)):
     cart.writelines(str(i) + "\n")
     # length.append(len(talkerData[i]))
     for j in range(len(talkerData[i])):
-        if len(talkerData[i][j]) > 40:
+        if len(talkerData[i][j]) > 50:
             d.parse(talkerData[i][j])       
             if int(d.gps_qual) == 4:
                 lat = degrees(d.latitude)
